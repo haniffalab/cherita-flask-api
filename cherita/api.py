@@ -1,10 +1,10 @@
 from flask import Blueprint
 from flask_restful import Api
 
-from bard.resources.about import About
-from bard.resources.errors import errors
-from bard.resources.plotting import Heatmap
-from bard.resources.dataset import ObsCols, VarCols, VarNames
+from cherita.resources.about import About
+from cherita.resources.errors import errors
+from cherita.resources.plotting import Heatmap
+from cherita.resources.dataset import ObsCols, VarCols, VarNames
 
 bp = Blueprint("api_v1", __name__)
 api = Api(bp, errors=errors)

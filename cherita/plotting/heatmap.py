@@ -5,7 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.validator_cache import ValidatorCache
 
-from bard.utils.adata_utils import get_group_index, get_index_in_array
+from cherita.utils.adata_utils import get_group_index, get_index_in_array
 
 
 def heatmap(adata_group: zarr.Group, marker: str = None):

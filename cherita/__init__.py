@@ -1,12 +1,10 @@
-import os
-
 from flask import Flask, render_template
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from flask_cors import CORS
 
 from config import Config
-from bard import api
+from cherita import api
 
 
 def create_app(test_config=None):

@@ -1,6 +1,6 @@
 import zarr
 import anndata as ad
-from bard.utils.adata_utils import get_group_index_name, parse_data
+from cherita.utils.adata_utils import get_group_index_name, parse_data
 
 
 def get_obs_col_names(adata_group: zarr.Group):
