@@ -41,7 +41,7 @@ def create_app(test_config=None):
         return render_template("index.html")
 
     # apply the blueprints to the app
-    from bard import api
+    from cherita import api
     app.register_blueprint(
         api.bp,
         url_prefix=app.config["API_PREFIX"]

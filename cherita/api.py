@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_restful import Api
 
-from bard.resources.about import About
-from bard.resources.errors import errors
+from cherita.resources.about import About
+from cherita.resources.errors import errors
 
 
 bp = Blueprint("api_v1", __name__)
