@@ -9,4 +9,8 @@ class Heatmap(Resource):
     def post(self):
         json_data = request.get_json()
         adata_group = open_anndata_zarr(json_data["url"])
-        return jsonify(heatmap(adata_group, json_data["selectedVar"]))
+        return jsonify(
+            heatmap(
+                adata_group, json_data["selectedMultiVar"], json_data["selectedObs"]
+            )
+        )
