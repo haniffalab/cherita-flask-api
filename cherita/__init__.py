@@ -1,9 +1,10 @@
-import os
-
 from flask import Flask, render_template
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+from flask_cors import CORS
+
 from config import Config
+from cherita import api
 
 
 def create_app(test_config=None):
@@ -30,21 +31,13 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.update(test_config)
 
-    # ensure the instance folder exists
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
+    CORS(app)
 
     @app.route("/")
     def index():
         return render_template("index.html")
 
     # apply the blueprints to the app
-    from bard import api
-    app.register_blueprint(
-        api.bp,
-        url_prefix=app.config["API_PREFIX"]
-    )
+    app.register_blueprint(api.bp, url_prefix=app.config["API_PREFIX"])
 
     return app
