@@ -3,6 +3,7 @@ from flask_restful import Resource, reqparse
 
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.plotting.heatmap import heatmap
+from cherita.plotting.dotplot import dotplot
 
 
 class Heatmap(Resource):
@@ -11,6 +12,17 @@ class Heatmap(Resource):
         adata_group = open_anndata_zarr(json_data["url"])
         return jsonify(
             heatmap(
+                adata_group, json_data["selectedMultiVar"], json_data["selectedObs"]
+            )
+        )
+
+
+class Dotplot(Resource):
+    def post(self):
+        json_data = request.get_json()
+        adata_group = open_anndata_zarr(json_data["url"])
+        return jsonify(
+            dotplot(
                 adata_group, json_data["selectedMultiVar"], json_data["selectedObs"]
             )
         )

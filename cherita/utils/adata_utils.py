@@ -24,6 +24,11 @@ def get_index_in_array(array: zarr.Array, item: str):
     return np.where(array[:] == item)[0][0]
 
 
+def get_indices_in_array(array: zarr.Array, items: list[str]):
+    sorter = np.argsort(array[:])
+    return sorter[np.searchsorted(array[:], items, sorter=sorter)]
+
+
 def parse_data(data: Union[zarr.Group, zarr.Array], store: zarr.Group = None):
     if type(data) == zarr.Group:
         return parse_group(data)

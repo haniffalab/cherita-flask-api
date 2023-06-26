@@ -5,14 +5,11 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.validator_cache import ValidatorCache
 
-from cherita.utils.adata_utils import get_group_index, get_index_in_array, parse_data
+from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
 
 
 def heatmap(adata_group: zarr.Group, markers: list[str] = None, obs_col: str = None):
-    marker_idx = [
-        get_index_in_array(get_group_index(adata_group.var), marker)
-        for marker in markers
-    ]
+    marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
     obs = parse_data(adata_group.obs[obs_col])
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
