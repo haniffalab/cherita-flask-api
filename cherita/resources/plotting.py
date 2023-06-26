@@ -12,7 +12,9 @@ class Heatmap(Resource):
         adata_group = open_anndata_zarr(json_data["url"])
         return jsonify(
             heatmap(
-                adata_group, json_data["selectedMultiVar"], json_data["selectedObs"]
+                adata_group=adata_group,
+                markers=json_data["selectedMultiVar"],
+                obs_col=json_data["selectedObs"],
             )
         )
 
@@ -23,6 +25,9 @@ class Dotplot(Resource):
         adata_group = open_anndata_zarr(json_data["url"])
         return jsonify(
             dotplot(
-                adata_group, json_data["selectedMultiVar"], json_data["selectedObs"]
+                adata_group=adata_group,
+                markers=json_data["selectedMultiVar"],
+                obs_col=json_data["selectedObs"],
+                mean_only_expressed=json_data["meanOnlyExpressed"] or False,
             )
         )

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 import zarr
 import pandas as pd
@@ -15,7 +16,7 @@ def dotplot(
     adata_group: zarr.Group,
     markers: list[str] = None,
     obs_col: str = None,
-    expression_cutoff=0.5,
+    expression_cutoff=0.0,
     mean_only_expressed=False,
     standard_scale=None,
 ):
@@ -102,15 +103,14 @@ def dotplot(
             title="Markers", showline=True, linewidth=1, linecolor="black", mirror=True
         ),
         xaxis2=dict(
-            title="Fraction of cells in group (%)",
             zeroline=False,
             showline=False,
             showticklabels=False,
             fixedrange=True,
             showgrid=False,
-            title_standoff=25,
         ),
         yaxis2=dict(
+            title="Fraction of cells in group (%)",
             zeroline=False,
             showline=False,
             showgrid=False,
