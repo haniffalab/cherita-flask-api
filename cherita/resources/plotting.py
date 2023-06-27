@@ -28,6 +28,11 @@ class Dotplot(Resource):
                 adata_group=adata_group,
                 markers=json_data["selectedMultiVar"],
                 obs_col=json_data["selectedObs"],
-                mean_only_expressed=json_data["meanOnlyExpressed"] or False,
+                mean_only_expressed=json_data["meanOnlyExpressed"]
+                if "meanOnlyExpressed" in json_data
+                else False,
+                expression_cutoff=json_data["expressionCutoff"]
+                if "expressionCutoff" in json_data
+                else 0.0,
             )
         )

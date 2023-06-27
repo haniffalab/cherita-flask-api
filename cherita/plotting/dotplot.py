@@ -16,9 +16,9 @@ def dotplot(
     adata_group: zarr.Group,
     markers: list[str] = None,
     obs_col: str = None,
-    expression_cutoff=0.0,
-    mean_only_expressed=False,
-    standard_scale=None,
+    expression_cutoff: float = 0.0,
+    mean_only_expressed: bool = False,
+    standard_scale: str = None,
 ):
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
     obs = parse_data(adata_group.obs[obs_col])
@@ -120,4 +120,12 @@ def dotplot(
         ),
     )
 
-    return json.loads(fig.to_json())
+    data_values_range = {
+        "min": float(dot_color_df.values.min()),
+        "max": float(dot_color_df.values.max()),
+    }
+
+    response_obj = json.loads(fig.to_json())
+    response_obj["range"] = data_values_range
+
+    return response_obj
