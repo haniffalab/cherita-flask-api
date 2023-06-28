@@ -34,5 +34,8 @@ class Dotplot(Resource):
                 expression_cutoff=json_data["expressionCutoff"]
                 if "expressionCutoff" in json_data
                 else 0.0,
+                standard_scale=json_data["standardScale"]
+                if "standardScale" in json_data
+                else None,
             )
         )
