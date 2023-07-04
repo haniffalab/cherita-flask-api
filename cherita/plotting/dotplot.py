@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+from typing import Any
 import zarr
 import pandas as pd
 import numpy as np
@@ -13,12 +14,29 @@ MARKER_PIXEL_SIZE = 50
 
 def dotplot(
     adata_group: zarr.Group,
-    markers: list[str] = None,
-    obs_col: str = None,
+    markers: list[str],
+    obs_col: str,
     expression_cutoff: float = 0.0,
     mean_only_expressed: bool = False,
     standard_scale: str = None,
-):
+) -> Any:
+    """Method to generate a Plotly dotplot JSON as a Python object
+    from an Anndata-Zarr object.
+
+    Args:
+        adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
+        markers (list[str]): List of markers present in var.
+        obs_col (str): The obs column to group data by
+        expression_cutoff (float, optional): Minimum expression value to consider
+            if mean_only_expressed is set to True. Defaults to 0.0.
+        mean_only_expressed (bool, optional): Whether to only average values
+            above the expression cutoff. Defaults to False.
+        standard_scale (str, optional): Scaling method to use.
+            Can be set to None, "var" or "group. Defaults to None.
+
+    Returns:
+        Any: A Plotly dotplot JSON as a Python object
+    """
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
     obs = parse_data(adata_group.obs[obs_col])
 
@@ -55,6 +73,7 @@ def dotplot(
         go.Scatter(
             x=x,
             y=[col] * len(x),
+            name=col,
             mode="markers",
             marker=dict(
                 color=dot_color_df[col],
