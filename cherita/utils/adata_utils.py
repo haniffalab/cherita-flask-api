@@ -46,6 +46,8 @@ def parse_group(group: zarr.Group):
             if not name.startswith("_") and name != get_group_index_name(group)
         ]:
             df[name] = group[name]
+        for name in group.group_keys():
+            df[name] = parse_group(group[name])
         return df
     elif "codes" in group and "categories" in group:
         series = pd.Categorical.from_codes(
