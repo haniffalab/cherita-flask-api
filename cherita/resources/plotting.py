@@ -56,3 +56,17 @@ class Matrixplot(Resource):
                 else None,
             )
         )
+
+
+class Violin(Resource):
+    def post(self):
+        json_data = request.get_json()
+        adata_group = open_anndata_zarr(json_data["url"])
+        return jsonify(
+            matrixplot(
+                adata_group=adata_group,
+                keys=json_data["keys"],
+                obs_col=json_data["selectedObs"],
+                scale=json_data["scale"] if "scale" in json_data else None,
+            )
+        )
