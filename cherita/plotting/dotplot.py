@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from plotly.validator_cache import ValidatorCache
 
 from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
 
@@ -64,7 +63,8 @@ def dotplot(
                 size=dot_size_df[col] * MARKER_PIXEL_SIZE,
             ),
             customdata=np.dstack((mean_df[col], dot_size_df[col]))[0],
-            hovertemplate="Mean expression: %{customdata[0]:.3f} <br> Fraction of cells in group: %{customdata[1]:.3f}",
+            hovertemplate="Mean expression: %{customdata[0]:.3f} <br>"
+            "Fraction of cells in group: %{customdata[1]:.3f}",
             showlegend=False,
         )
         for col in df.columns
@@ -95,7 +95,11 @@ def dotplot(
     fig.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
         xaxis_type="category",
-        coloraxis=dict(colorscale=None, colorbar_x=0.82),
+        coloraxis=dict(
+            colorscale=None,
+            colorbar_x=0.82,
+            colorbar=dict(title=dict(text="Mean expression in group", side="right")),
+        ),
         xaxis=dict(
             title=obs_col, showline=True, linewidth=1, linecolor="black", mirror=True
         ),

@@ -2,9 +2,7 @@ from __future__ import annotations
 import json
 import zarr
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
-from plotly.validator_cache import ValidatorCache
 
 from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
 

@@ -3,7 +3,7 @@ from flask_restful import Api
 
 from cherita.resources.about import About
 from cherita.resources.errors import errors
-from cherita.resources.plotting import Heatmap, Dotplot
+from cherita.resources.plotting import Heatmap, Dotplot, Matrixplot
 from cherita.resources.dataset import ObsCols, VarCols, VarNames
 
 bp = Blueprint("api_v1", __name__)
@@ -15,3 +15,4 @@ api.add_resource(VarCols, "/var/cols")
 api.add_resource(VarNames, "/var/names")
 api.add_resource(Heatmap, "/heatmap")
 api.add_resource(Dotplot, "/dotplot")
+api.add_resource(Matrixplot, "/matrixplot")
