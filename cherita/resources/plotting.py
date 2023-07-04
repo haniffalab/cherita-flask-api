@@ -5,6 +5,7 @@ from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.plotting.heatmap import heatmap
 from cherita.plotting.dotplot import dotplot
 from cherita.plotting.matrixplot import matrixplot
+from cherita.plotting.violin import violin
 
 
 class Heatmap(Resource):
@@ -63,10 +64,12 @@ class Violin(Resource):
         json_data = request.get_json()
         adata_group = open_anndata_zarr(json_data["url"])
         return jsonify(
-            matrixplot(
+            violin(
                 adata_group=adata_group,
                 keys=json_data["keys"],
-                obs_col=json_data["selectedObs"],
+                obs_col=json_data["selectedObs"]
+                if "selectedObs" in json_data
+                else None,
                 scale=json_data["scale"] if "scale" in json_data else None,
             )
         )

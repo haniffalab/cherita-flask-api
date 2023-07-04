@@ -13,7 +13,7 @@ from cherita.utils.adata_utils import (
 )
 
 
-def violinplot(
+def violin(
     adata_group: zarr.Group,
     keys: Union[str, list[str]],
     obs_col: str = None,
