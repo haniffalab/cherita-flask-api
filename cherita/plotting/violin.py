@@ -42,7 +42,7 @@ def violinplot(
 
         violins = []
         for c in df[obs_col].cat.categories:
-            violin = go.Violin(y=df[keys][df[obs_col] == c], name=c)
+            violin = go.Violin(y=df[keys][df[obs_col] == c], name=c, scalemode=scale)
             violins.append(violin)
 
         fig = go.Figure(
@@ -71,7 +71,7 @@ def violinplot(
 
         violins = []
         for col in df.columns:
-            violin = go.Violin(name=col, y=df[col])
+            violin = go.Violin(name=col, y=df[col], scalemode=scale)
             violins.append(violin)
 
         fig = go.Figure(violins)
