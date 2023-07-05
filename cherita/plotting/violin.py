@@ -33,7 +33,9 @@ def violin(
     Returns:
         Any: A Plotly violin plot JSON as a Python object
     """
-    if isinstance(keys, str) and obs_col:
+    if obs_col:
+        # @TODO: return error
+        assert isinstance(keys, str)
         marker_idx = get_index_in_array(get_group_index(adata_group.var), keys)
         df = pd.DataFrame(adata_group.X[:, marker_idx], columns=[keys])
 
@@ -42,15 +44,20 @@ def violin(
 
         violins = []
         for c in df[obs_col].cat.categories:
-            violin = go.Violin(y=df[keys][df[obs_col] == c], name=c, scalemode=scale)
+            violin = go.Violin(
+                y=df[keys][df[obs_col] == c],
+                name=c,
+                scalegroup="group" if scale == "count" else None,
+            )
             violins.append(violin)
 
         fig = go.Figure(
             data=violins, layout=dict(yaxis=dict(title=keys), xaxis=dict(title=obs_col))
         )
 
-    elif isinstance(keys, str):
-        keys = [keys]
+    else:
+        if isinstance(keys, str):
+            keys = [keys]
 
         var_keys = list(parse_data(adata_group.var).index.intersection(keys))
         obs_keys = list(set(adata_group.obs.attrs["column-order"]).intersection(keys))
@@ -71,9 +78,13 @@ def violin(
 
         violins = []
         for col in df.columns:
-            violin = go.Violin(name=col, y=df[col], scalemode=scale)
+            violin = go.Violin(
+                name=col, y=df[col], scalegroup="group" if scale == "count" else None
+            )
             violins.append(violin)
 
-        fig = go.Figure(violins)
+        fig = go.Figure(data=violins, layout=dict(yaxis=dict(title="Value")))
+
+    fig.update_traces(scalemode=scale)
 
     return json.loads(fig.to_json())
