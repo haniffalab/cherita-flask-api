@@ -15,7 +15,7 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: str) -> Any:
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         markers (list[str]): List of markers present in var.
-        obs_col (str): The obs column to use for the X axis
+        obs_col (str): The obs column to group data
 
     Returns:
         Any: A Plotly heatmap plot JSON as a Python object

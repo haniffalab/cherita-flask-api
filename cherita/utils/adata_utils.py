@@ -3,8 +3,11 @@ import os
 import zarr
 import numpy as np
 import pandas as pd
+from zarr.errors import GroupNotFoundError
 from typing import Union
 from urllib.parse import urlparse, ParseResult
+
+from cherita.resources.errors import BadRequest
 
 
 def get_group_index(group: zarr.Group):
@@ -98,6 +101,12 @@ def open_anndata_zarr(url: str):
         adata_group = zarr.open_consolidated(
             url, storage_options=storage_options, mode="r"
         )
-    except:
-        adata_group = zarr.open_group(url, storage_options=storage_options, mode="r")
+    except (FileNotFoundError, KeyError):
+        try:
+            adata_group = zarr.open_group(
+                url, storage_options=storage_options, mode="r"
+            )
+        except GroupNotFoundError:
+            raise BadRequest("Cannot open Anndata Zarr at URL {}".format(url))
+
     return adata_group

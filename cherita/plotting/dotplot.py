@@ -25,8 +25,8 @@ def dotplot(
 
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
-        markers (list[str]): List of markers present in var.
-        obs_col (str): The obs column to group data by
+        markers (list[str]): Root zarr Group of an Anndata-Zarr object
+        obs_col (str): The obs column to group data
         expression_cutoff (float, optional): Minimum expression value to consider
             if mean_only_expressed is set to True. Defaults to 0.0.
         mean_only_expressed (bool, optional): Whether to only average values

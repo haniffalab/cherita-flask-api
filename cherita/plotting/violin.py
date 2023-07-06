@@ -4,6 +4,7 @@ from typing import Union, Any
 import zarr
 import pandas as pd
 import plotly.graph_objects as go
+from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import (
     get_group_index,
@@ -34,8 +35,11 @@ def violin(
         Any: A Plotly violin plot JSON as a Python object
     """
     if obs_col:
-        # @TODO: return error
-        assert isinstance(keys, str)
+        if not isinstance(keys, str):
+            raise BadRequest(
+                "'keys' parameter should be a single string item"
+                "when grouping by an observation"
+            )
         marker_idx = get_index_in_array(get_group_index(adata_group.var), keys)
         df = pd.DataFrame(adata_group.X[:, marker_idx], columns=[keys])
 
@@ -66,15 +70,15 @@ def violin(
         df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=var_keys)
 
         # Only numerical obs
-        # @TODO: return error
         for k in obs_keys:
-            if isinstance(adata_group.obs[k], zarr.Array) and adata_group.obs[
+            if not isinstance(adata_group.obs[k], zarr.Array) and adata_group.obs[
                 k
             ].dtype in [
                 "int",
                 "float",
             ]:
-                df[k] = adata_group.obs[k]
+                raise BadRequest("Observation {} is not numerical".format(k))
+            df[k] = adata_group.obs[k]
 
         violins = []
         for col in df.columns:
