@@ -1,11 +1,37 @@
+import re
 import zarr
 import pandas as pd
-from cherita.utils.adata_utils import get_group_index_name, parse_data
+from cherita.utils.adata_utils import (
+    get_group_index_name,
+    parse_data,
+    type_category,
+    type_discrete,
+    type_numeric,
+    type_bool,
+)
+
+parse_dtype = {
+    "category": type_category,
+    "object": type_discrete,
+    "int": type_numeric,
+    "float": type_numeric,
+    "complex": type_numeric,
+    "bool": type_bool,
+}
 
 
 def get_obs_col_names(adata_group: zarr.Group):
     obs_col_names = adata_group.obs.attrs["column-order"]
     return obs_col_names
+
+
+def get_obs_col_metadata(adata_group: zarr.Group):
+    obs_df = parse_data(adata_group.obs)
+    obs_metadata = []
+    for col in obs_df.columns:
+        t = re.sub(r"[^a-zA-Z]", "", obs_df[col].dtype.name)
+        obs_metadata.append({"name": col, **parse_dtype[t](obs_df[col])})
+    return obs_metadata
 
 
 def get_var_col_names(adata_group: zarr.Group):

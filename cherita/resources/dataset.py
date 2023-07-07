@@ -3,10 +3,15 @@ from flask_restful import Resource
 from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import open_anndata_zarr
-from cherita.dataset.metadata import get_obs_col_names, get_var_col_names, get_var_names
+from cherita.dataset.metadata import (
+    get_obs_col_names,
+    get_obs_col_metadata,
+    get_var_col_names,
+    get_var_names,
+)
 
 
-class ObsCols(Resource):
+class ObsColsNames(Resource):
     def post(self):
         json_data = request.get_json()
         try:
@@ -18,7 +23,19 @@ class ObsCols(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
-class VarCols(Resource):
+class ObsCols(Resource):
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            return jsonify(get_obs_col_metadata(adata_group))
+        except BadRequest as e:
+            raise e
+        except KeyError as e:
+            raise BadRequest("Missing required parameter: {}".format(e))
+
+
+class VarColsNames(Resource):
     def post(self):
         json_data = request.get_json()
         try:

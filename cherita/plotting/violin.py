@@ -77,7 +77,7 @@ def violin(
                 "int",
                 "float",
             ]:
-                raise BadRequest("Observation {} is not numerical".format(k))
+                raise BadRequest("Obs column '{}' is not numerical".format(k))
             df[k] = adata_group.obs[k]
 
         violins = []

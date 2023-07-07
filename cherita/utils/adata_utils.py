@@ -110,3 +110,82 @@ def open_anndata_zarr(url: str):
             raise BadRequest("Cannot open Anndata Zarr at URL {}".format(url))
 
     return adata_group
+
+
+def type_category(obs):
+    categories = [str(i) for i in obs.cat.categories.values.flatten()]
+
+    if len(categories) > 100:
+        return {
+            "type": "categorical",
+            "is_truncated": True,
+            "values": categories[:99],
+        }
+
+    return {
+        "type": "categorical",
+        "is_truncated": False,
+        "values": categories,
+    }
+
+
+def type_bool(obs):
+    return {"type": "categorical", "values": {1: "True", 0: "False"}}
+
+
+def type_numeric(obs):
+    accuracy = 4
+    return {
+        "type": "continuous",
+        "min": encode_dtype(round(ndarray_min(obs), accuracy)),
+        "max": encode_dtype(round(ndarray_max(obs), accuracy)),
+        "mean": encode_dtype(round(ndarray_mean(obs), accuracy)),
+        "median": encode_dtype(round(ndarray_median(obs), accuracy)),
+    }
+
+
+def type_discrete(obs):
+    return {"type": "discrete"}
+
+
+def ndarray_max(a):
+    if np.isnan(a).all():
+        return 0
+    else:
+        return np.nanmax(a)
+
+
+def ndarray_min(a):
+    if np.isnan(a).all():
+        return 0
+    else:
+        return np.nanmin(a)
+
+
+def ndarray_mean(a):
+    if np.isnan(a).all():
+        return 0
+    else:
+        return np.nanmean(a)
+
+
+def ndarray_median(a):
+    if np.isnan(a).all():
+        return 0
+    else:
+        return np.nanmedian(a)
+
+
+def encode_dtype(a):
+    if hasattr(a, "dtype"):
+        if isinstance(a, np.integer):
+            return int(a)
+        if isinstance(a, np.floating):
+            return float(a)
+        if isinstance(a, np.bool_):
+            return bool(a)
+        if isinstance(a, np.ndarray) or isinstance(a, pd.Categorical):
+            return a.tolist()
+        return a
+    else:
+        return a
