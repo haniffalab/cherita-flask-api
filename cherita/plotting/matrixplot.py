@@ -64,13 +64,14 @@ def matrixplot(
             x=values_df.columns,
             y=values_df.index,
             colorbar=dict(title=dict(text="Mean expression in group", side="right")),
+            coloraxis="coloraxis",
         ),
         layout=dict(
             autosize=False,
             plot_bgcolor="rgba(0,0,0,0)",
             yaxis_type="category",
             xaxis_type="category",
-            xaxis=dict(title="Markers"),
+            xaxis=dict(title="Markers", tickvals=values_df.columns),
             yaxis=dict(
                 title=obs_colname
                 + (
