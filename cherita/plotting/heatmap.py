@@ -8,12 +8,21 @@ import plotly.graph_objects as go
 
 from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
 
+CHUNK_SIZE = 60000
+
 
 def split_df(df, chunk_size):
     chunks = []
     n_chunks = math.ceil(len(df) / chunk_size)
     for i in range(n_chunks):
-        chunks.append(df[i * chunk_size : (i + 1) * chunk_size])
+        chunks.append(
+            # To address gaps between image html elements
+            # Include previous items to force overlap
+            df[
+                i * chunk_size
+                - (int(len(df) * 0.001) if i > 0 else 0) : (i + 1) * chunk_size
+            ]
+        )
     return chunks
 
 
@@ -72,7 +81,7 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: str) -> Any:
         )
 
     # To handle data above 65k rows (image limit)
-    sub_dfs = split_df(df, 60000)
+    sub_dfs = split_df(df, CHUNK_SIZE)
     sub_heatmaps = []
     for d in sub_dfs:
         sub_heatmaps.append(
