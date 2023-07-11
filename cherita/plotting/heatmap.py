@@ -1,4 +1,5 @@
 from __future__ import annotations
+import math
 import json
 from typing import Any
 import zarr
@@ -6,6 +7,14 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
+
+
+def split_df(df, chunk_size):
+    chunks = []
+    n_chunks = math.ceil(len(df) / chunk_size)
+    for i in range(n_chunks):
+        chunks.append(df[i * chunk_size : (i + 1) * chunk_size])
+    return chunks
 
 
 def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: str) -> Any:
@@ -63,7 +72,21 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: str) -> Any:
             )
         )
 
-    fig = go.Figure(go.Heatmap(z=df[markers].transpose(), y=markers), layout=layout)
+    # To handle data above 65k rows (image limit)
+    sub_dfs = split_df(df, 60000)
+    sub_heatmaps = []
+    for d in sub_dfs:
+        sub_heatmaps.append(
+            go.Heatmap(
+                z=d[markers].transpose(),
+                y=markers,
+                x=d.index.union([d.index.max() + 1]),
+                coloraxis="coloraxis",
+                name="",
+            )
+        )
+
+    fig = go.Figure(data=sub_heatmaps, layout=layout)
 
     if not len(markers) > 2:
         fig.update_yaxes(fixedrange=True)
