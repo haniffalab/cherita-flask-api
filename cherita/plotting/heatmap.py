@@ -59,7 +59,6 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: str) -> Any:
             )
         ticks = list(ticks)
         ticks.sort()
-        ticks[-1] -= 1
 
         layout.update(
             dict(
