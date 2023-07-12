@@ -6,7 +6,12 @@ import zarr
 import pandas as pd
 import plotly.graph_objects as go
 
-from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
+from cherita.utils.adata_utils import (
+    continuous2categorical,
+    get_group_index,
+    get_indices_in_array,
+    parse_data,
+)
 
 CHUNK_SIZE = 60000
 
@@ -26,59 +31,66 @@ def split_df(df, chunk_size):
     return chunks
 
 
-def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: str) -> Any:
+def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
     """Method to generate a Plotly heatmap plot JSON as a Python object
     from an Anndata-Zarr object.
 
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         markers (list[str]): List of markers present in var.
-        obs_col (str): The obs column to group data
+        obs_col (dict): The obs column to group data
 
     Returns:
         Any: A Plotly heatmap plot JSON as a Python object
     """
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
-    obs = parse_data(adata_group.obs[obs_col])
+    obs_colname = obs_col["name"]
+    obs = parse_data(adata_group.obs[obs_colname])
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
     layout = dict(yaxis=dict(title="Markers"))
 
-    if obs.dtype == "category":
-        df[obs_col] = obs
+    if obs_col["type"] == "continuous":
+        df[obs_colname] = continuous2categorical(obs, obs_col["bins"]["thresholds"])
 
-        df = df.sort_values(by=[obs_col])
-        df = df.reset_index()
+    elif obs_col["type"] == "categorical":
+        df[obs_colname] = obs
 
-        ticks = set([])
-        middle_ticks = []
-        for c in df[obs_col].cat.categories:
-            ticks.add(df[df[obs_col] == c][markers].index.min())
-            ticks.add(df[df[obs_col] == c][markers].index.max() + 1)
-            middle_ticks.append(
-                (
-                    df[df[obs_col] == c][markers].index.min()
-                    + (
-                        df[df[obs_col] == c][markers].index.max()
-                        - df[df[obs_col] == c][markers].index.min()
-                    )
-                    // 2
+    df = df.sort_values(by=[obs_colname])
+    df = df.reset_index()
+
+    ticks = set([])
+    middle_ticks = []
+    for c in df[obs_colname].cat.categories:
+        ticks.add(df[df[obs_colname] == c][markers].index.min())
+        ticks.add(df[df[obs_colname] == c][markers].index.max() + 1)
+        middle_ticks.append(
+            (
+                df[df[obs_colname] == c][markers].index.min()
+                + (
+                    df[df[obs_colname] == c][markers].index.max()
+                    - df[df[obs_colname] == c][markers].index.min()
                 )
-            )
-        ticks = list(ticks)
-        ticks.sort()
-
-        layout.update(
-            dict(
-                xaxis=dict(
-                    title=obs_col,
-                    tickvals=middle_ticks,
-                    ticktext=list(df[obs_col].cat.categories),
-                    minor=dict(tickvals=ticks, ticks="outside", ticklen=5),
-                )
+                // 2
             )
         )
+    ticks = list(ticks)
+    ticks.sort()
+
+    layout.update(
+        dict(
+            xaxis=dict(
+                title=obs_colname
+                + " ({} bins)".format(
+                    obs_col["bins"]["nBins"] if obs_col["type"] == "continuous" else ""
+                ),
+                tickvals=middle_ticks,
+                ticktext=list(df[obs_colname].cat.categories),
+                minor=dict(tickvals=ticks, ticks="outside", ticklen=5),
+            )
+        )
+    )
 
     # To handle data above 65k rows (image limit)
     sub_dfs = split_df(df, CHUNK_SIZE)

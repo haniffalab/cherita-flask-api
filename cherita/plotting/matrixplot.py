@@ -5,13 +5,18 @@ import zarr
 import pandas as pd
 import plotly.graph_objects as go
 
-from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
+from cherita.utils.adata_utils import (
+    continuous2categorical,
+    get_group_index,
+    get_indices_in_array,
+    parse_data,
+)
 
 
 def matrixplot(
     adata_group: zarr.Group,
     markers: list[str],
-    obs_col: str,
+    obs_col: dict,
     standard_scale: str = None,
 ) -> Any:
     """Method to generate a Plotly matrixplot JSON as a Python object
@@ -20,7 +25,7 @@ def matrixplot(
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         markers (list[str]): Root zarr Group of an Anndata-Zarr object.
-        obs_col (str): The obs column to group data.
+        obs_col (dict): The obs column to group data.
         standard_scale (str, optional): Scaling method to use.
             Can be set to None, "var" or "group. Defaults to None.
 
@@ -28,12 +33,18 @@ def matrixplot(
         Any: A Plotly matrixplot JSON as a Python object
     """
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
-    obs = parse_data(adata_group.obs[obs_col])
+    obs_colname = obs_col["name"]
+    obs = parse_data(adata_group.obs[obs_colname])
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
-    df[obs_col] = obs
 
-    values_df = df.groupby(obs_col).mean()
+    if obs_col["type"] == "continuous":
+        df[obs_colname] = continuous2categorical(obs, obs_col["bins"]["thresholds"])
+
+    elif obs_col["type"] == "categorical":
+        df[obs_colname] = obs
+
+    values_df = df.groupby(obs_colname).mean()
 
     if standard_scale == "group":
         values_df = values_df.sub(values_df.min(1), axis=0)
@@ -57,7 +68,14 @@ def matrixplot(
             yaxis_type="category",
             xaxis_type="category",
             xaxis=dict(title="Markers"),
-            yaxis=dict(title=obs_col, tickvals=values_df.index, scaleanchor="x"),
+            yaxis=dict(
+                title=obs_colname
+                + " ({} bins)".format(
+                    obs_col["bins"]["nBins"] if obs_col["type"] == "continuous" else ""
+                ),
+                tickvals=values_df.index,
+                scaleanchor="x",
+            ),
         ),
     )
 

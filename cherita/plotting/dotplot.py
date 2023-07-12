@@ -7,7 +7,12 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from cherita.utils.adata_utils import get_group_index, get_indices_in_array, parse_data
+from cherita.utils.adata_utils import (
+    continuous2categorical,
+    get_group_index,
+    get_indices_in_array,
+    parse_data,
+)
 
 MARKER_PIXEL_SIZE = 50
 
@@ -15,7 +20,7 @@ MARKER_PIXEL_SIZE = 50
 def dotplot(
     adata_group: zarr.Group,
     markers: list[str],
-    obs_col: str,
+    obs_col: dict,
     expression_cutoff: float = 0.0,
     mean_only_expressed: bool = False,
     standard_scale: str = None,
@@ -38,24 +43,32 @@ def dotplot(
         Any: A Plotly dotplot JSON as a Python object
     """
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
-    obs = parse_data(adata_group.obs[obs_col])
+    obs_colname = obs_col["name"]
+    obs = parse_data(adata_group.obs[obs_colname])
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
-    df[obs_col] = obs
-    df.set_index(obs_col, append=True, inplace=True)
+    if obs_col["type"] == "continuous":
+        df[obs_colname] = continuous2categorical(obs, obs_col["bins"]["thresholds"])
+
+    elif obs_col["type"] == "categorical":
+        df[obs_colname] = obs
+
+    df.set_index(obs_colname, append=True, inplace=True)
 
     # Following Scanpy's dotplot
     # https://github.com/scverse/scanpy/blob/ed3b277b2f498e3cab04c9416aaddf97eec8c3e2/scanpy/plotting/_dotplot.py
 
     bool_df = df > expression_cutoff
 
-    dot_size_df = bool_df.groupby(obs_col).sum() / bool_df.groupby(obs_col).count()
+    dot_size_df = (
+        bool_df.groupby(obs_colname).sum() / bool_df.groupby(obs_colname).count()
+    )
 
     if mean_only_expressed:
-        dot_color_df = df.mask(~bool_df).groupby(obs_col).mean().fillna(0)
+        dot_color_df = df.mask(~bool_df).groupby(obs_colname).mean().fillna(0)
     else:
-        dot_color_df = df.groupby(obs_col).mean()
+        dot_color_df = df.groupby(obs_colname).mean()
     mean_df = dot_color_df
 
     if standard_scale == "group":
@@ -67,7 +80,7 @@ def dotplot(
     elif standard_scale is None:
         pass
 
-    x = df.index.get_level_values(obs_col).categories
+    x = df.index.get_level_values(obs_colname).categories
 
     data = [
         go.Scatter(
@@ -120,7 +133,14 @@ def dotplot(
             colorbar=dict(title=dict(text="Mean expression in group", side="right")),
         ),
         xaxis=dict(
-            title=obs_col, showline=True, linewidth=1, linecolor="black", mirror=True
+            title=obs_colname
+            + " ({} bins)".format(
+                obs_col["bins"]["nBins"] if obs_col["type"] == "continuous" else ""
+            ),
+            showline=True,
+            linewidth=1,
+            linecolor="black",
+            mirror=True,
         ),
         yaxis=dict(
             title="Markers", showline=True, linewidth=1, linecolor="black", mirror=True
