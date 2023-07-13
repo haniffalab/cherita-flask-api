@@ -5,6 +5,7 @@ from typing import Any
 import zarr
 import pandas as pd
 import plotly.graph_objects as go
+from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import (
     continuous2categorical,
@@ -43,6 +44,8 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
     Returns:
         Any: A Plotly heatmap plot JSON as a Python object
     """
+    if not isinstance(obs_col, dict):
+        raise BadRequest("'selectedObs' must be an object")
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
     obs_colname = obs_col["name"]
     obs = parse_data(adata_group.obs[obs_colname])

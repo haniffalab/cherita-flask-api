@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import (
     continuous2categorical,
@@ -42,6 +43,8 @@ def dotplot(
     Returns:
         Any: A Plotly dotplot JSON as a Python object
     """
+    if not isinstance(obs_col, dict):
+        raise BadRequest("'selectedObs' must be an object")
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
     obs_colname = obs_col["name"]
     obs = parse_data(adata_group.obs[obs_colname])

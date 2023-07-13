@@ -36,6 +36,8 @@ def violin(
         Any: A Plotly violin plot JSON as a Python object
     """
     if obs_col:
+        if not isinstance(obs_col, dict):
+            raise BadRequest("'selectedObs' must be an object")
         if not isinstance(keys, str):
             raise BadRequest(
                 "'keys' parameter should be a single string item"
