@@ -195,5 +195,5 @@ def continuous2categorical(
     s: pd.Series, thresholds: list[Union[int, float]], start: int = 1
 ):
     return pd.Categorical(
-        pd.cut(s, [s.min()] + thresholds, include_lowest=True, labels=False) + start
+        pd.cut(s, thresholds, include_lowest=True, labels=False) + start
     )
