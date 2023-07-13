@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import (
+    continuous2categorical,
     get_group_index,
     get_index_in_array,
     get_indices_in_array,
@@ -17,7 +18,7 @@ from cherita.utils.adata_utils import (
 def violin(
     adata_group: zarr.Group,
     keys: Union[str, list[str]],
-    obs_col: str = None,
+    obs_col: dict = None,
     scale: str = "width",
 ) -> Any:
     """Method to generate a Plotly violin plot JSON as a Python object
@@ -26,7 +27,7 @@ def violin(
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         keys (list[str], optional): Keys of .var_names or numerical obs columns.
-        obs_col (str, optional): Obs colum to group by. Defaults to None.
+        obs_col (dict, optional): Obs colum to group by. Defaults to None.
         standard_scale (str, optional): Method to scale each violin's width.
             Can be set to "width" or "count".
             Defaults to "width".
@@ -35,28 +36,47 @@ def violin(
         Any: A Plotly violin plot JSON as a Python object
     """
     if obs_col:
+        if not isinstance(obs_col, dict):
+            raise BadRequest("'selectedObs' must be an object")
         if not isinstance(keys, str):
             raise BadRequest(
                 "'keys' parameter should be a single string item"
                 "when grouping by an observation"
             )
         marker_idx = get_index_in_array(get_group_index(adata_group.var), keys)
+        obs_colname = obs_col["name"]
         df = pd.DataFrame(adata_group.X[:, marker_idx], columns=[keys])
 
-        obs = parse_data(adata_group.obs[obs_col])
-        df[obs_col] = obs
+        obs = parse_data(adata_group.obs[obs_colname])
+
+        if obs_col["type"] == "continuous":
+            df[obs_colname] = continuous2categorical(obs, obs_col["bins"]["thresholds"])
+
+        elif obs_col["type"] == "categorical":
+            df[obs_colname] = obs
 
         violins = []
-        for c in df[obs_col].cat.categories:
+        for c in df[obs_colname].cat.categories:
             violin = go.Violin(
-                y=df[keys][df[obs_col] == c],
+                y=df[keys][df[obs_colname] == c],
                 name=c,
                 scalegroup="group" if scale == "count" else None,
             )
             violins.append(violin)
 
         fig = go.Figure(
-            data=violins, layout=dict(yaxis=dict(title=keys), xaxis=dict(title=obs_col))
+            data=violins,
+            layout=dict(
+                yaxis=dict(title=keys),
+                xaxis=dict(
+                    title=obs_colname
+                    + (
+                        " ({} bins)".format(obs_col["bins"]["nBins"])
+                        if obs_col["type"] == "continuous"
+                        else ""
+                    ),
+                ),
+            ),
         )
 
     else:
