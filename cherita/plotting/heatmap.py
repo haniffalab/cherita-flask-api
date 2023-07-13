@@ -82,8 +82,10 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
         dict(
             xaxis=dict(
                 title=obs_colname
-                + " ({} bins)".format(
-                    obs_col["bins"]["nBins"] if obs_col["type"] == "continuous" else ""
+                + (
+                    " ({} bins)".format(obs_col["bins"]["nBins"])
+                    if obs_col["type"] == "continuous"
+                    else ""
                 ),
                 tickvals=middle_ticks,
                 ticktext=list(df[obs_colname].cat.categories),

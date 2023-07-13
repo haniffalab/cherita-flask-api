@@ -134,8 +134,10 @@ def dotplot(
         ),
         xaxis=dict(
             title=obs_colname
-            + " ({} bins)".format(
-                obs_col["bins"]["nBins"] if obs_col["type"] == "continuous" else ""
+            + (
+                " ({} bins)".format(obs_col["bins"]["nBins"])
+                if obs_col["type"] == "continuous"
+                else ""
             ),
             showline=True,
             linewidth=1,

@@ -70,8 +70,10 @@ def matrixplot(
             xaxis=dict(title="Markers"),
             yaxis=dict(
                 title=obs_colname
-                + " ({} bins)".format(
-                    obs_col["bins"]["nBins"] if obs_col["type"] == "continuous" else ""
+                + (
+                    " ({} bins)".format(obs_col["bins"]["nBins"])
+                    if obs_col["type"] == "continuous"
+                    else ""
                 ),
                 tickvals=values_df.index,
                 scaleanchor="x",

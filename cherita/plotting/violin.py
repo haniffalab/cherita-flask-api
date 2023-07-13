@@ -68,11 +68,11 @@ def violin(
                 yaxis=dict(title=keys),
                 xaxis=dict(
                     title=obs_colname
-                    + " ({} bins)".format(
-                        obs_col["bins"]["nBins"]
+                    + (
+                        " ({} bins)".format(obs_col["bins"]["nBins"])
                         if obs_col["type"] == "continuous"
                         else ""
-                    )
+                    ),
                 ),
             ),
         )
