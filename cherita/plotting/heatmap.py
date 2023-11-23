@@ -8,10 +8,10 @@ import plotly.graph_objects as go
 from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import (
-    continuous2categorical,
     get_group_index,
     get_indices_in_array,
     parse_data,
+    to_categorical,
 )
 
 CHUNK_SIZE = 60000
@@ -54,11 +54,7 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
 
     layout = dict(yaxis=dict(title="Markers"))
 
-    if obs_col["type"] == "continuous":
-        df[obs_colname] = continuous2categorical(obs, obs_col["bins"]["thresholds"])
-
-    elif obs_col["type"] == "categorical":
-        df[obs_colname] = obs
+    df[obs_colname] = to_categorical(obs, **obs_col)
 
     df = df.sort_values(by=[obs_colname])
     df = df.reset_index()

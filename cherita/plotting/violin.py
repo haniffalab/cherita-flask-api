@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import (
-    continuous2categorical,
+    to_categorical,
     get_group_index,
     get_index_in_array,
     get_indices_in_array,
@@ -49,11 +49,7 @@ def violin(
 
         obs = parse_data(adata_group.obs[obs_colname])
 
-        if obs_col["type"] == "continuous":
-            df[obs_colname] = continuous2categorical(obs, obs_col["bins"]["thresholds"])
-
-        elif obs_col["type"] == "categorical":
-            df[obs_colname] = obs
+        df[obs_colname] = to_categorical(obs, **obs_col)
 
         violins = []
         for c in df[obs_colname].cat.categories:

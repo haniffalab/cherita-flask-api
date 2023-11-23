@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import (
-    continuous2categorical,
+    to_categorical,
     get_group_index,
     get_indices_in_array,
     parse_data,
@@ -41,11 +41,7 @@ def matrixplot(
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
-    if obs_col["type"] == "continuous":
-        df[obs_colname] = continuous2categorical(obs, obs_col["bins"]["thresholds"])
-
-    elif obs_col["type"] == "categorical":
-        df[obs_colname] = obs
+    df[obs_colname] = to_categorical(obs, **obs_col)
 
     values_df = df.groupby(obs_colname).mean()
 

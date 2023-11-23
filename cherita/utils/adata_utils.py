@@ -34,9 +34,9 @@ def get_indices_in_array(array: zarr.Array, items: list[str]):
 
 
 def parse_data(data: Union[zarr.Group, zarr.Array], store: zarr.Group = None):
-    if type(data) == zarr.Group:
+    if isinstance(data, zarr.Group):
         return parse_group(data)
-    elif type(data) == zarr.Array:
+    elif isinstance(data, zarr.Array):
         return parse_array(data, store)
 
 
@@ -115,22 +115,16 @@ def open_anndata_zarr(url: str):
 def type_category(obs):
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
 
-    if len(categories) > 100:
-        return {
-            "type": "categorical",
-            "is_truncated": True,
-            "values": categories[:99],
-        }
-
     return {
-        "type": "categorical",
-        "is_truncated": False,
-        "values": categories,
+        "type": "discrete",
+        "is_truncated": True,
+        "values": categories[:99] if len(categories) > 100 else categories,
+        "n_values": len(categories),
     }
 
 
 def type_bool(obs):
-    return {"type": "categorical", "values": {1: "True", 0: "False"}}
+    return {"type": "bool", "values": {1: "True", 0: "False"}}
 
 
 def type_numeric(obs):
@@ -145,7 +139,15 @@ def type_numeric(obs):
 
 
 def type_discrete(obs):
-    return {"type": "discrete"}
+    obs = obs.astype("category")
+    categories = [str(i) for i in obs.cat.categories.values.flatten()]
+
+    return {
+        "type": "discrete",
+        "is_truncated": True,
+        "values": categories[:99] if len(categories) > 100 else categories,
+        "n_values": len(categories),
+    }
 
 
 def ndarray_max(a):
@@ -191,9 +193,39 @@ def encode_dtype(a):
         return a
 
 
+def to_categorical(data: Union[pd.Series, np.Array], type: str, **kwargs):
+    func_dict = {
+        "continuous": continuous2categorical,
+        "discrete": discrete2categorical,
+        "bool": bool2categorical,
+    }
+
+    return func_dict.get(type, lambda data, **kwargs: data)(data, **kwargs)
+
+
 def continuous2categorical(
-    s: pd.Series, thresholds: list[Union[int, float]], start: int = 1
+    s: pd.Series,
+    thresholds: list[Union[int, float]] = None,
+    nBins: int = 20,
+    start: int = 1,
+    **kwargs,
 ):
-    return pd.Categorical(
-        pd.cut(s, thresholds, include_lowest=True, labels=False) + start
+    return (
+        pd.Categorical(pd.cut(s, thresholds, include_lowest=True, labels=False) + start)
+        if thresholds
+        else pd.Categorical(pd.cut(s, nBins, include_lowest=True, labels=False))
     )
+
+
+def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwargs):
+    s = pd.Series(array).astype("category")
+    if nBins >= len(s.cat.categories):
+        return s
+    else:
+        return pd.Categorical(
+            pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
+        )
+
+
+def bool2categorical(array: np.Array, **kwargs):
+    return pd.Series(array).astype("category")
