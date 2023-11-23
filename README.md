@@ -1,5 +1,7 @@
 ## Development
 
+Requires Python3.10
+
 Create a development environment with the `requirements.txt` file
 
 ```sh
