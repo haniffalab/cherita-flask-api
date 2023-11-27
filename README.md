@@ -21,3 +21,15 @@ Run the API
 ```sh
 python -m flask run
 ```
+
+You can enable debugging mode with
+
+```sh
+python -m flask run --debug
+```
+
+You can set a specific port for the API with the `-p` flag
+
+```sh
+python -m flask run -p 8001
+```
