@@ -44,6 +44,7 @@ def dotplot(
         Any: A Plotly dotplot JSON as a Python object
     """
     if not isinstance(obs_col, dict):
+        print(obs_col)
         raise BadRequest("'selectedObs' must be an object")
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
     obs_colname = obs_col["name"]
@@ -61,13 +62,16 @@ def dotplot(
     bool_df = df > expression_cutoff
 
     dot_size_df = (
-        bool_df.groupby(obs_colname).sum() / bool_df.groupby(obs_colname).count()
+        bool_df.groupby(obs_colname, observed=False).sum()
+        / bool_df.groupby(obs_colname, observed=False).count()
     )
 
     if mean_only_expressed:
-        dot_color_df = df.mask(~bool_df).groupby(obs_colname).mean().fillna(0)
+        dot_color_df = (
+            df.mask(~bool_df).groupby(obs_colname, observed=False).mean().fillna(0)
+        )
     else:
-        dot_color_df = df.groupby(obs_colname).mean()
+        dot_color_df = df.groupby(obs_colname, observed=False).mean()
     mean_df = dot_color_df
 
     if standard_scale == "group":

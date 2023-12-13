@@ -47,3 +47,8 @@ def get_var_names(adata_group: zarr.Group, col: str = None):
     var_df.reset_index(names=[INDEX_NAME], inplace=True)
     var_df.sort_values(by=[COL_NAME], inplace=True)
     return var_df.to_dict("records", index=True)
+
+
+def get_obsm_keys(adata_group: zarr.Group):
+    obsm_keys = list(adata_group.obsm.keys())
+    return obsm_keys

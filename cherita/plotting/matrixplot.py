@@ -43,7 +43,7 @@ def matrixplot(
 
     df[obs_colname] = to_categorical(obs, **obs_col)
 
-    values_df = df.groupby(obs_colname).mean()
+    values_df = df.groupby(obs_colname, observed=False).mean()
 
     if standard_scale == "group":
         values_df = values_df.sub(values_df.min(1), axis=0)
