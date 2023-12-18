@@ -214,7 +214,7 @@ def to_categorical(data: Union[pd.Series, np.Array], type: str, **kwargs):
         "bool": bool2categorical,
     }
 
-    return func_dict.get(type, lambda data, **kwargs: data)(data, **kwargs)
+    return func_dict.get(type, lambda data, **kwargs: (data, None))(data, **kwargs)
 
 
 def continuous2categorical(
@@ -228,18 +228,21 @@ def continuous2categorical(
         pd.Categorical(pd.cut(s, thresholds, include_lowest=True, labels=False) + start)
         if thresholds
         else pd.Categorical(pd.cut(s, nBins, include_lowest=True, labels=False))
-    )
+    ), nBins
 
 
 def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwargs):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
-        return s
+        return s, None
     else:
-        return pd.Categorical(
-            pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
+        return (
+            pd.Categorical(
+                pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
+            ),
+            nBins,
         )
 
 
 def bool2categorical(array: np.Array, **kwargs):
-    return pd.Series(array).astype("category")
+    return pd.Series(array).astype("category"), None

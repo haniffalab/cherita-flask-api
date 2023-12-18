@@ -41,7 +41,7 @@ def matrixplot(
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
-    df[obs_colname] = to_categorical(obs, **obs_col)
+    df[obs_colname], bins = to_categorical(obs, **obs_col)
 
     values_df = df.groupby(obs_colname, observed=False).mean()
 
@@ -69,12 +69,7 @@ def matrixplot(
             xaxis_type="category",
             xaxis=dict(title="Markers", tickvals=values_df.columns),
             yaxis=dict(
-                title=obs_colname
-                + (
-                    " ({} bins)".format(obs_col["bins"]["nBins"])
-                    if obs_col["type"] == "continuous"
-                    else ""
-                ),
+                title=obs_colname + (f" ({bins} bins)" if bins else ""),
                 tickvals=values_df.index,
                 scaleanchor="x",
             ),

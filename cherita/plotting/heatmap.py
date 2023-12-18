@@ -54,7 +54,7 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
 
     layout = dict(yaxis=dict(title="Markers"))
 
-    df[obs_colname] = to_categorical(obs, **obs_col)
+    df[obs_colname], bins = to_categorical(obs, **obs_col)
 
     df = df.sort_values(by=[obs_colname])
     df = df.reset_index()
@@ -80,12 +80,7 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
     layout.update(
         dict(
             xaxis=dict(
-                title=obs_colname
-                + (
-                    " ({} bins)".format(obs_col["bins"]["nBins"])
-                    if obs_col["type"] == "continuous"
-                    else ""
-                ),
+                title=obs_colname + (f" ({bins} bins)" if bins else ""),
                 tickvals=middle_ticks,
                 ticktext=list(df[obs_colname].cat.categories),
                 minor=dict(tickvals=ticks, ticks="outside", ticklen=5),

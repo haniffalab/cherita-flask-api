@@ -44,7 +44,6 @@ def dotplot(
         Any: A Plotly dotplot JSON as a Python object
     """
     if not isinstance(obs_col, dict):
-        print(obs_col)
         raise BadRequest("'selectedObs' must be an object")
     marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
     obs_colname = obs_col["name"]
@@ -52,7 +51,7 @@ def dotplot(
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
-    df[obs_colname] = to_categorical(obs, **obs_col)
+    df[obs_colname], bins = to_categorical(obs, **obs_col)
 
     df.set_index(obs_colname, append=True, inplace=True)
 
@@ -136,12 +135,7 @@ def dotplot(
             colorbar=dict(title=dict(text="Mean expression in group", side="right")),
         ),
         xaxis=dict(
-            title=obs_colname
-            + (
-                " ({} bins)".format(obs_col["bins"]["nBins"])
-                if obs_col["type"] == "continuous"
-                else ""
-            ),
+            title=obs_colname + (f" ({bins} bins)" if bins else ""),
             showline=True,
             linewidth=1,
             linecolor="black",
