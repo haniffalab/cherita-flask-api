@@ -6,7 +6,6 @@ from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.dataset.metadata import (
     get_obs_col_names,
     get_obs_col_metadata,
-    get_obsm_keys,
     get_var_col_names,
     get_var_names,
     get_obsm_keys,
@@ -68,18 +67,6 @@ class VarNames(Resource):
             adata_group = open_anndata_zarr(json_data["url"])
             col = json_data["col"] if "col" in json_data else None
             return jsonify(get_var_names(adata_group, col))
-        except BadRequest as e:
-            raise e
-        except KeyError as e:
-            raise BadRequest("Missing required parameter: {}".format(e))
-
-
-class ObsmKeys(Resource):
-    def post(self):
-        json_data = request.get_json()
-        try:
-            adata_group = open_anndata_zarr(json_data["url"])
-            return jsonify(get_obsm_keys(adata_group))
         except BadRequest as e:
             raise e
         except KeyError as e:
