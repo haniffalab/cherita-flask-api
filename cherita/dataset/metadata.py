@@ -25,6 +25,10 @@ def get_obs_col_names(adata_group: zarr.Group):
     return obs_col_names
 
 
+def get_obsm_keys(adata_group: zarr.Group):
+    return list(adata_group.obsm)
+
+
 def get_obs_col_metadata(adata_group: zarr.Group):
     obs_df = parse_data(adata_group.obs)
     obs_metadata = []
