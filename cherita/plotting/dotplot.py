@@ -51,7 +51,7 @@ def dotplot(
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
-    df[obs_colname] = to_categorical(obs, **obs_col)
+    df[obs_colname], bins = to_categorical(obs, **obs_col)
 
     df.set_index(obs_colname, append=True, inplace=True)
 
@@ -61,13 +61,16 @@ def dotplot(
     bool_df = df > expression_cutoff
 
     dot_size_df = (
-        bool_df.groupby(obs_colname).sum() / bool_df.groupby(obs_colname).count()
+        bool_df.groupby(obs_colname, observed=False).sum()
+        / bool_df.groupby(obs_colname, observed=False).count()
     )
 
     if mean_only_expressed:
-        dot_color_df = df.mask(~bool_df).groupby(obs_colname).mean().fillna(0)
+        dot_color_df = (
+            df.mask(~bool_df).groupby(obs_colname, observed=False).mean().fillna(0)
+        )
     else:
-        dot_color_df = df.groupby(obs_colname).mean()
+        dot_color_df = df.groupby(obs_colname, observed=False).mean()
     mean_df = dot_color_df
 
     if standard_scale == "group":
@@ -132,12 +135,7 @@ def dotplot(
             colorbar=dict(title=dict(text="Mean expression in group", side="right")),
         ),
         xaxis=dict(
-            title=obs_colname
-            + (
-                " ({} bins)".format(obs_col["bins"]["nBins"])
-                if obs_col["type"] == "continuous"
-                else ""
-            ),
+            title=obs_colname + (f" ({bins} bins)" if bins else ""),
             showline=True,
             linewidth=1,
             linecolor="black",

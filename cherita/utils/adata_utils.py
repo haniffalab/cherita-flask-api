@@ -41,8 +41,10 @@ def parse_data(data: Union[zarr.Group, zarr.Array], store: zarr.Group = None):
 
 
 def parse_group(group: zarr.Group):
-    if "_index" in group.attrs:
-        df = pd.DataFrame(index=group[group.attrs["_index"]])
+    encoding_type = group.attrs.get("encoding-type", "")
+    if encoding_type == "dataframe":
+        if "_index" in group.attrs:
+            df = pd.DataFrame(index=group[group.attrs["_index"]])
         for name in [
             name
             for name in group.array_keys()
@@ -52,15 +54,27 @@ def parse_group(group: zarr.Group):
         for name in group.group_keys():
             df[name] = parse_group(group[name])
         return df
-    elif "codes" in group and "categories" in group:
-        series = pd.Categorical.from_codes(
-            group["codes"][:], categories=group["categories"][:]
-        )
-        if np.array_equal(
-            np.sort(series.categories.values), np.sort(["True", "False"])
-        ):
-            return series.map({"True": True, "False": False}).astype(bool)
-        return series
+    elif encoding_type == "categorical":
+        if "codes" in group and "categories" in group:
+            series = pd.Categorical.from_codes(
+                group["codes"][:], categories=group["categories"][:]
+            )
+            if np.array_equal(
+                np.sort(series.categories.values), np.sort(["True", "False"])
+            ):
+                return series.map({"True": True, "False": False}).astype(bool)
+            return series
+        else:
+            raise SystemError(
+                f"Categorical group {group} does not contain 'codes' and 'categories'"
+            )
+    elif encoding_type == "dict":
+        d = {}
+        for k in group.keys():
+            d[k] = parse_data(group[k])
+        return d
+    else:
+        raise SystemError(f"Unrecognized encoding-type {encoding_type}")
 
 
 def parse_array(array: zarr.Array, store: zarr.Group = None):
@@ -116,7 +130,7 @@ def type_category(obs):
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
 
     return {
-        "type": "discrete",
+        "type": "categorical",
         "is_truncated": True,
         "values": categories[:99] if len(categories) > 100 else categories,
         "n_values": len(categories),
@@ -200,7 +214,7 @@ def to_categorical(data: Union[pd.Series, np.Array], type: str, **kwargs):
         "bool": bool2categorical,
     }
 
-    return func_dict.get(type, lambda data, **kwargs: data)(data, **kwargs)
+    return func_dict.get(type, lambda data, **kwargs: (data, None))(data, **kwargs)
 
 
 def continuous2categorical(
@@ -214,18 +228,21 @@ def continuous2categorical(
         pd.Categorical(pd.cut(s, thresholds, include_lowest=True, labels=False) + start)
         if thresholds
         else pd.Categorical(pd.cut(s, nBins, include_lowest=True, labels=False))
-    )
+    ), nBins
 
 
 def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwargs):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
-        return s
+        return s, None
     else:
-        return pd.Categorical(
-            pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
+        return (
+            pd.Categorical(
+                pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
+            ),
+            nBins,
         )
 
 
 def bool2categorical(array: np.Array, **kwargs):
-    return pd.Series(array).astype("category")
+    return pd.Series(array).astype("category"), None

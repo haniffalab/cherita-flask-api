@@ -49,7 +49,7 @@ def violin(
 
         obs = parse_data(adata_group.obs[obs_colname])
 
-        df[obs_colname] = to_categorical(obs, **obs_col)
+        df[obs_colname], bins = to_categorical(obs, **obs_col)
 
         violins = []
         for c in df[obs_colname].cat.categories:
@@ -65,12 +65,7 @@ def violin(
             layout=dict(
                 yaxis=dict(title=keys),
                 xaxis=dict(
-                    title=obs_colname
-                    + (
-                        " ({} bins)".format(obs_col["bins"]["nBins"])
-                        if obs_col["type"] == "continuous"
-                        else ""
-                    ),
+                    title=obs_colname + (f" ({bins} bins)" if bins else ""),
                 ),
             ),
         )
