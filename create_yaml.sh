@@ -5,7 +5,7 @@ FILE="app.yaml"
 runtime: python39
 service: $APP_SERVICE
 service_account: $SERVICE_ACCOUNT
-entrypoint: gunicorn -b $PORT -w 2 'cherita:create_app()'
+entrypoint: gunicorn -b :$PORT -w 2 'cherita:create_app()'
 env_variables:
   FLASK_APP: $FLASK_APP
 automatic_scaling:
