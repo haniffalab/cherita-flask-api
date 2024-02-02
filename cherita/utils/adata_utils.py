@@ -7,7 +7,7 @@ from zarr.errors import GroupNotFoundError
 from typing import Union
 from urllib.parse import urlparse, ParseResult
 
-from cherita.resources.errors import BadRequest
+from cherita.resources.errors import ReadZarrError, InvalidKey
 
 
 def get_group_index(group: zarr.Group):
@@ -25,19 +25,27 @@ def get_group_index_name(group: zarr.Group):
 
 
 def get_index_in_array(array: zarr.Array, item: str):
-    return np.where(array[:] == item)[0][0]
+    try:
+        return np.where(array[:] == item)[0][0]
+    except Exception:
+        raise InvalidKey(f"Invalid key: {item}")
 
 
 def get_indices_in_array(array: zarr.Array, items: list[str]):
+    if not set(items).issubset(array[:]):
+        raise InvalidKey(f"Invalid keys: {items}")
     sorter = np.argsort(array[:])
     return sorter[np.searchsorted(array[:], items, sorter=sorter)]
 
 
 def parse_data(data: Union[zarr.Group, zarr.Array], store: zarr.Group = None):
-    if isinstance(data, zarr.Group):
-        return parse_group(data)
-    elif isinstance(data, zarr.Array):
-        return parse_array(data, store)
+    try:
+        if isinstance(data, zarr.Group):
+            return parse_group(data)
+        elif isinstance(data, zarr.Array):
+            return parse_array(data, store)
+    except KeyError as e:
+        raise InvalidKey(f"Invalid key: {e}")
 
 
 def parse_group(group: zarr.Group):
@@ -65,7 +73,7 @@ def parse_group(group: zarr.Group):
                 return series.map({"True": True, "False": False}).astype(bool)
             return series
         else:
-            raise SystemError(
+            raise ReadZarrError(
                 f"Categorical group {group} does not contain 'codes' and 'categories'"
             )
     elif encoding_type == "dict":
@@ -74,7 +82,7 @@ def parse_group(group: zarr.Group):
             d[k] = parse_data(group[k])
         return d
     else:
-        raise SystemError(f"Unrecognized encoding-type {encoding_type}")
+        raise ReadZarrError(f"Unrecognized encoding-type {encoding_type}")
 
 
 def parse_array(array: zarr.Array, store: zarr.Group = None):
@@ -121,7 +129,7 @@ def open_anndata_zarr(url: str):
                 url, storage_options=storage_options, mode="r"
             )
         except GroupNotFoundError:
-            raise BadRequest("Cannot open Anndata Zarr at URL {}".format(url))
+            raise ReadZarrError(f"Cannot open Anndata Zarr at URL {url}")
 
     return adata_group
 
