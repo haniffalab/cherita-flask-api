@@ -4,7 +4,7 @@ from typing import Any
 import zarr
 import pandas as pd
 import plotly.graph_objects as go
-from cherita.resources.errors import BadRequest
+from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
 
 from cherita.utils.adata_utils import (
     to_categorical,
@@ -35,9 +35,17 @@ def matrixplot(
     """
     if not isinstance(obs_col, dict):
         raise BadRequest("'selectedObs' must be an object")
-    marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
+
+    try:
+        marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
+    except InvalidKey:
+        raise InvalidVar(f"Invalid features {markers}")
+
     obs_colname = obs_col["name"]
-    obs = parse_data(adata_group.obs[obs_colname])
+    try:
+        obs = parse_data(adata_group.obs[obs_colname])
+    except KeyError as e:
+        raise InvalidObs(f"Invalid observation {e}")
 
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 

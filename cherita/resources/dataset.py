@@ -22,6 +22,8 @@ class ObsColsNames(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class ObsCols(Resource):
@@ -34,6 +36,8 @@ class ObsCols(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class ObsmKeys(Resource):
@@ -46,6 +50,8 @@ class ObsmKeys(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class VarColsNames(Resource):
@@ -58,6 +64,8 @@ class VarColsNames(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class VarNames(Resource):
@@ -71,3 +79,5 @@ class VarNames(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
