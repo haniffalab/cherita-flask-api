@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from typing import Any
 import zarr
+import logging
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -170,10 +171,17 @@ def dotplot(
         ),
     )
 
-    data_values_range = {
-        "min": float(dot_color_df.values.min()),
-        "max": float(dot_color_df.values.max()),
-    }
+    try:
+        data_values_range = {
+            "min": float(dot_color_df.values.min()),
+            "max": float(dot_color_df.values.max()),
+        }
+    except ValueError as e:
+        logging.warning(e)
+        data_values_range = {
+            "min": 0,
+            "max": 0,
+        }
 
     response_obj = json.loads(fig.to_json())
     response_obj["range"] = data_values_range
