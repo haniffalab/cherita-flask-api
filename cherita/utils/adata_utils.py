@@ -134,6 +134,7 @@ def type_category(obs):
         "is_truncated": True,
         "values": categories[:99] if len(categories) > 100 else categories,
         "n_values": len(categories),
+        "state": {},
     }
 
 
@@ -161,6 +162,7 @@ def type_discrete(obs):
         "is_truncated": True,
         "values": categories[:99] if len(categories) > 100 else categories,
         "n_values": len(categories),
+        "state": {},
     }
 
 
