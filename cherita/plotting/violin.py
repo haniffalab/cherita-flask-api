@@ -4,7 +4,7 @@ from typing import Union, Any
 import zarr
 import pandas as pd
 import plotly.graph_objects as go
-from cherita.resources.errors import BadRequest
+from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
 
 from cherita.utils.adata_utils import (
     to_categorical,
@@ -43,11 +43,19 @@ def violin(
                 "'keys' parameter should be a single string item"
                 "when grouping by an observation"
             )
-        marker_idx = get_index_in_array(get_group_index(adata_group.var), keys)
-        obs_colname = obs_col["name"]
-        df = pd.DataFrame(adata_group.X[:, marker_idx], columns=[keys])
 
-        obs = parse_data(adata_group.obs[obs_colname])
+        try:
+            marker_idx = get_index_in_array(get_group_index(adata_group.var), keys)
+        except InvalidKey:
+            raise InvalidVar(f"Invalid features {keys}")
+
+        obs_colname = obs_col["name"]
+        try:
+            obs = parse_data(adata_group.obs[obs_colname])
+        except KeyError as e:
+            raise InvalidObs(f"Invalid observation {e}")
+
+        df = pd.DataFrame(adata_group.X[:, marker_idx], columns=[keys])
 
         df[obs_colname], bins = to_categorical(obs, **obs_col)
 
@@ -77,7 +85,13 @@ def violin(
         var_keys = list(parse_data(adata_group.var).index.intersection(keys))
         obs_keys = list(set(adata_group.obs.attrs["column-order"]).intersection(keys))
 
-        marker_idx = get_indices_in_array(get_group_index(adata_group.var), var_keys)
+        try:
+            marker_idx = get_indices_in_array(
+                get_group_index(adata_group.var), var_keys
+            )
+        except InvalidKey:
+            raise InvalidVar(f"Invalid features {var_keys}")
+
         df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=var_keys)
 
         # Only numerical obs

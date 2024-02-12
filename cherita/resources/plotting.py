@@ -25,6 +25,8 @@ class Heatmap(Resource):
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
 
 
 class Dotplot(Resource):
@@ -46,6 +48,8 @@ class Dotplot(Resource):
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
 
 
 class Matrixplot(Resource):
@@ -65,6 +69,8 @@ class Matrixplot(Resource):
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
 
 
 class Violin(Resource):
@@ -84,3 +90,5 @@ class Violin(Resource):
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
