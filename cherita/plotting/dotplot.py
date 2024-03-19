@@ -1,6 +1,6 @@
 from __future__ import annotations
 import json
-from typing import Any
+from typing import Union, Any
 import zarr
 import logging
 import pandas as pd
@@ -21,18 +21,19 @@ MARKER_PIXEL_SIZE = 50
 
 def dotplot(
     adata_group: zarr.Group,
-    markers: list[str],
+    markers: Union[list[int], list[str]],
     obs_col: dict,
     expression_cutoff: float = 0.0,
     mean_only_expressed: bool = False,
     standard_scale: str = None,
+    var_names_col: str = None,
 ) -> Any:
     """Method to generate a Plotly dotplot JSON as a Python object
     from an Anndata-Zarr object.
 
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
-        markers (list[str]): Root zarr Group of an Anndata-Zarr object
+        markers (Union[list[int], list[str]]): List of markers present in var.
         obs_col (str): The obs column to group data
         expression_cutoff (float, optional): Minimum expression value to consider
             if mean_only_expressed is set to True. Defaults to 0.0.
@@ -40,6 +41,8 @@ def dotplot(
             above the expression cutoff. Defaults to False.
         standard_scale (str, optional): Scaling method to use.
             Can be set to None, "var" or "group. Defaults to None.
+        var_names_col (str, optional): Column in var to pull markers' names from.
+            Defaults to None.
 
     Returns:
         Any: A Plotly dotplot JSON as a Python object
@@ -47,10 +50,23 @@ def dotplot(
     if not isinstance(obs_col, dict):
         raise BadRequest("'selectedObs' must be an object")
 
-    try:
-        marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
-    except InvalidKey:
-        raise InvalidVar(f"Invalid features {markers}")
+    if not all(isinstance(x, int) for x in markers) and not all(
+        isinstance(x, str) for x in markers
+    ):
+        raise InvalidVar("List of features should be all of the same type str or int")
+
+    if isinstance(markers[0], str):
+        try:
+            marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
+        except InvalidKey:
+            raise InvalidVar(f"Invalid feature name {markers}")
+    else:
+        marker_idx = markers
+
+    if var_names_col:
+        markers = adata_group.var[var_names_col][marker_idx]
+    else:
+        markers = get_group_index(adata_group.var)[marker_idx]
 
     obs_colname = obs_col["name"]
     try:

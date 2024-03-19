@@ -1,7 +1,7 @@
 from __future__ import annotations
 import math
 import json
-from typing import Any
+from typing import Union, Any
 import zarr
 import pandas as pd
 import plotly.graph_objects as go
@@ -32,14 +32,21 @@ def split_df(df, chunk_size):
     return chunks
 
 
-def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
+def heatmap(
+    adata_group: zarr.Group,
+    markers: Union[list[int], list[str]],
+    obs_col: dict,
+    var_names_col: str = None,
+) -> Any:
     """Method to generate a Plotly heatmap plot JSON as a Python object
     from an Anndata-Zarr object.
 
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
-        markers (list[str]): List of markers present in var.
+        markers (Union[list[int], list[str]]): List of markers present in var.
         obs_col (dict): The obs column to group data
+        var_names_col (str, optional): Column in var to pull markers' names from.
+            Defaults to None.
 
     Returns:
         Any: A Plotly heatmap plot JSON as a Python object
@@ -47,10 +54,23 @@ def heatmap(adata_group: zarr.Group, markers: list[str], obs_col: dict) -> Any:
     if not isinstance(obs_col, dict):
         raise BadRequest("'selectedObs' must be an object")
 
-    try:
-        marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
-    except InvalidKey:
-        raise InvalidVar(f"Invalid features {markers}")
+    if not all(isinstance(x, int) for x in markers) and not all(
+        isinstance(x, str) for x in markers
+    ):
+        raise InvalidVar("List of features should be all of the same type str or int")
+
+    if isinstance(markers[0], str):
+        try:
+            marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
+        except InvalidKey:
+            raise InvalidVar(f"Invalid feature name {markers}")
+    else:
+        marker_idx = markers
+
+    if var_names_col:
+        markers = adata_group.var[var_names_col][marker_idx]
+    else:
+        markers = get_group_index(adata_group.var)[marker_idx]
 
     obs_colname = obs_col["name"]
     try:

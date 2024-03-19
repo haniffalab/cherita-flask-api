@@ -73,7 +73,7 @@ class VarNames(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            col = json_data["col"] if "col" in json_data else None
+            col = json_data.get("col", None)
             return jsonify(get_var_names(adata_group, col))
         except BadRequest as e:
             raise e

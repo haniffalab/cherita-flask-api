@@ -19,6 +19,7 @@ class Heatmap(Resource):
                     adata_group=adata_group,
                     markers=json_data["selectedMultiVar"],
                     obs_col=json_data["selectedObs"],
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:
@@ -42,6 +43,7 @@ class Dotplot(Resource):
                     mean_only_expressed=json_data.get("meanOnlyExpressed", False),
                     expression_cutoff=json_data.get("expressionCutoff", 0.0),
                     standard_scale=json_data.get("standardScale", None),
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:
@@ -63,6 +65,7 @@ class Matrixplot(Resource):
                     markers=json_data["selectedMultiVar"],
                     obs_col=json_data["selectedObs"],
                     standard_scale=json_data.get("standardScale", None),
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:
@@ -84,6 +87,7 @@ class Violin(Resource):
                     keys=json_data["keys"],
                     obs_col=json_data.get("selectedObs", None),
                     scale=json_data.get("scale", None),
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:

@@ -9,7 +9,6 @@ from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, Invalid
 from cherita.utils.adata_utils import (
     to_categorical,
     get_group_index,
-    get_index_in_array,
     get_indices_in_array,
     parse_data,
 )
@@ -17,20 +16,23 @@ from cherita.utils.adata_utils import (
 
 def violin(
     adata_group: zarr.Group,
-    keys: Union[str, list[str]],
+    keys: Union[list[int], list[str]],
     obs_col: dict = None,
     scale: str = "width",
+    var_names_col: str = None,
 ) -> Any:
     """Method to generate a Plotly violin plot JSON as a Python object
     from an Anndata-Zarr object.
 
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
-        keys (list[str], optional): Keys of .var_names or numerical obs columns.
+        keys (Union[list[int], list[str]]): Keys of .var_names or numerical obs columns.
         obs_col (dict, optional): Obs colum to group by. Defaults to None.
         standard_scale (str, optional): Method to scale each violin's width.
             Can be set to "width" or "count".
             Defaults to "width".
+        var_names_col (str, optional): Column in var to pull markers' names from.
+            Defaults to None.
 
     Returns:
         Any: A Plotly violin plot JSON as a Python object
@@ -44,10 +46,27 @@ def violin(
                 "when grouping by an observation"
             )
 
-        try:
-            marker_idx = get_index_in_array(get_group_index(adata_group.var), keys)
-        except InvalidKey:
-            raise InvalidVar(f"Invalid features {keys}")
+        if not all(isinstance(x, int) for x in keys) and not all(
+            isinstance(x, str) for x in keys
+        ):
+            raise InvalidVar(
+                "List of features should be all of the same type str or int"
+            )
+
+        if isinstance(keys[0], str):
+            try:
+                marker_idx = get_indices_in_array(
+                    get_group_index(adata_group.var), keys
+                )
+            except InvalidKey:
+                raise InvalidVar(f"Invalid feature name {keys}")
+        else:
+            marker_idx = keys
+
+        if var_names_col:
+            keys = adata_group.var[var_names_col][marker_idx]
+        else:
+            keys = get_group_index(adata_group.var)[marker_idx]
 
         obs_colname = obs_col["name"]
         try:
@@ -82,6 +101,9 @@ def violin(
         if isinstance(keys, str):
             keys = [keys]
 
+        if not all(isinstance(x, str) for x in keys):
+            raise BadRequest("'keys' should be of type str for multikey violin plot")
+
         var_keys = list(parse_data(adata_group.var).index.intersection(keys))
         obs_keys = list(set(adata_group.obs.attrs["column-order"]).intersection(keys))
 
@@ -91,6 +113,9 @@ def violin(
             )
         except InvalidKey:
             raise InvalidVar(f"Invalid features {var_keys}")
+
+        if var_names_col:
+            var_keys = adata_group.var[var_names_col][marker_idx]
 
         df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=var_keys)
 
