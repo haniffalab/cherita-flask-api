@@ -84,7 +84,7 @@ def violin(
         violins = []
         for c in df[obs_colname].cat.categories:
             obs_data = df[keys][df[obs_colname] == c]
-            if len(obs_data >= MAX_SAMPLES):
+            if len(obs_data) >= MAX_SAMPLES:
                 data_values = kde_resample(obs_data, MAX_SAMPLES)
                 resampled = True
             else:
@@ -143,7 +143,7 @@ def violin(
         violins = []
         resampled = False
         for col in df.columns:
-            if len(df[col] >= MAX_SAMPLES):
+            if len(df[col]) >= MAX_SAMPLES:
                 data_values = kde_resample(df[col], MAX_SAMPLES)
                 resampled = True
             else:
