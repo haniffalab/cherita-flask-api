@@ -4,6 +4,7 @@ from typing import Union, Any
 import zarr
 import pandas as pd
 import plotly.graph_objects as go
+from scipy.stats import gaussian_kde
 from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
 
 from cherita.utils.adata_utils import (
@@ -12,6 +13,8 @@ from cherita.utils.adata_utils import (
     get_indices_in_array,
     parse_data,
 )
+
+MAX_SAMPLES = 100000
 
 
 def violin(
@@ -80,8 +83,15 @@ def violin(
 
         violins = []
         for c in df[obs_colname].cat.categories:
+            obs_data = df[keys][df[obs_colname] == c]
+            if len(obs_data >= MAX_SAMPLES):
+                data_values = kde_resample(obs_data, MAX_SAMPLES)
+                resampled = True
+            else:
+                data_values = obs_data
+
             violin = go.Violin(
-                y=df[keys][df[obs_colname] == c],
+                y=data_values,
                 name=c,
                 scalegroup="group" if scale == "count" else None,
             )
@@ -131,14 +141,31 @@ def violin(
             df[k] = adata_group.obs[k]
 
         violins = []
+        resampled = False
         for col in df.columns:
+            if len(df[col] >= MAX_SAMPLES):
+                data_values = kde_resample(df[col], MAX_SAMPLES)
+                resampled = True
+            else:
+                data_values = df[col]
+
             violin = go.Violin(
-                name=col, y=df[col], scalegroup="group" if scale == "count" else None
+                name=col,
+                y=data_values,
+                scalegroup="group" if scale == "count" else None,
             )
             violins.append(violin)
 
         fig = go.Figure(data=violins, layout=dict(yaxis=dict(title="Value")))
 
     fig.update_traces(scalemode=scale)
+    fig_json = json.loads(fig.to_json())
+    fig_json.update({"resampled": resampled})
+    return fig_json
 
-    return json.loads(fig.to_json())
+
+def kde_resample(df: pd.DataFrame, nsamples: int):
+    kde = gaussian_kde(df)
+    kde_values = set([df.min(), df.max()])
+    kde_values.update(kde.resample(nsamples, seed=nsamples)[0])
+    return list(kde_values)
