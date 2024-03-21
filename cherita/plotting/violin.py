@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from typing import Union, Any
 import zarr
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from scipy.stats import gaussian_kde
@@ -15,6 +16,7 @@ from cherita.utils.adata_utils import (
 )
 
 MAX_SAMPLES = 100000
+N_SAMPLES = 1000
 
 
 def violin(
@@ -82,11 +84,14 @@ def violin(
         df[obs_colname], bins = to_categorical(obs, **obs_col)
 
         violins = []
+        resampled = False
+        points = "outliers"
         for c in df[obs_colname].cat.categories:
             obs_data = df[keys][df[obs_colname] == c]
             if len(obs_data) >= MAX_SAMPLES:
-                data_values = kde_resample(obs_data, MAX_SAMPLES)
+                data_values = kde_resample(obs_data, N_SAMPLES)
                 resampled = True
+                points = False
             else:
                 data_values = obs_data
 
@@ -94,6 +99,7 @@ def violin(
                 y=data_values,
                 name=c,
                 scalegroup="group" if scale == "count" else None,
+                points=points,
             )
             violins.append(violin)
 
@@ -142,10 +148,12 @@ def violin(
 
         violins = []
         resampled = False
+        points = "outliers"
         for col in df.columns:
             if len(df[col]) >= MAX_SAMPLES:
-                data_values = kde_resample(df[col], MAX_SAMPLES)
+                data_values = kde_resample(df[col], N_SAMPLES)
                 resampled = True
+                points = False
             else:
                 data_values = df[col]
 
@@ -153,6 +161,7 @@ def violin(
                 name=col,
                 y=data_values,
                 scalegroup="group" if scale == "count" else None,
+                points=points,
             )
             violins.append(violin)
 
@@ -165,7 +174,11 @@ def violin(
 
 
 def kde_resample(df: pd.DataFrame, nsamples: int):
+    np.random.seed(nsamples)
     kde = gaussian_kde(df)
-    kde_values = set([df.min(), df.max()])
-    kde_values.update(kde.resample(nsamples, seed=nsamples)[0])
+    kde_values = [df.min(), df.max()]
+    x = np.linspace(df.min(), df.max(), nsamples)
+    pdf = kde.evaluate(x)
+    kde_values.extend(np.random.choice(a=x, size=nsamples * 10, p=pdf / pdf.sum()))
+
     return list(kde_values)
