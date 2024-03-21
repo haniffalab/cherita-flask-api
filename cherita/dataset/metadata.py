@@ -42,7 +42,7 @@ def get_var_col_names(adata_group: zarr.Group):
 def get_var_names(adata_group: zarr.Group, col: str = None):
     COL_NAME = "name"
     INDEX_NAME = "matrix_index"
-    idx_col = get_group_index_name(adata_group)
+    idx_col = get_group_index_name(adata_group.var)
     col = col or idx_col
     var_df = pd.DataFrame(
         parse_data(adata_group.var[col]),
