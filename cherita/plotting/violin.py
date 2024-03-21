@@ -16,7 +16,7 @@ from cherita.utils.adata_utils import (
 )
 
 MAX_SAMPLES = 100000
-N_SAMPLES = 1000
+N_SAMPLES = 10000
 
 
 def violin(
@@ -177,8 +177,8 @@ def kde_resample(df: pd.DataFrame, nsamples: int):
     np.random.seed(nsamples)
     kde = gaussian_kde(df)
     kde_values = [df.min(), df.max()]
-    x = np.linspace(df.min(), df.max(), nsamples)
+    x = np.linspace(df.min(), df.max(), 1000)
     pdf = kde.evaluate(x)
-    kde_values.extend(np.random.choice(a=x, size=nsamples * 10, p=pdf / pdf.sum()))
+    kde_values.extend(np.random.choice(a=x, size=nsamples, p=pdf / pdf.sum()))
 
     return list(kde_values)
