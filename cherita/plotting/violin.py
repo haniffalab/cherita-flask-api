@@ -2,8 +2,10 @@ from __future__ import annotations
 import json
 from typing import Union, Any
 import zarr
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from scipy.stats import gaussian_kde
 from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
 
 from cherita.utils.adata_utils import (
@@ -12,6 +14,9 @@ from cherita.utils.adata_utils import (
     get_indices_in_array,
     parse_data,
 )
+
+MAX_SAMPLES = 100000
+N_SAMPLES = 10000
 
 
 def violin(
@@ -79,11 +84,22 @@ def violin(
         df[obs_colname], bins = to_categorical(obs, **obs_col)
 
         violins = []
+        resampled = False
+        points = "outliers"
         for c in df[obs_colname].cat.categories:
+            obs_data = df[keys][df[obs_colname] == c]
+            if len(obs_data) >= MAX_SAMPLES:
+                data_values = kde_resample(obs_data, N_SAMPLES)
+                resampled = True
+                points = False
+            else:
+                data_values = obs_data
+
             violin = go.Violin(
-                y=df[keys][df[obs_colname] == c],
+                y=data_values,
                 name=c,
                 scalegroup="group" if scale == "count" else None,
+                points=points,
             )
             violins.append(violin)
 
@@ -131,14 +147,38 @@ def violin(
             df[k] = adata_group.obs[k]
 
         violins = []
+        resampled = False
+        points = "outliers"
         for col in df.columns:
+            if len(df[col]) >= MAX_SAMPLES:
+                data_values = kde_resample(df[col], N_SAMPLES)
+                resampled = True
+                points = False
+            else:
+                data_values = df[col]
+
             violin = go.Violin(
-                name=col, y=df[col], scalegroup="group" if scale == "count" else None
+                name=col,
+                y=data_values,
+                scalegroup="group" if scale == "count" else None,
+                points=points,
             )
             violins.append(violin)
 
         fig = go.Figure(data=violins, layout=dict(yaxis=dict(title="Value")))
 
     fig.update_traces(scalemode=scale)
+    fig_json = json.loads(fig.to_json())
+    fig_json.update({"resampled": resampled})
+    return fig_json
 
-    return json.loads(fig.to_json())
+
+def kde_resample(df: pd.DataFrame, nsamples: int):
+    np.random.seed(nsamples)
+    kde = gaussian_kde(df)
+    kde_values = [df.min(), df.max()]
+    x = np.linspace(df.min(), df.max(), 1000)
+    pdf = kde.evaluate(x)
+    kde_values.extend(np.random.choice(a=x, size=nsamples, p=pdf / pdf.sum()))
+
+    return list(kde_values)
