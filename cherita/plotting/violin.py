@@ -174,7 +174,7 @@ def violin(
 
 def kde_resample(df: pd.DataFrame, nsamples: int):
     np.random.seed(nsamples)
-    NDRAWS = 10**6
+    NDRAWS = len(df) * 100
     kde_values = [df.min(), df.max()]
     unq, ids = np.unique(df, return_inverse=True)
     all_ids = np.random.choice(ids, size=NDRAWS, replace=True)
