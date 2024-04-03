@@ -5,7 +5,6 @@ import zarr
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from scipy.stats import gaussian_kde
 from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
 
 from cherita.utils.adata_utils import (
@@ -16,7 +15,7 @@ from cherita.utils.adata_utils import (
 )
 
 MAX_SAMPLES = 100000
-N_SAMPLES = 10000
+N_SAMPLES = 100000
 
 
 def violin(
@@ -175,10 +174,10 @@ def violin(
 
 def kde_resample(df: pd.DataFrame, nsamples: int):
     np.random.seed(nsamples)
-    kde = gaussian_kde(df)
+    NDRAWS = len(df) * 100
     kde_values = [df.min(), df.max()]
-    x = np.linspace(df.min(), df.max(), 1000)
-    pdf = kde.evaluate(x)
-    kde_values.extend(np.random.choice(a=x, size=nsamples, p=pdf / pdf.sum()))
-
+    unq, ids = np.unique(df, return_inverse=True)
+    all_ids = np.random.choice(ids, size=NDRAWS, replace=True)
+    ar = np.bincount(all_ids) / NDRAWS
+    kde_values.extend(np.random.choice(a=unq, size=nsamples, p=ar))
     return list(kde_values)
