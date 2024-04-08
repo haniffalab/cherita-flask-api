@@ -88,7 +88,7 @@ def violin(
         for c in df[obs_colname].cat.categories:
             obs_data = df[keys][df[obs_colname] == c]
             if len(obs_data) >= MAX_SAMPLES:
-                data_values = kde_resample(obs_data, N_SAMPLES)
+                data_values = resample(obs_data, N_SAMPLES)
                 resampled = True
                 points = False
             else:
@@ -150,7 +150,7 @@ def violin(
         points = "outliers"
         for col in df.columns:
             if len(df[col]) >= MAX_SAMPLES:
-                data_values = kde_resample(df[col], N_SAMPLES)
+                data_values = resample(df[col], N_SAMPLES)
                 resampled = True
                 points = False
             else:
@@ -172,12 +172,12 @@ def violin(
     return fig_json
 
 
-def kde_resample(df: pd.DataFrame, nsamples: int):
+def resample(df: pd.DataFrame, nsamples: int):
     np.random.seed(nsamples)
     NDRAWS = len(df) * 100
-    kde_values = [df.min(), df.max()]
+    resamples = [df.min(), df.max()]
     unq, ids = np.unique(df, return_inverse=True)
     all_ids = np.random.choice(ids, size=NDRAWS, replace=True)
     ar = np.bincount(all_ids) / NDRAWS
-    kde_values.extend(np.random.choice(a=unq, size=nsamples, p=ar))
-    return list(kde_values)
+    resamples.extend(np.random.choice(a=unq, size=nsamples, p=ar))
+    return list(resamples)
