@@ -7,9 +7,9 @@ from cherita.dataset.metadata import (
     get_obs_col_names,
     get_obs_col_metadata,
     get_var_col_names,
-    get_var_names,
     get_obsm_keys,
 )
+from cherita.dataset.search import search_var_names
 
 
 class ObsColsNames(Resource):
@@ -74,7 +74,8 @@ class VarNames(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             col = json_data.get("col", None)
-            return jsonify(get_var_names(adata_group, col))
+            text = json_data.get("text", "")
+            return jsonify(search_var_names(adata_group, col, text))
         except BadRequest as e:
             raise e
         except KeyError as e:

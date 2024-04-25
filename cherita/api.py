@@ -11,6 +11,11 @@ from cherita.resources.dataset import (
     VarColsNames,
     VarNames,
 )
+from cherita.resources.diseases import (
+    SearchDiseaseNames,
+    SearchDiseaseGenes,
+    GetDiseaseGenes,
+)
 
 bp = Blueprint("api_v1", __name__)
 api = Api(bp, errors=errors)
@@ -25,3 +30,6 @@ api.add_resource(Heatmap, "/heatmap")
 api.add_resource(Dotplot, "/dotplot")
 api.add_resource(Matrixplot, "/matrixplot")
 api.add_resource(Violin, "/violin")
+api.add_resource(SearchDiseaseNames, "/diseases")
+api.add_resource(SearchDiseaseGenes, "/diseases/genes")
+api.add_resource(GetDiseaseGenes, "/disease/genes")
