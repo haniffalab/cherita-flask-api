@@ -15,7 +15,7 @@ class SearchDiseaseNames(Resource):
         json_data = request.get_json()
         try:
             text = json_data.get("text", "")
-            disease_datasets = json_data.get("disease_datasets", [])
+            disease_datasets = json_data.get("diseaseDatasets", [])
             return jsonify(search_diseases(text, disease_datasets))
         except BadRequest as e:
             raise e
@@ -30,9 +30,9 @@ class GetDiseaseGenes(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            disease_name = json_data["disease_name"]
+            disease_name = json_data["diseaseName"]
             col = json_data.get("col", None)
-            disease_datasets = json_data.get("disease_datasets", [])
+            disease_datasets = json_data.get("diseaseDatasets", [])
             return jsonify(
                 get_disease_genes(adata_group, disease_name, col, disease_datasets)
             )
@@ -51,7 +51,7 @@ class SearchDiseaseGenes(Resource):
             adata_group = open_anndata_zarr(json_data["url"])
             text = json_data.get("text", "")
             col = json_data.get("col", None)
-            disease_datasets = json_data.get("disease_datasets", "")
+            disease_datasets = json_data.get("diseaseDatasets", "")
             return jsonify(
                 search_disease_genes(adata_group, col, text, disease_datasets)
             )

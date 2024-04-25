@@ -29,7 +29,7 @@ def search_diseases(
     if "error" in res and res["error"]:
         return {"error": "Error fetching diseases"}
 
-    res_data = {item["id"]: item["attributes"] for item in res["data"]}
+    res_data = [({"id": item["id"]} | item["attributes"]) for item in res["data"]]
 
     return res_data
 
