@@ -21,6 +21,7 @@ def search_diseases(
         "filters[disease_datasets][name][$contains]": disease_datasets,
         f"filters[disease_name][${'startsWith' if len(text) < 2 else 'contains'}]": text,
         "fields": ["disease_id", "disease_name", "uid"],
+        "sort": "disease_name",
         "pagination[start]": 0,
         "pagination[limit]": 500,
     }
@@ -47,6 +48,7 @@ def get_disease_genes(
         "filters[disease_datasets][name][$contains]": disease_datasets,
         "filters[disease_name][$eq]": disease_name,
         "fields": ["disease_id", "disease_name", "gene_id", "gene_name", "uid"],
+        "sort": "gene_name",
         "pagination[start]": 0,
         "pagination[limit]": 500,
     }
@@ -75,6 +77,7 @@ def search_disease_genes(
         "filters[disease_datasets][name][$contains]": disease_datasets,
         "filters[gene_name][$startsWith]": text,
         "fields": ["gene_id", "gene_name", "disease_id", "disease_name", "uid"],
+        "sort": "gene_name",
         "pagination[start]": 0,
         "pagination[limit]": 500,
     }

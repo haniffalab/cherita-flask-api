@@ -63,6 +63,9 @@ def match_var_names(
     matched_df = var_df.merge(
         data_df, how="right", left_on=COL_NAME, right_on=right_key
     )
+    matched_df["index"].fillna(matched_df["gene_id"], inplace=True)
+    matched_df[COL_NAME].fillna(matched_df["gene_name"], inplace=True)
+    matched_df[INDEX_NAME].fillna(-1, inplace=True)
     return matched_df
 
 
