@@ -18,12 +18,8 @@ class ObsColsNames(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             return jsonify(get_obs_col_names(adata_group))
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e
 
 
 class ObsCols(Resource):
@@ -32,12 +28,8 @@ class ObsCols(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             return jsonify(get_obs_col_metadata(adata_group))
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e
 
 
 class ObsmKeys(Resource):
@@ -46,12 +38,8 @@ class ObsmKeys(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             return jsonify(get_obsm_keys(adata_group))
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e
 
 
 class VarColsNames(Resource):
@@ -60,12 +48,8 @@ class VarColsNames(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             return jsonify(get_var_col_names(adata_group))
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e
 
 
 class VarNames(Resource):
@@ -76,9 +60,5 @@ class VarNames(Resource):
             col = json_data.get("col", None)
             text = json_data.get("text", "")
             return jsonify(search_var_names(adata_group, col, text))
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e

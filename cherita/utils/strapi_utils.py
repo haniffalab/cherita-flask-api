@@ -1,8 +1,9 @@
 from __future__ import annotations
 from flask import current_app
-import logging
 import requests
 from urllib.parse import urljoin
+
+from cherita.resources.errors import FetchError
 
 
 def get_from_strapi(endpoint: str, params: dict = {}):
@@ -11,12 +12,10 @@ def get_from_strapi(endpoint: str, params: dict = {}):
 
     response = requests.get(urljoin(API_URL, endpoint), params=params)
     if not response:
-        logging.error("Error fetching disease genes")
-        return {"error": "Error fetching disease genes"}
+        raise FetchError("Error fetching from strapi")
     if response.status_code != 200:
-        logging.warning(
-            f"Unsuccesful status code {response.status_code} fetching disease genes"
+        raise FetchError(
+            f"Unsuccesful status code {response.status_code} fetching from strapi"
         )
-        return {"error": response}
 
     return response.json()

@@ -17,12 +17,8 @@ class SearchDiseaseNames(Resource):
             text = json_data.get("text", "")
             disease_datasets = json_data.get("diseaseDatasets", [])
             return jsonify(search_diseases(text, disease_datasets))
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e
 
 
 class GetDiseaseGenes(Resource):
@@ -36,12 +32,8 @@ class GetDiseaseGenes(Resource):
             return jsonify(
                 get_disease_genes(adata_group, disease_name, col, disease_datasets)
             )
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e
 
 
 class SearchDiseaseGenes(Resource):
@@ -55,9 +47,5 @@ class SearchDiseaseGenes(Resource):
             return jsonify(
                 search_disease_genes(adata_group, col, text, disease_datasets)
             )
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
-        except Exception as e:
-            raise e

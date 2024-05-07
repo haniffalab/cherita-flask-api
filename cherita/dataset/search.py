@@ -2,6 +2,7 @@ import zarr
 import pandas as pd
 from cherita.dataset.metadata import get_var_names, match_var_names, COL_NAME
 from cherita.utils.strapi_utils import get_from_strapi
+from cherita.resources.errors import FetchError
 
 
 def search_var_names(adata_group: zarr.Group, col: str = None, text: str = ""):
@@ -26,9 +27,10 @@ def search_diseases(
         "pagination[limit]": 500,
     }
 
-    res = get_from_strapi(ENDPOINT, params)
-    if "error" in res and res["error"]:
-        return {"error": "Error fetching diseases"}
+    try:
+        res = get_from_strapi(ENDPOINT, params)
+    except Exception as e:
+        raise FetchError(f"Error fetching diseases. {e}")
 
     res_data = [({"id": item["id"]} | item["attributes"]) for item in res["data"]]
 
@@ -53,9 +55,10 @@ def get_disease_genes(
         "pagination[limit]": 500,
     }
 
-    res = get_from_strapi(ENDPOINT, params)
-    if "error" in res and res["error"]:
-        return {"error": "Error fetching diseases"}
+    try:
+        res = get_from_strapi(ENDPOINT, params)
+    except Exception as e:
+        raise FetchError(f"Error fetching diseases. {e}")
 
     res_data = {item["id"]: item["attributes"] for item in res["data"]}
     res_df = pd.DataFrame.from_dict(res_data, orient="index")
@@ -82,9 +85,10 @@ def search_disease_genes(
         "pagination[limit]": 500,
     }
 
-    res = get_from_strapi(ENDPOINT, params)
-    if "error" in res and res["error"]:
-        return {"error": "Error fetching diseases"}
+    try:
+        res = get_from_strapi(ENDPOINT, params)
+    except Exception as e:
+        raise FetchError(f"Error fetching diseases. {e}")
 
     res_data = {item["id"]: item["attributes"] for item in res["data"]}
     res_df = pd.DataFrame.from_dict(res_data, orient="index")
