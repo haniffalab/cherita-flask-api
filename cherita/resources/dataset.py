@@ -22,6 +22,8 @@ class ObsColsNames(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class ObsCols(Resource):
@@ -34,6 +36,8 @@ class ObsCols(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class ObsmKeys(Resource):
@@ -46,6 +50,8 @@ class ObsmKeys(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class VarColsNames(Resource):
@@ -58,6 +64,8 @@ class VarColsNames(Resource):
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e
 
 
 class VarNames(Resource):
@@ -65,9 +73,11 @@ class VarNames(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            col = json_data["col"] if "col" in json_data else None
+            col = json_data.get("col", None)
             return jsonify(get_var_names(adata_group, col))
         except BadRequest as e:
             raise e
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+        except Exception as e:
+            raise e

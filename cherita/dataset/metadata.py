@@ -42,8 +42,14 @@ def get_var_col_names(adata_group: zarr.Group):
 def get_var_names(adata_group: zarr.Group, col: str = None):
     COL_NAME = "name"
     INDEX_NAME = "matrix_index"
-    col = col or get_group_index_name(adata_group)
-    var_df = pd.DataFrame(parse_data(adata_group.var[col]), columns=[COL_NAME])
+    idx_col = get_group_index_name(adata_group.var)
+    col = col or idx_col
+    var_df = pd.DataFrame(
+        parse_data(adata_group.var[col]),
+        columns=[COL_NAME],
+        index=parse_data(adata_group.var[idx_col]),
+    )
+    var_df.reset_index(names=["index"], inplace=True)
     var_df.reset_index(names=[INDEX_NAME], inplace=True)
     var_df.sort_values(by=[COL_NAME], inplace=True)
     return var_df.to_dict("records", index=True)

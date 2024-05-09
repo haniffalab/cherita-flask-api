@@ -19,12 +19,15 @@ class Heatmap(Resource):
                     adata_group=adata_group,
                     markers=json_data["selectedMultiVar"],
                     obs_col=json_data["selectedObs"],
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
 
 
 class Dotplot(Resource):
@@ -40,12 +43,15 @@ class Dotplot(Resource):
                     mean_only_expressed=json_data.get("meanOnlyExpressed", False),
                     expression_cutoff=json_data.get("expressionCutoff", 0.0),
                     standard_scale=json_data.get("standardScale", None),
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
 
 
 class Matrixplot(Resource):
@@ -59,12 +65,15 @@ class Matrixplot(Resource):
                     markers=json_data["selectedMultiVar"],
                     obs_col=json_data["selectedObs"],
                     standard_scale=json_data.get("standardScale", None),
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
 
 
 class Violin(Resource):
@@ -78,9 +87,12 @@ class Violin(Resource):
                     keys=json_data["keys"],
                     obs_col=json_data.get("selectedObs", None),
                     scale=json_data.get("scale", None),
+                    var_names_col=json_data.get("varNamesCol", None),
                 )
             )
         except BadRequest as e:
             raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
+        except Exception as e:
+            raise e
