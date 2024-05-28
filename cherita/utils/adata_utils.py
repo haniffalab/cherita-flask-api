@@ -136,12 +136,14 @@ def open_anndata_zarr(url: str):
 
 def type_category(obs):
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
+    codes = {str(i): idx for idx, i in enumerate(categories)}
 
     return {
         "type": "categorical",
         "is_truncated": True,
         "values": categories[:99] if len(categories) > 100 else categories,
         "n_values": len(categories),
+        "codes": codes,
     }
 
 
@@ -163,12 +165,14 @@ def type_numeric(obs):
 def type_discrete(obs):
     obs = obs.astype("category")
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
+    codes = {str(i): idx for idx, i in enumerate(categories)}
 
     return {
         "type": "discrete",
         "is_truncated": True,
         "values": categories[:99] if len(categories) > 100 else categories,
         "n_values": len(categories),
+        "codes": codes,
     }
 
 
