@@ -25,6 +25,10 @@ class BadRequest(HTTPException):
     pass
 
 
+class FetchError(HTTPException):
+    pass
+
+
 errors = {
     "InternalServerError": {
         "name": "InternalServerError",
@@ -36,4 +40,5 @@ errors = {
     "InvalidObs": {"name": "InvalidObs", "status": 400},
     "InvalidVar": {"name": "InvalidVar", "status": 400},
     "BadRequest": {"name": "BadRequest", "status": 400},
+    "FetchError": {"name": "FetchError", "status": 500},
 }

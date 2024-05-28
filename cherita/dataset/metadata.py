@@ -19,6 +19,9 @@ parse_dtype = {
     "bool": type_bool,
 }
 
+COL_NAME = "name"
+INDEX_NAME = "matrix_index"
+
 
 def get_obs_col_names(adata_group: zarr.Group):
     obs_col_names = adata_group.obs.attrs["column-order"]
@@ -40,8 +43,6 @@ def get_var_col_names(adata_group: zarr.Group):
 
 
 def get_var_names(adata_group: zarr.Group, col: str = None):
-    COL_NAME = "name"
-    INDEX_NAME = "matrix_index"
     idx_col = get_group_index_name(adata_group.var)
     col = col or idx_col
     var_df = pd.DataFrame(
@@ -53,6 +54,19 @@ def get_var_names(adata_group: zarr.Group, col: str = None):
     var_df.reset_index(names=[INDEX_NAME], inplace=True)
     var_df.sort_values(by=[COL_NAME], inplace=True)
     return var_df.to_dict("records", index=True)
+
+
+def match_var_names(
+    adata_group: zarr.Group, data_df: pd.DataFrame, col: str = None, right_key=COL_NAME
+):
+    var_df = pd.DataFrame.from_records(get_var_names(adata_group, col))
+    matched_df = var_df.merge(
+        data_df, how="right", left_on=COL_NAME, right_on=right_key
+    )
+    matched_df["index"].fillna(matched_df["gene_id"], inplace=True)
+    matched_df[COL_NAME].fillna(matched_df["gene_name"], inplace=True)
+    matched_df[INDEX_NAME].fillna(-1, inplace=True)
+    return matched_df
 
 
 def get_obsm_keys(adata_group: zarr.Group):

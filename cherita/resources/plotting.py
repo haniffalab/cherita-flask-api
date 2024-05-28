@@ -22,12 +22,8 @@ class Heatmap(Resource):
                     var_names_col=json_data.get("varNamesCol", None),
                 )
             )
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
-        except Exception as e:
-            raise e
 
 
 class Dotplot(Resource):
@@ -46,12 +42,8 @@ class Dotplot(Resource):
                     var_names_col=json_data.get("varNamesCol", None),
                 )
             )
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
-        except Exception as e:
-            raise e
 
 
 class Matrixplot(Resource):
@@ -68,12 +60,8 @@ class Matrixplot(Resource):
                     var_names_col=json_data.get("varNamesCol", None),
                 )
             )
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
-        except Exception as e:
-            raise e
 
 
 class Violin(Resource):
@@ -90,9 +78,5 @@ class Violin(Resource):
                     var_names_col=json_data.get("varNamesCol", None),
                 )
             )
-        except BadRequest as e:
-            raise e
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
-        except Exception as e:
-            raise e
