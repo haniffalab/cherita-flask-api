@@ -134,16 +134,34 @@ def open_anndata_zarr(url: str):
     return adata_group
 
 
+# @TODO: add undefined category in plotting functions as well
+def get_undefined_category_name(series):
+    base_name = "undefined"
+    if base_name not in series.cat.categories:
+        return base_name
+    else:
+        i = 1
+        while f"{base_name}_{i}" in series.cat.categories:
+            i += 1
+        return f"{base_name}_{i}"
+
+
 def type_category(obs):
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
     codes = {str(i): idx for idx, i in enumerate(categories)}
 
+    if obs.hasnans:
+        undefined_cat = get_undefined_category_name(obs)
+        categories.append(undefined_cat)
+        codes.update({undefined_cat: -1})
+
     return {
         "type": "categorical",
         "is_truncated": True,
-        "values": categories[:99] if len(categories) > 100 else categories,
+        "values": categories,
         "n_values": len(categories),
         "codes": codes,
+        "hasnans": obs.hasnans,
     }
 
 
@@ -167,12 +185,18 @@ def type_discrete(obs):
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
     codes = {str(i): idx for idx, i in enumerate(categories)}
 
+    if obs.hasnans:
+        undefined_cat = get_undefined_category_name(obs)
+        categories.append(undefined_cat)
+        codes.update({undefined_cat: -1})
+
     return {
         "type": "discrete",
         "is_truncated": True,
-        "values": categories[:99] if len(categories) > 100 else categories,
+        "values": categories,
         "n_values": len(categories),
         "codes": codes,
+        "hasnans": obs.hasnans,
     }
 
 
