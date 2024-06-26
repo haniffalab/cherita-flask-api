@@ -149,11 +149,13 @@ def get_undefined_category_name(series):
 def type_category(obs):
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
     codes = {str(i): idx for idx, i in enumerate(categories)}
+    value_counts = {}
 
     if obs.hasnans:
         undefined_cat = get_undefined_category_name(obs)
         categories.append(undefined_cat)
         codes.update({undefined_cat: -1})
+        value_counts[undefined_cat] = int(obs.isna().sum())
 
     return {
         "type": "categorical",
@@ -162,7 +164,10 @@ def type_category(obs):
         "n_values": len(categories),
         "codes": codes,
         "hasnans": obs.hasnans,
-        "value_counts": {str(k): v for k, v in obs.value_counts().to_dict().items()},
+        "value_counts": {
+            **value_counts,
+            **{str(k): v for k, v in obs.value_counts().to_dict().items()},
+        },
     }
 
 
