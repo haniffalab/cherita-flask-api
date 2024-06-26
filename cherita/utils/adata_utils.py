@@ -162,11 +162,16 @@ def type_category(obs):
         "n_values": len(categories),
         "codes": codes,
         "hasnans": obs.hasnans,
+        "value_counts": {str(k): v for k, v in obs.value_counts().to_dict().items()},
     }
 
 
 def type_bool(obs):
-    return {"type": "bool", "values": {1: "True", 0: "False"}}
+    obs = obs.astype("category")
+    data = type_category(obs)
+    data["type"] = "boolean"
+
+    return data
 
 
 def type_numeric(obs):
@@ -182,22 +187,10 @@ def type_numeric(obs):
 
 def type_discrete(obs):
     obs = obs.astype("category")
-    categories = [str(i) for i in obs.cat.categories.values.flatten()]
-    codes = {str(i): idx for idx, i in enumerate(categories)}
+    data = type_category(obs)
+    data["type"] = "discrete"
 
-    if obs.hasnans:
-        undefined_cat = get_undefined_category_name(obs)
-        categories.append(undefined_cat)
-        codes.update({undefined_cat: -1})
-
-    return {
-        "type": "discrete",
-        "is_truncated": True,
-        "values": categories,
-        "n_values": len(categories),
-        "codes": codes,
-        "hasnans": obs.hasnans,
-    }
+    return data
 
 
 def ndarray_max(a):
