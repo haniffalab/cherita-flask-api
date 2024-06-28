@@ -10,6 +10,7 @@ from cherita.resources.dataset import (
     ObsmKeys,
     VarColsNames,
     VarNames,
+    VarHistograms,
 )
 from cherita.resources.diseases import (
     SearchDiseaseNames,
@@ -33,3 +34,4 @@ api.add_resource(Violin, "/violin")
 api.add_resource(SearchDiseaseNames, "/diseases")
 api.add_resource(SearchDiseaseGenes, "/diseases/genes")
 api.add_resource(GetDiseaseGenes, "/disease/genes")
+api.add_resource(VarHistograms, "/var/histograms")

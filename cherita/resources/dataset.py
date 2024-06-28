@@ -8,6 +8,7 @@ from cherita.dataset.metadata import (
     get_obs_col_metadata,
     get_var_col_names,
     get_obsm_keys,
+    get_var_histograms,
 )
 from cherita.dataset.search import search_var_names
 
@@ -60,5 +61,16 @@ class VarNames(Resource):
             col = json_data.get("col", None)
             text = json_data.get("text", "")
             return jsonify(search_var_names(adata_group, col, text))
+        except KeyError as e:
+            raise BadRequest("Missing required parameter: {}".format(e))
+
+
+class VarHistograms(Resource):
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            matrix_index = json_data["matrix_index"]
+            return jsonify(get_var_histograms(adata_group, matrix_index))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))

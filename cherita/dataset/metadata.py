@@ -1,6 +1,7 @@
 import re
 import zarr
 import pandas as pd
+import numpy as np
 from cherita.utils.adata_utils import (
     get_group_index_name,
     parse_data,
@@ -40,6 +41,14 @@ def get_obs_col_metadata(adata_group: zarr.Group):
 def get_var_col_names(adata_group: zarr.Group):
     var_col_names = adata_group.var.attrs["column-order"]
     return var_col_names
+
+
+def get_var_histograms(adata_group: zarr.Group, matrix_index: int):
+    hists = {
+        "noscale": np.histogram(adata_group.X[:, matrix_index])[0].tolist(),
+        "log10": np.histogram(np.log10(adata_group.X[:, matrix_index] + 1))[0].tolist(),
+    }
+    return hists
 
 
 def get_var_names(adata_group: zarr.Group, col: str = None):
