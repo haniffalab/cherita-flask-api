@@ -44,11 +44,13 @@ def get_var_col_names(adata_group: zarr.Group):
 
 
 def get_var_histograms(adata_group: zarr.Group, matrix_index: int):
-    hists = {
-        "noscale": np.histogram(adata_group.X[:, matrix_index])[0].tolist(),
-        "log10": np.histogram(np.log10(adata_group.X[:, matrix_index] + 1))[0].tolist(),
-    }
-    return hists
+    hist, bin_edges = np.histogram(adata_group.X[:, matrix_index])
+    bin_edges = [
+        [float(bin_edges[i]), float(bin_edges[i + 1])]
+        for i in range(len(bin_edges) - 1)
+    ]
+    log10_hist = np.log10(hist + 1)
+    return {"hist": hist.tolist(), "bin_edges": bin_edges, "log10": log10_hist.tolist()}
 
 
 def get_var_names(adata_group: zarr.Group, col: str = None):

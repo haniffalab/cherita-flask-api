@@ -70,7 +70,9 @@ def parse_group(group: zarr.Group):
             if np.array_equal(
                 np.sort(series.categories.values), np.sort(["True", "False"])
             ):
-                return series.map({"True": True, "False": False}).astype(bool)
+                return series.map(
+                    {"True": True, "False": False}, na_action="ignore"
+                ).astype(bool)
             return series
         else:
             raise ReadZarrError(
@@ -117,7 +119,10 @@ def open_anndata_zarr(url: str):
     elif o.netloc == "storage.googleapis.com":
         storage_options = None
     else:
-        url, storage_options = get_s3_http_options(o)
+        try:
+            url, storage_options = get_s3_http_options(o)
+        except:
+            url, storage_options = url, None
 
     try:
         adata_group = zarr.open_consolidated(
