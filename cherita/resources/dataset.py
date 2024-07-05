@@ -70,7 +70,8 @@ class VarHistograms(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            matrix_index = json_data["matrix_index"]
-            return jsonify(get_var_histograms(adata_group, matrix_index))
+            var_index = json_data["var_index"]
+            obs_indices = json_data.get("obs_indices", None)
+            return jsonify(get_var_histograms(adata_group, var_index, obs_indices))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))

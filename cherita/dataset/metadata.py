@@ -1,4 +1,5 @@
 import re
+from typing import Union
 import zarr
 import pandas as pd
 import numpy as np
@@ -43,8 +44,13 @@ def get_var_col_names(adata_group: zarr.Group):
     return var_col_names
 
 
-def get_var_histograms(adata_group: zarr.Group, matrix_index: int):
-    hist, bin_edges = np.histogram(adata_group.X[:, matrix_index])
+# @TODO: optional obs_categories input
+def get_var_histograms(
+    adata_group: zarr.Group,
+    var_index: int,
+    obs_indices: Union[list, dict] = None,
+):
+    hist, bin_edges = np.histogram(adata_group.X[obs_indices or slice(None), var_index])
     bin_edges = [
         [float(bin_edges[i]), float(bin_edges[i + 1])]
         for i in range(len(bin_edges) - 1)
