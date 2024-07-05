@@ -164,7 +164,6 @@ def type_category(obs):
 
     return {
         "type": "categorical",
-        "is_truncated": True,
         "values": categories,
         "n_values": len(categories),
         "codes": codes,
