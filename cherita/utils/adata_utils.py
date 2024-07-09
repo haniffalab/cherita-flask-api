@@ -256,17 +256,23 @@ def to_categorical(data: Union[pd.Series, np.Array], type: str, **kwargs):
 
 
 def continuous2categorical(
-    s: pd.Series,
+    array: np.Array,
     thresholds: list[Union[int, float]] = None,
     nBins: int = 20,
     start: int = 1,
     **kwargs,
 ):
-    return (
-        pd.Categorical(pd.cut(s, thresholds, include_lowest=True, labels=False) + start)
-        if thresholds
-        else pd.Categorical(pd.cut(s, nBins, include_lowest=True, labels=False))
-    ), nBins
+    s = pd.Series(array).astype("category")
+    if nBins >= len(s.cat.categories):
+        return s, None
+    else:
+        return (
+            pd.Categorical(
+                pd.cut(s, thresholds, include_lowest=True, labels=False) + start
+            )
+            if thresholds
+            else pd.Categorical(pd.cut(s, nBins, include_lowest=True, labels=False))
+        )
 
 
 def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwargs):
@@ -274,11 +280,8 @@ def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwa
     if nBins >= len(s.cat.categories):
         return s, None
     else:
-        return (
-            pd.Categorical(
-                pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
-            ),
-            nBins,
+        return pd.Categorical(
+            pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
         )
 
 

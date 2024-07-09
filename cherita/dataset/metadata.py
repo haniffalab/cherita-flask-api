@@ -3,6 +3,7 @@ from typing import Union
 import zarr
 import pandas as pd
 import numpy as np
+from scipy.stats import gaussian_kde
 from cherita.utils.adata_utils import (
     get_group_index_name,
     parse_data,
@@ -10,7 +11,9 @@ from cherita.utils.adata_utils import (
     type_discrete,
     type_numeric,
     type_bool,
+    continuous2categorical,
 )
+from cherita.plotting.resampling import resample
 
 parse_dtype = {
     "category": type_category,
@@ -37,6 +40,14 @@ def get_obs_col_metadata(adata_group: zarr.Group):
         t = re.sub(r"[^a-zA-Z]", "", obs_df[col].dtype.name)
         obs_metadata.append({"name": col, **parse_dtype[t](obs_df[col])})
     return obs_metadata
+
+
+def get_obs_bin_data(
+    adata_group: zarr.Group, obs_col: str, thresholds: list, nBins: int
+):
+    obs_s = parse_data(adata_group.obs[obs_col])
+    cat = continuous2categorical(obs_s, thresholds, nBins)
+    return type_category(pd.Series(cat))
 
 
 def get_var_col_names(adata_group: zarr.Group):
@@ -89,3 +100,35 @@ def match_var_names(
 def get_obsm_keys(adata_group: zarr.Group):
     obsm_keys = list(adata_group.obsm.keys())
     return obsm_keys
+
+
+def get_kde_values(data):
+    x = np.linspace(data.min(), data.max(), 1000)
+    kde = gaussian_kde(data)
+    kde_values = kde.evaluate(x)
+    return x, kde_values
+
+
+def get_obs_distribution(adata_group: zarr.Group, obs_colname: str):
+    MAX_SAMPLES = 100000
+    N_SAMPLES = 100000
+
+    obs = parse_data(adata_group.obs[obs_colname])
+
+    resampled = False
+    if len(obs) >= MAX_SAMPLES:
+        data_values = np.array(resample(obs, N_SAMPLES))
+        resampled = True
+    else:
+        data_values = obs
+
+    log_data_values = np.log(np.square(data_values))
+
+    kde_values = get_kde_values(data_values)
+    log_kde_values = get_kde_values(log_data_values)
+
+    return {
+        "kde_values": [kde_values[0].tolist(), kde_values[1].tolist()],
+        "log_kde_values": [log_kde_values[0].tolist(), log_kde_values[1].tolist()],
+        "resampled": resampled,
+    }

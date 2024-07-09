@@ -9,4 +9,5 @@ gunicorn==21.2.0
 plotly==5.14.1
 requests==2.31.0
 s3fs==2023.5.0
+scipy==1.14.0
 zarr==2.16.1

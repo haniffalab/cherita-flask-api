@@ -9,6 +9,8 @@ from cherita.dataset.metadata import (
     get_var_col_names,
     get_obsm_keys,
     get_var_histograms,
+    get_obs_bin_data,
+    get_obs_distribution,
 )
 from cherita.dataset.search import search_var_names
 
@@ -31,6 +33,32 @@ class ObsCols(Resource):
             return jsonify(get_obs_col_metadata(adata_group))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+
+
+class ObsBinData(Resource):
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            obs_col = json_data["obs_col"]
+            thresholds = json_data.get("thresholds", None)
+            nBins = json_data.get("nBins", None)
+            if not thresholds and not nBins:
+                raise BadRequest("Missing required parameter: thresholds or nBins")
+            return jsonify(get_obs_bin_data(adata_group, obs_col, thresholds, nBins))
+        except KeyError as e:
+            raise BadRequest("Missing required parameter: {}".format(e))
+
+
+class ObsDistribution(Resource):
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            obs_colname = json_data["obs_colname"]
+            return jsonify(get_obs_distribution(adata_group, obs_colname))
+        except KeyError as e:
+            raise BadRequest(f"Missing required parameter: {e}")
 
 
 class ObsmKeys(Resource):

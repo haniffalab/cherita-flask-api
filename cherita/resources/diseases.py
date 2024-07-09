@@ -7,6 +7,7 @@ from cherita.dataset.search import (
     search_diseases,
     search_disease_genes,
     get_disease_genes,
+    get_disease_gene,
 )
 
 
@@ -32,6 +33,18 @@ class GetDiseaseGenes(Resource):
             return jsonify(
                 get_disease_genes(adata_group, disease_name, col, disease_datasets)
             )
+        except KeyError as e:
+            raise BadRequest("Missing required parameter: {}".format(e))
+
+
+class GetDiseaseGene(Resource):
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            gene_name = json_data["geneName"]
+            disease_datasets = json_data.get("diseaseDatasets", [])
+            return jsonify(get_disease_gene(adata_group, gene_name, disease_datasets))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
 

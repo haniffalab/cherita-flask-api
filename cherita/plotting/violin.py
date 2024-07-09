@@ -2,7 +2,6 @@ from __future__ import annotations
 import json
 from typing import Union, Any
 import zarr
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
@@ -13,6 +12,7 @@ from cherita.utils.adata_utils import (
     get_indices_in_array,
     parse_data,
 )
+from cherita.plotting.resampling import resample
 
 MAX_SAMPLES = 100000
 N_SAMPLES = 100000
@@ -88,7 +88,7 @@ def violin(
         for c in df[obs_colname].cat.categories:
             obs_data = df[keys][df[obs_colname] == c]
             if len(obs_data) >= MAX_SAMPLES:
-                data_values = resample(obs_data, N_SAMPLES)
+                data_values = list(resample(obs_data, N_SAMPLES))
                 resampled = True
                 points = False
             else:
@@ -150,7 +150,7 @@ def violin(
         points = "outliers"
         for col in df.columns:
             if len(df[col]) >= MAX_SAMPLES:
-                data_values = resample(df[col], N_SAMPLES)
+                data_values = list(resample(df[col], N_SAMPLES))
                 resampled = True
                 points = False
             else:
@@ -170,14 +170,3 @@ def violin(
     fig_json = json.loads(fig.to_json())
     fig_json.update({"resampled": resampled})
     return fig_json
-
-
-def resample(df: pd.DataFrame, nsamples: int):
-    np.random.seed(nsamples)
-    NDRAWS = len(df) * 100
-    resamples = [df.min(), df.max()]
-    unq, ids = np.unique(df, return_inverse=True)
-    all_ids = np.random.choice(ids, size=NDRAWS, replace=True)
-    ar = np.bincount(all_ids) / NDRAWS
-    resamples.extend(np.random.choice(a=unq, size=nsamples, p=ar))
-    return list(resamples)

@@ -71,6 +71,38 @@ def get_disease_genes(
     return matched_df.to_dict("records", index=True)
 
 
+def get_disease_gene(
+    gene_name: str,
+    disease_datasets: list = [],
+):
+    ENDPOINT = "disease-genes"
+
+    params = {
+        "filters[disease_datasets][name][$contains]": disease_datasets,
+        "filters[gene_name][$eq]": gene_name,
+        "fields": [
+            "disease_id",
+            "disease_name",
+            "uid",
+            "confidence",
+            "metadata",
+        ],
+        "populate": ["organs"],
+        "sort": "disease_name",
+        "pagination[start]": 0,
+        "pagination[limit]": 500,
+    }
+
+    try:
+        res = get_from_strapi(ENDPOINT, params)
+    except Exception as e:
+        raise FetchError(f"Error fetching disease gene. {e}")
+
+    res_data = {item["id"]: item["attributes"] for item in res["data"]}
+
+    return res_data
+
+
 def search_disease_genes(
     adata_group: zarr.Group,
     col: str = None,
