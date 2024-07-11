@@ -47,7 +47,7 @@ def get_obs_bin_data(
 ):
     obs_s = parse_data(adata_group.obs[obs_col])
     cat = continuous2categorical(obs_s, thresholds, nBins)
-    return type_category(pd.Series(cat))
+    return {**type_category(pd.Series(cat)), "type": "continuous"}
 
 
 def get_var_col_names(adata_group: zarr.Group):

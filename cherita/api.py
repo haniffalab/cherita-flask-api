@@ -7,6 +7,7 @@ from cherita.resources.plotting import Heatmap, Dotplot, Matrixplot, Violin
 from cherita.resources.dataset import (
     ObsColsNames,
     ObsCols,
+    ObsBinData,
     ObsDistribution,
     ObsmKeys,
     VarColsNames,
@@ -26,6 +27,7 @@ api = Api(bp, errors=errors)
 api.add_resource(About, "/about")
 api.add_resource(ObsColsNames, "/obs/cols/names")
 api.add_resource(ObsCols, "/obs/cols")
+api.add_resource(ObsBinData, "/obs/bins")
 api.add_resource(ObsDistribution, "/obs/distribution")
 api.add_resource(ObsmKeys, "/obsm/keys")
 api.add_resource(VarColsNames, "/var/cols/names")

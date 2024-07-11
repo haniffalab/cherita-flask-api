@@ -259,19 +259,14 @@ def continuous2categorical(
     array: np.Array,
     thresholds: list[Union[int, float]] = None,
     nBins: int = 20,
-    start: int = 1,
     **kwargs,
 ):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
         return s, None
     else:
-        return (
-            pd.Categorical(
-                pd.cut(s, thresholds, include_lowest=True, labels=False) + start
-            )
-            if thresholds
-            else pd.Categorical(pd.cut(s, nBins, include_lowest=True, labels=False))
+        return pd.Categorical(
+            pd.cut(s, thresholds or nBins, include_lowest=True, labels=False)
         )
 
 
