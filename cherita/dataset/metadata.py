@@ -46,7 +46,7 @@ def get_obs_bin_data(
     adata_group: zarr.Group, obs_col: str, thresholds: list, nBins: int
 ):
     obs_s = parse_data(adata_group.obs[obs_col])
-    cat = continuous2categorical(obs_s, thresholds, nBins)
+    cat, _ = continuous2categorical(obs_s, thresholds, nBins)
     return {**type_category(pd.Series(cat)), "type": "continuous"}
 
 
@@ -103,6 +103,9 @@ def get_obsm_keys(adata_group: zarr.Group):
 
 
 def get_kde_values(data):
+    data = data[~np.isnan(data)]
+    data = data[~np.isinf(data)]
+
     x = np.linspace(data.min(), data.max(), 1000)
     kde = gaussian_kde(data)
     kde_values = kde.evaluate(x)
@@ -122,7 +125,7 @@ def get_obs_distribution(adata_group: zarr.Group, obs_colname: str):
     else:
         data_values = obs
 
-    log_data_values = np.log(np.square(data_values))
+    log_data_values = np.log(np.square(data_values) + np.spacing(1))
 
     kde_values = get_kde_values(data_values)
     log_kde_values = get_kde_values(log_data_values)

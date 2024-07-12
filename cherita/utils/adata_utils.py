@@ -245,14 +245,18 @@ def encode_dtype(a):
         return a
 
 
-def to_categorical(data: Union[pd.Series, np.Array], type: str, **kwargs):
+def to_categorical(
+    data: Union[pd.Series, np.Array], type: str, bins: dict = {}, **kwargs
+):
     func_dict = {
         "continuous": continuous2categorical,
         "discrete": discrete2categorical,
         "bool": bool2categorical,
     }
 
-    return func_dict.get(type, lambda data, **kwargs: (data, None))(data, **kwargs)
+    return func_dict.get(type, lambda data, **kwargs: (data, None))(
+        data, **bins, **kwargs
+    )
 
 
 def continuous2categorical(
@@ -265,9 +269,10 @@ def continuous2categorical(
     if nBins >= len(s.cat.categories):
         return s, None
     else:
-        return pd.Categorical(
+        s = pd.Categorical(
             pd.cut(s, thresholds or nBins, include_lowest=True, labels=False)
         )
+        return s, len(s.categories)
 
 
 def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwargs):
