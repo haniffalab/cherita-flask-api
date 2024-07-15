@@ -98,7 +98,7 @@ def get_disease_gene(
     except Exception as e:
         raise FetchError(f"Error fetching disease gene. {e}")
 
-    res_data = {item["id"]: item["attributes"] for item in res["data"]}
+    res_data = [{**item["attributes"], "id": item["id"]} for item in res["data"]]
 
     return res_data
 
