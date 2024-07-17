@@ -104,6 +104,11 @@ def parse_array(array: zarr.Array, store: zarr.Group = None):
         return array[:]
 
 
+def get_row_from_zarr_df(group: zarr.Group, idx: str, cols: list):
+    df_idx = get_index_in_array(get_group_index(group), idx)
+    return {c: group[c][df_idx] for c in cols}
+
+
 def get_s3_http_options(o: ParseResult):
     bucket, endpoint = o.hostname.split(".", 1)
     s3url = "s3://" + bucket + o.path

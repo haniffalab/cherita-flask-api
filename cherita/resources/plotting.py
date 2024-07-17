@@ -7,6 +7,7 @@ from cherita.plotting.heatmap import heatmap
 from cherita.plotting.dotplot import dotplot
 from cherita.plotting.matrixplot import matrixplot
 from cherita.plotting.violin import violin
+from cherita.plotting.pseudospatial import pseudospatial_gene
 
 
 class Heatmap(Resource):
@@ -78,5 +79,33 @@ class Violin(Resource):
                     var_names_col=json_data.get("varNamesCol", None),
                 )
             )
+        except KeyError as e:
+            raise BadRequest(f"Missing required parameter: {e}")
+
+
+class PseudospatialGene(Resource):
+    def get(self):
+        params = request.args
+        try:
+            adata_group = open_anndata_zarr(params["url"])
+            optional_params = {
+                "marker_id": "varId",
+                "marker_name": "varName",
+                "mask": "mask",
+                "var_names_col": "varNamesCol",
+                "colormap": "colormap",
+                "plot_format": "format",
+                "full_html": "fullHtml",
+                "show_colorbar": "showColorbar",
+                "min_value": "minValue",
+                "max_value": "maxValue",
+                "width": "width",
+                "height": "height",
+            }
+            optional_params_dict = {
+                p: params.get(n) for p, n in optional_params.items() if n in params
+            }
+
+            return pseudospatial_gene(adata_group, **optional_params_dict)
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")

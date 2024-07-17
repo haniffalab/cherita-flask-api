@@ -3,7 +3,13 @@ from flask_restful import Api
 
 from cherita.resources.about import About
 from cherita.resources.errors import errors
-from cherita.resources.plotting import Heatmap, Dotplot, Matrixplot, Violin
+from cherita.resources.plotting import (
+    Heatmap,
+    Dotplot,
+    Matrixplot,
+    Violin,
+    PseudospatialGene,
+)
 from cherita.resources.dataset import (
     ObsColsNames,
     ObsCols,
@@ -36,6 +42,7 @@ api.add_resource(Heatmap, "/heatmap")
 api.add_resource(Dotplot, "/dotplot")
 api.add_resource(Matrixplot, "/matrixplot")
 api.add_resource(Violin, "/violin")
+api.add_resource(PseudospatialGene, "/pseudospatial/gene")
 api.add_resource(SearchDiseaseNames, "/diseases")
 api.add_resource(SearchDiseaseGenes, "/diseases/genes")
 api.add_resource(GetDiseaseGenes, "/disease/genes")
