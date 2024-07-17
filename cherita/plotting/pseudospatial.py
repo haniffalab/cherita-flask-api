@@ -78,8 +78,8 @@ def plot_polygons(
     height: int = 500,
     full_html: bool = False,
 ):
-    min_value = min_value or min(values_dict.values())
-    max_value = max_value or max(values_dict.values())
+    min_value = float(min_value) if min_value else min(values_dict.values())
+    max_value = float(max_value) if max_value else max(values_dict.values())
 
     normalized_values = {
         k: (v - min_value) / (max_value - min_value) for k, v in values_dict.items()
@@ -116,7 +116,7 @@ def plot_polygons(
                             else (
                                 f"Mean expression: {values_dict[polygon]:.3e}"
                                 if values_dict[polygon] < 0.001
-                                else f"Mean expression: {values_dict[polygon]:.3f}"
+                                else f"Mean expression: {values_dict[polygon]:,.3f}"
                             )
                         ),
                     ]
@@ -125,6 +125,8 @@ def plot_polygons(
             )
         )
 
+    if isinstance(show_colorbar, str):
+        show_colorbar = show_colorbar.lower() in ["true", "1"]
     if show_colorbar:
         colorbar_trace = go.Scatter(
             x=[None],
@@ -148,9 +150,10 @@ def plot_polygons(
     fig.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
-        width=width,
-        height=height,
+        width=int(width),
+        height=int(height),
         modebar_remove=["select2d", "lasso2d"],
+        margin=dict(pad=0, l=10, r=10, t=10, b=10),
     )
 
     if plot_format in ["png", "svg"]:
@@ -158,6 +161,8 @@ def plot_polygons(
         img_str = base64.b64encode(img_bytes).decode()
         return img_str
     elif plot_format == "html":
+        if isinstance(full_html, str):
+            full_html = full_html.lower() in ["true", "1"]
         return fig.to_html(
             config=dict(displaylogo=False), include_plotlyjs="cdn", full_html=full_html
         )
