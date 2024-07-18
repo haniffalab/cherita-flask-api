@@ -3,7 +3,9 @@ from typing import Literal
 import base64
 import json
 import zarr
+import logging
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
 from cherita.utils.adata_utils import (
@@ -12,7 +14,7 @@ from cherita.utils.adata_utils import (
     get_group_index,
     get_row_from_zarr_df,
 )
-from cherita.resources.errors import BadRequest
+from cherita.resources.errors import BadRequest, NotInData, InvalidKey
 
 
 def pseudospatial_gene(
@@ -29,36 +31,53 @@ def pseudospatial_gene(
         raise BadRequest("Either 'varId' or 'varName' must be provided")
 
     if "masks" not in adata_group.uns or mask not in adata_group.uns["masks"]:
-        raise KeyError(f"Mask {mask} not found in adata")
+        raise NotInData(f"Mask '{mask}' not found in adata")
 
     if "polygons" not in adata_group.uns["masks"][mask] or not len(
         adata_group.uns["masks"][mask]["polygons"]
     ):
-        raise ValueError(f"No polygons found in mask {mask}")
+        raise NotInData(f"No polygons found in mask {mask}")
 
     if plot_format not in ["png", "svg", "html"]:
-        raise BadRequest("Invalid format. Must be one of 'png', 'svg', 'html'")
-
-    if marker_name:
-        if var_names_col:
-            marker_idx = get_index_in_array(adata_group.var[var_names_col], marker_name)
-            marker_id = get_group_index(adata_group.var)[marker_idx]
-        else:
-            marker_id = marker_name
-
-    if "varm" in adata_group.uns["masks"][mask].keys():  # precomputed mean expression
-        cols = parse_data(
-            adata_group.obs[adata_group.uns["masks"][mask]["varm"][()]]["categories"]
+        raise BadRequest(
+            f"Invalid format '{format}'. Must be one of 'png', 'svg', 'html'"
         )
+
+    try:
+        if marker_name:
+            if var_names_col:
+                marker_idx = get_index_in_array(
+                    adata_group.var[var_names_col], marker_name
+                )
+                marker_id = get_group_index(adata_group.var)[marker_idx]
+            else:
+                marker_id = marker_name
+                marker_idx = get_index_in_array(
+                    get_group_index(adata_group.var), marker_id
+                )
+    except (KeyError, InvalidKey):
+        raise NotInData(f"Marker '{marker_name}' not found in dataset")
+
+    if "varm" in adata_group.uns["masks"][mask].keys():
+        # precomputed mean expression
+        logging.info(f"Using precomputed mean expression of {marker_id}")
+        obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+        cats = parse_data(adata_group.obs[obs_colname]).categories
         values_dict = get_row_from_zarr_df(
             adata_group.varm[adata_group.uns["masks"][mask]["varm"][()]],
             marker_id,
-            cols,
+            cats,
         )
     else:
-        raise ValueError(
-            "No precomputed mean expression found in dataset for requested masks"
-        )
+        # compute mean expression
+        logging.info(f"Computing mean expression for {marker_id}")
+        obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+        obs_col = parse_data(adata_group.obs[obs_colname])
+        cats = obs_col.categories
+        values_dict = {
+            cat: adata_group.X[np.flatnonzero(obs_col.isin([cat])), marker_idx].mean(0)
+            for cat in cats
+        }
 
     return plot_polygons(
         adata_group, values_dict, mask, plot_format=plot_format, **kwargs
@@ -107,6 +126,7 @@ def plot_polygons(
                 showlegend=False,
                 fill="toself",
                 fillcolor=(color_values[polygon]),
+                hoverinfo="text",
                 text="<br>".join(
                     [
                         f"<b>{polygon}</b>",
@@ -121,7 +141,6 @@ def plot_polygons(
                         ),
                     ]
                 ),
-                hoverinfo="text",
             )
         )
 
@@ -164,7 +183,9 @@ def plot_polygons(
         if isinstance(full_html, str):
             full_html = full_html.lower() in ["true", "1"]
         return fig.to_html(
-            config=dict(displaylogo=False), include_plotlyjs="cdn", full_html=full_html
+            config=dict(displaylogo=False),
+            include_plotlyjs="cdn",
+            full_html=full_html,
         )
     else:  # json
         json.loads(fig.to_json())

@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, Response
 from flask_restful import Resource
 from cherita.resources.errors import BadRequest
 
@@ -84,17 +84,17 @@ class Violin(Resource):
 
 
 class PseudospatialGene(Resource):
-    def get(self):
-        params = request.args
+    def post(self):
+        json_data = request.get_json()
         try:
-            adata_group = open_anndata_zarr(params["url"])
+            adata_group = open_anndata_zarr(json_data["url"])
+            plot_format = json_data.get("format", "png")
             optional_params = {
                 "marker_id": "varId",
                 "marker_name": "varName",
                 "mask": "mask",
                 "var_names_col": "varNamesCol",
                 "colormap": "colormap",
-                "plot_format": "format",
                 "full_html": "fullHtml",
                 "show_colorbar": "showColorbar",
                 "min_value": "minValue",
@@ -103,9 +103,20 @@ class PseudospatialGene(Resource):
                 "height": "height",
             }
             optional_params_dict = {
-                p: params.get(n) for p, n in optional_params.items() if n in params
+                p: json_data.get(n)
+                for p, n in optional_params.items()
+                if n in json_data
             }
 
-            return pseudospatial_gene(adata_group, **optional_params_dict)
+            plot = pseudospatial_gene(
+                adata_group, plot_format=plot_format, **optional_params_dict
+            )
+
+            if plot_format == "html":
+                return Response(
+                    plot,
+                    mimetype="text/html",
+                )
+            return plot
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")

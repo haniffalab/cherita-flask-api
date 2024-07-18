@@ -29,6 +29,10 @@ class FetchError(HTTPException):
     pass
 
 
+class NotInData(HTTPException):
+    pass
+
+
 errors = {
     "InternalServerError": {
         "name": "InternalServerError",
@@ -41,4 +45,5 @@ errors = {
     "InvalidVar": {"name": "InvalidVar", "status": 400},
     "BadRequest": {"name": "BadRequest", "status": 400},
     "FetchError": {"name": "FetchError", "status": 500},
+    "NotInData": {"name": "NotInData", "status": 404},
 }
