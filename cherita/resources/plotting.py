@@ -7,7 +7,11 @@ from cherita.plotting.heatmap import heatmap
 from cherita.plotting.dotplot import dotplot
 from cherita.plotting.matrixplot import matrixplot
 from cherita.plotting.violin import violin
-from cherita.plotting.pseudospatial import pseudospatial_gene, pseudospatial_categorical
+from cherita.plotting.pseudospatial import (
+    pseudospatial_gene,
+    pseudospatial_categorical,
+    pseudospatial_continuous,
+)
 
 
 class Heatmap(Resource):
@@ -152,6 +156,47 @@ class PseudospatialCategorical(Resource):
                 adata_group,
                 obs_colname,
                 obs_values,
+                plot_format=plot_format,
+                **optional_params_dict,
+            )
+
+            if plot_format == "html":
+                return Response(
+                    plot,
+                    mimetype="text/html",
+                )
+            return plot
+        except KeyError as e:
+            raise BadRequest(f"Missing required parameter: {e}")
+
+
+class PseudospatialContinuous(Resource):
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            obs_colname = json_data["obsName"]
+            plot_format = json_data.get("format", "png")
+
+            optional_params = {
+                "mask": "mask",
+                "colormap": "colormap",
+                "full_html": "fullHtml",
+                "show_colorbar": "showColorbar",
+                "min_value": "minValue",
+                "max_value": "maxValue",
+                "width": "width",
+                "height": "height",
+            }
+            optional_params_dict = {
+                p: json_data.get(n)
+                for p, n in optional_params.items()
+                if n in json_data
+            }
+
+            plot = pseudospatial_continuous(
+                adata_group,
+                obs_colname,
                 plot_format=plot_format,
                 **optional_params_dict,
             )

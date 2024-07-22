@@ -17,6 +17,23 @@ from cherita.utils.adata_utils import (
 from cherita.resources.errors import BadRequest, NotInData, InvalidKey
 
 
+def validate_pseudospatial(adata_group: zarr.Group, mask: str):
+    if "masks" not in adata_group.uns or mask not in adata_group.uns["masks"]:
+        raise NotInData(f"Mask '{mask}' not found in adata")
+
+    if "polygons" not in adata_group.uns["masks"][mask] or not len(
+        adata_group.uns["masks"][mask]["polygons"]
+    ):
+        raise NotInData(f"No polygons found in mask {mask}")
+
+
+def validate_format(format: str):
+    if format not in ["png", "svg", "html"]:
+        raise BadRequest(
+            f"Invalid format '{format}'. Must be one of 'png', 'svg', 'html'"
+        )
+
+
 def pseudospatial_gene(
     adata_group: zarr.Group,
     marker_id: str = None,
@@ -26,22 +43,10 @@ def pseudospatial_gene(
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
-
+    validate_pseudospatial(adata_group, mask)
+    validate_format(plot_format)
     if not marker_id and not marker_name:
         raise BadRequest("Either 'varId' or 'varName' must be provided")
-
-    if "masks" not in adata_group.uns or mask not in adata_group.uns["masks"]:
-        raise NotInData(f"Mask '{mask}' not found in adata")
-
-    if "polygons" not in adata_group.uns["masks"][mask] or not len(
-        adata_group.uns["masks"][mask]["polygons"]
-    ):
-        raise NotInData(f"No polygons found in mask {mask}")
-
-    if plot_format not in ["png", "svg", "html"]:
-        raise BadRequest(
-            f"Invalid format '{format}'. Must be one of 'png', 'svg', 'html'"
-        )
 
     try:
         if marker_name:
@@ -93,7 +98,10 @@ def pseudospatial_categorical(
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
-
+    validate_pseudospatial(adata_group, mask)
+    validate_format(plot_format)
+    if obs_colname not in adata_group.obs:
+        raise NotInData(f"Column '{obs_colname}' not found in adata")
     if mode not in ["counts", "across", "within"]:
         raise BadRequest(
             f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
@@ -125,6 +133,35 @@ def pseudospatial_categorical(
                 / crosstab[obs_values].sum().sum()
                 for cat in mask_obs_col.categories
             }
+
+    return plot_polygons(
+        adata_group, values_dict, mask, plot_format=plot_format, **kwargs
+    )
+
+
+def pseudospatial_continuous(
+    adata_group: zarr.Group,
+    obs_colname: str,
+    mask: str = "spatial",
+    plot_format: Literal["png", "svg", "html", "json"] = "png",
+    **kwargs,
+):
+    validate_pseudospatial(adata_group, mask)
+    validate_format(plot_format)
+    if obs_colname not in adata_group.obs:
+        raise NotInData(f"Column '{obs_colname}' not found in adata")
+
+    mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+    mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+
+    obs_col = parse_data(adata_group.obs[obs_colname])
+
+    df = pd.DataFrame({mask_obs_colname: mask_obs_col, obs_colname: obs_col})
+    mean_table = df.pivot_table(
+        index=mask_obs_colname, values=obs_colname, aggfunc="mean"
+    )
+
+    values_dict = mean_table.to_dict()[obs_colname]
 
     return plot_polygons(
         adata_group, values_dict, mask, plot_format=plot_format, **kwargs
