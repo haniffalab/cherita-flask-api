@@ -7,7 +7,7 @@ from cherita.plotting.heatmap import heatmap
 from cherita.plotting.dotplot import dotplot
 from cherita.plotting.matrixplot import matrixplot
 from cherita.plotting.violin import violin
-from cherita.plotting.pseudospatial import pseudospatial_gene
+from cherita.plotting.pseudospatial import pseudospatial_gene, pseudospatial_categorical
 
 
 class Heatmap(Resource):
@@ -110,6 +110,50 @@ class PseudospatialGene(Resource):
 
             plot = pseudospatial_gene(
                 adata_group, plot_format=plot_format, **optional_params_dict
+            )
+
+            if plot_format == "html":
+                return Response(
+                    plot,
+                    mimetype="text/html",
+                )
+            return plot
+        except KeyError as e:
+            raise BadRequest(f"Missing required parameter: {e}")
+
+
+class PseudospatialCategorical(Resource):
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            obs_colname = json_data["obsName"]
+            obs_values = json_data["obsValues"]
+            plot_format = json_data.get("format", "png")
+
+            optional_params = {
+                "mask": "mask",
+                "mode": "mode",
+                "colormap": "colormap",
+                "full_html": "fullHtml",
+                "show_colorbar": "showColorbar",
+                "min_value": "minValue",
+                "max_value": "maxValue",
+                "width": "width",
+                "height": "height",
+            }
+            optional_params_dict = {
+                p: json_data.get(n)
+                for p, n in optional_params.items()
+                if n in json_data
+            }
+
+            plot = pseudospatial_categorical(
+                adata_group,
+                obs_colname,
+                obs_values,
+                plot_format=plot_format,
+                **optional_params_dict,
             )
 
             if plot_format == "html":

@@ -9,6 +9,7 @@ from cherita.resources.plotting import (
     Matrixplot,
     Violin,
     PseudospatialGene,
+    PseudospatialCategorical,
 )
 from cherita.resources.dataset import (
     ObsColsNames,
@@ -43,6 +44,7 @@ api.add_resource(Dotplot, "/dotplot")
 api.add_resource(Matrixplot, "/matrixplot")
 api.add_resource(Violin, "/violin")
 api.add_resource(PseudospatialGene, "/pseudospatial/gene")
+api.add_resource(PseudospatialCategorical, "/pseudospatial/categorical")
 api.add_resource(SearchDiseaseNames, "/diseases")
 api.add_resource(SearchDiseaseGenes, "/diseases/genes")
 api.add_resource(GetDiseaseGenes, "/disease/genes")

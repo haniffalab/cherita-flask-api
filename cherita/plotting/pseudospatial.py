@@ -84,6 +84,53 @@ def pseudospatial_gene(
     )
 
 
+def pseudospatial_categorical(
+    adata_group: zarr.Group,
+    obs_colname: str,
+    obs_values: list[str] = None,
+    mode: Literal["counts", "across", "within"] = "counts",
+    mask: str = "spatial",
+    plot_format: Literal["png", "svg", "html", "json"] = "png",
+    **kwargs,
+):
+
+    if mode not in ["counts", "across", "within"]:
+        raise BadRequest(
+            f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
+        )
+
+    mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+    mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+
+    obs_col = parse_data(adata_group.obs[obs_colname])
+
+    if not len(obs_values):
+        values_dict = {cat: None for cat in mask_obs_col.categories}
+    else:
+        crosstab = pd.crosstab(mask_obs_col, obs_col)
+
+        if mode == "counts":
+            values_dict = {
+                cat: crosstab[obs_values].loc[cat].sum()
+                for cat in mask_obs_col.categories
+            }
+        elif mode == "across":
+            values_dict = {
+                cat: crosstab[obs_values].loc[cat].sum() / crosstab.loc[cat].sum()
+                for cat in mask_obs_col.categories
+            }
+        elif mode == "within":
+            values_dict = {
+                cat: crosstab[obs_values].loc[cat].sum()
+                / crosstab[obs_values].sum().sum()
+                for cat in mask_obs_col.categories
+            }
+
+    return plot_polygons(
+        adata_group, values_dict, mask, plot_format=plot_format, **kwargs
+    )
+
+
 def plot_polygons(
     adata_group: zarr.Group,
     values_dict: pd.DataFrame,
@@ -97,16 +144,37 @@ def plot_polygons(
     height: int = 500,
     full_html: bool = False,
 ):
-    min_value = float(min_value) if min_value else min(values_dict.values())
-    max_value = float(max_value) if max_value else max(values_dict.values())
+
+    min_value = (
+        float(min_value)
+        if min_value is not None
+        else min([v for v in values_dict.values() if v is not None] or [0])
+    )
+    max_value = (
+        float(max_value)
+        if max_value is not None
+        else max([v for v in values_dict.values() if v is not None] or [1])
+    )
 
     normalized_values = {
-        k: (v - min_value) / (max_value - min_value) for k, v in values_dict.items()
+        k: (((v - min_value) / (max_value - min_value)) if v is not None else None)
+        for k, v in values_dict.items()
     }
     color_values = {
-        k: sample_colorscale(colormap, [v], colortype="rgb")[0]
+        k: (
+            (
+                sample_colorscale(
+                    colormap,
+                    [min(max(v, 0), 1)],
+                    colortype="rgb",
+                )[0]
+            )
+            if v is not None
+            else "rgba(0,0,0,0)"
+        )
         for k, v in normalized_values.items()
     }
+
     fig = go.Figure()
 
     for polygon in adata_group.uns["masks"][mask]["polygons"].keys():
@@ -119,7 +187,11 @@ def plot_polygons(
                     *adata_group.uns["masks"][mask]["polygons"][polygon][:, :, 0, 1]
                 ),
                 line=dict(
-                    color=(color_values[polygon]),
+                    color=(
+                        color_values[polygon]
+                        if values_dict[polygon] is not None
+                        else "rgb(0,0,0)"
+                    ),
                     width=1,
                 ),
                 mode="lines",
@@ -135,8 +207,13 @@ def plot_polygons(
                             if values_dict[polygon] == 0
                             else (
                                 f"Mean expression: {values_dict[polygon]:.3e}"
-                                if values_dict[polygon] < 0.001
-                                else f"Mean expression: {values_dict[polygon]:,.3f}"
+                                if values_dict[polygon] is not None
+                                and values_dict[polygon] < 0.001
+                                else (
+                                    f"Mean expression: {values_dict[polygon]:,.3f}"
+                                    if values_dict[polygon] is not None
+                                    else "Mean expression: N/A"
+                                )
                             )
                         ),
                     ]
