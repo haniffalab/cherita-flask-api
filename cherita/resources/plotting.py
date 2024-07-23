@@ -97,6 +97,7 @@ class PseudospatialGene(Resource):
                 "marker_id": "varId",
                 "marker_name": "varName",
                 "mask": "mask",
+                "mask_values": "maskValues",
                 "var_names_col": "varNamesCol",
                 "colormap": "colormap",
                 "full_html": "fullHtml",
@@ -138,6 +139,7 @@ class PseudospatialCategorical(Resource):
             optional_params = {
                 "mask": "mask",
                 "mode": "mode",
+                "mask_values": "maskValues",
                 "colormap": "colormap",
                 "full_html": "fullHtml",
                 "show_colorbar": "showColorbar",
@@ -180,6 +182,7 @@ class PseudospatialContinuous(Resource):
 
             optional_params = {
                 "mask": "mask",
+                "mask_values": "maskValues",
                 "colormap": "colormap",
                 "full_html": "fullHtml",
                 "show_colorbar": "showColorbar",

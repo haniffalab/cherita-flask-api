@@ -39,6 +39,7 @@ def pseudospatial_gene(
     marker_id: str = None,
     marker_name: str = None,
     mask: str = "spatial",
+    mask_values: list[str] = None,
     var_names_col: str = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
@@ -66,26 +67,40 @@ def pseudospatial_gene(
     if "varm" in adata_group.uns["masks"][mask].keys():
         # precomputed mean expression
         logging.info(f"Using precomputed mean expression of {marker_id}")
-        obs_colname = adata_group.uns["masks"][mask]["obs"][()]
-        cats = parse_data(adata_group.obs[obs_colname]).categories
+        mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+        masks = parse_data(adata_group.obs[mask_obs_colname]).categories
         values_dict = get_row_from_zarr_df(
             adata_group.varm[adata_group.uns["masks"][mask]["varm"][()]],
             marker_id,
-            cats,
+            masks,
         )
+        if mask_values:
+            for m in mask_values:
+                values_dict[m] = None
     else:
         # compute mean expression
         logging.info(f"Computing mean expression for {marker_id}")
-        obs_colname = adata_group.uns["masks"][mask]["obs"][()]
-        obs_col = parse_data(adata_group.obs[obs_colname])
-        cats = obs_col.categories
+        mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+        mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+        masks = mask_obs_col.categories
         values_dict = {
-            cat: adata_group.X[np.flatnonzero(obs_col.isin([cat])), marker_idx].mean(0)
-            for cat in cats
+            m: (
+                None
+                if mask_values and m not in mask_values
+                else adata_group.X[
+                    np.flatnonzero(mask_obs_col.isin([m])), marker_idx
+                ].mean(0)
+            )
+            for m in masks
         }
 
     return plot_polygons(
-        adata_group, values_dict, mask, plot_format=plot_format, **kwargs
+        adata_group,
+        values_dict,
+        mask,
+        text="Mean expression",
+        plot_format=plot_format,
+        **kwargs,
     )
 
 
@@ -95,6 +110,7 @@ def pseudospatial_categorical(
     obs_values: list[str] = None,
     mode: Literal["counts", "across", "within"] = "counts",
     mask: str = "spatial",
+    mask_values: list[str] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -109,33 +125,55 @@ def pseudospatial_categorical(
 
     mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+    masks = mask_obs_col.categories
 
     obs_col = parse_data(adata_group.obs[obs_colname])
 
     if not len(obs_values):
-        values_dict = {cat: None for cat in mask_obs_col.categories}
+        values_dict = {m: None for m in masks}
     else:
         crosstab = pd.crosstab(mask_obs_col, obs_col)
+        if mask_values:
+            crosstab = crosstab.loc[mask_values]
 
         if mode == "counts":
             values_dict = {
-                cat: crosstab[obs_values].loc[cat].sum()
-                for cat in mask_obs_col.categories
+                m: (
+                    None
+                    if mask_values and m not in mask_values
+                    else crosstab[obs_values].loc[m].sum()
+                )
+                for m in masks
             }
+            text = "Counts"
         elif mode == "across":
             values_dict = {
-                cat: crosstab[obs_values].loc[cat].sum() / crosstab.loc[cat].sum()
-                for cat in mask_obs_col.categories
+                m: (
+                    None
+                    if mask_values and m not in mask_values
+                    else (
+                        crosstab[obs_values].loc[m].sum()
+                        / crosstab[obs_values].sum().sum()
+                    )
+                    * 100
+                )
+                for m in masks
             }
+            text = "% across regions"
         elif mode == "within":
             values_dict = {
-                cat: crosstab[obs_values].loc[cat].sum()
-                / crosstab[obs_values].sum().sum()
-                for cat in mask_obs_col.categories
+                m: (
+                    None
+                    if mask_values and m not in mask_values
+                    else (crosstab[obs_values].loc[m].sum() / crosstab.loc[m].sum())
+                    * 100
+                )
+                for m in masks
             }
+            text = "% within region"
 
     return plot_polygons(
-        adata_group, values_dict, mask, plot_format=plot_format, **kwargs
+        adata_group, values_dict, mask, text=text, plot_format=plot_format, **kwargs
     )
 
 
@@ -143,6 +181,7 @@ def pseudospatial_continuous(
     adata_group: zarr.Group,
     obs_colname: str,
     mask: str = "spatial",
+    mask_values: list[str] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -157,6 +196,8 @@ def pseudospatial_continuous(
     obs_col = parse_data(adata_group.obs[obs_colname])
 
     df = pd.DataFrame({mask_obs_colname: mask_obs_col, obs_colname: obs_col})
+    if mask_values:
+        df = df[df[mask_obs_colname].isin(mask_values)]
     mean_table = df.pivot_table(
         index=mask_obs_colname, values=obs_colname, aggfunc="mean"
     )
@@ -164,7 +205,12 @@ def pseudospatial_continuous(
     values_dict = mean_table.to_dict()[obs_colname]
 
     return plot_polygons(
-        adata_group, values_dict, mask, plot_format=plot_format, **kwargs
+        adata_group,
+        values_dict,
+        mask,
+        text="Mean value",
+        plot_format=plot_format,
+        **kwargs,
     )
 
 
@@ -176,6 +222,7 @@ def plot_polygons(
     show_colorbar: bool = True,
     min_value: float = None,
     max_value: float = None,
+    text: str = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     width: int = 500,
     height: int = 500,
@@ -194,27 +241,34 @@ def plot_polygons(
     )
 
     normalized_values = {
-        k: (((v - min_value) / (max_value - min_value)) if v is not None else None)
+        k: ((v - min_value) / (max_value - min_value))
         for k, v in values_dict.items()
+        if v is not None
     }
     color_values = {
         k: (
-            (
-                sample_colorscale(
-                    colormap,
-                    [min(max(v, 0), 1)],
-                    colortype="rgb",
-                )[0]
-            )
-            if v is not None
-            else "rgba(0,0,0,0)"
+            sample_colorscale(
+                colormap,
+                [min(max(v, 0), 1)],
+                colortype="rgb",
+            )[0]
         )
         for k, v in normalized_values.items()
+        if v is not None
     }
+    text = (text + ": ") if text is not None else ""
 
     fig = go.Figure()
 
     for polygon in adata_group.uns["masks"][mask]["polygons"].keys():
+        line_color = (
+            values_dict.get(polygon) is not None
+            and color_values.get(polygon)
+            or "rgb(0,0,0)"
+        )
+        fill_color = color_values.get(polygon, "rgba(0,0,0,0)")
+        value = values_dict.get(polygon)
+
         fig.add_trace(
             go.Scatter(
                 x=list(
@@ -224,32 +278,27 @@ def plot_polygons(
                     *adata_group.uns["masks"][mask]["polygons"][polygon][:, :, 0, 1]
                 ),
                 line=dict(
-                    color=(
-                        color_values[polygon]
-                        if values_dict[polygon] is not None
-                        else "rgb(0,0,0)"
-                    ),
+                    color=line_color,
                     width=1,
                 ),
                 mode="lines",
                 showlegend=False,
                 fill="toself",
-                fillcolor=(color_values[polygon]),
+                fillcolor=fill_color,
                 hoverinfo="text",
                 text="<br>".join(
                     [
                         f"<b>{polygon}</b>",
                         (
-                            "Mean expression: 0"
-                            if values_dict[polygon] == 0
+                            f"{text}0"
+                            if value == 0
                             else (
-                                f"Mean expression: {values_dict[polygon]:.3e}"
-                                if values_dict[polygon] is not None
-                                and values_dict[polygon] < 0.001
+                                f"{text}{value:.3e}"
+                                if value is not None and value < 0.001
                                 else (
-                                    f"Mean expression: {values_dict[polygon]:,.3f}"
-                                    if values_dict[polygon] is not None
-                                    else "Mean expression: N/A"
+                                    f"{text}{value:,.3f}"
+                                    if value is not None
+                                    else "{text}N/A"
                                 )
                             )
                         ),
