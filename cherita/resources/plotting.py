@@ -96,7 +96,7 @@ class PseudospatialGene(Resource):
             optional_params = {
                 "marker_id": "varId",
                 "marker_name": "varName",
-                "mask": "mask",
+                "mask_set": "maskSet",
                 "mask_values": "maskValues",
                 "var_names_col": "varNamesCol",
                 "colormap": "colormap",
@@ -137,7 +137,7 @@ class PseudospatialCategorical(Resource):
             plot_format = json_data.get("format", "png")
 
             optional_params = {
-                "mask": "mask",
+                "mask_set": "maskSet",
                 "mode": "mode",
                 "mask_values": "maskValues",
                 "colormap": "colormap",
@@ -181,7 +181,7 @@ class PseudospatialContinuous(Resource):
             plot_format = json_data.get("format", "png")
 
             optional_params = {
-                "mask": "mask",
+                "mask_set": "maskSet",
                 "mask_values": "maskValues",
                 "colormap": "colormap",
                 "full_html": "fullHtml",

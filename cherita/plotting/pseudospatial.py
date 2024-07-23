@@ -17,14 +17,14 @@ from cherita.utils.adata_utils import (
 from cherita.resources.errors import BadRequest, NotInData, InvalidKey
 
 
-def validate_pseudospatial(adata_group: zarr.Group, mask: str):
-    if "masks" not in adata_group.uns or mask not in adata_group.uns["masks"]:
-        raise NotInData(f"Mask '{mask}' not found in adata")
+def validate_pseudospatial(adata_group: zarr.Group, mask_set: str):
+    if "masks" not in adata_group.uns or mask_set not in adata_group.uns["masks"]:
+        raise NotInData(f"Mask '{mask_set}' not found in adata")
 
-    if "polygons" not in adata_group.uns["masks"][mask] or not len(
-        adata_group.uns["masks"][mask]["polygons"]
+    if "polygons" not in adata_group.uns["masks"][mask_set] or not len(
+        adata_group.uns["masks"][mask_set]["polygons"]
     ):
-        raise NotInData(f"No polygons found in mask {mask}")
+        raise NotInData(f"No polygons found in mask {mask_set}")
 
 
 def validate_format(format: str):
@@ -34,17 +34,20 @@ def validate_format(format: str):
         )
 
 
+# @TODO: check for nan values
+
+
 def pseudospatial_gene(
     adata_group: zarr.Group,
     marker_id: str = None,
     marker_name: str = None,
-    mask: str = "spatial",
+    mask_set: str = "spatial",
     mask_values: list[str] = None,
     var_names_col: str = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
-    validate_pseudospatial(adata_group, mask)
+    validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
     if not marker_id and not marker_name:
         raise BadRequest("Either 'varId' or 'varName' must be provided")
@@ -64,13 +67,13 @@ def pseudospatial_gene(
     except (KeyError, InvalidKey):
         raise NotInData(f"Marker '{marker_name}' not found in dataset")
 
-    if "varm" in adata_group.uns["masks"][mask].keys():
+    if "varm" in adata_group.uns["masks"][mask_set].keys():
         # precomputed mean expression
         logging.info(f"Using precomputed mean expression of {marker_id}")
-        mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+        mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
         masks = parse_data(adata_group.obs[mask_obs_colname]).categories
         values_dict = get_row_from_zarr_df(
-            adata_group.varm[adata_group.uns["masks"][mask]["varm"][()]],
+            adata_group.varm[adata_group.uns["masks"][mask_set]["varm"][()]],
             marker_id,
             masks,
         )
@@ -80,7 +83,7 @@ def pseudospatial_gene(
     else:
         # compute mean expression
         logging.info(f"Computing mean expression for {marker_id}")
-        mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+        mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
         mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
         masks = mask_obs_col.categories
         values_dict = {
@@ -97,7 +100,7 @@ def pseudospatial_gene(
     return plot_polygons(
         adata_group,
         values_dict,
-        mask,
+        mask_set,
         text="Mean expression",
         plot_format=plot_format,
         **kwargs,
@@ -109,12 +112,12 @@ def pseudospatial_categorical(
     obs_colname: str,
     obs_values: list[str] = None,
     mode: Literal["counts", "across", "within"] = "counts",
-    mask: str = "spatial",
+    mask_set: str = "spatial",
     mask_values: list[str] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
-    validate_pseudospatial(adata_group, mask)
+    validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
     if obs_colname not in adata_group.obs:
         raise NotInData(f"Column '{obs_colname}' not found in adata")
@@ -123,7 +126,7 @@ def pseudospatial_categorical(
             f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
         )
 
-    mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+    mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
     masks = mask_obs_col.categories
 
@@ -173,24 +176,24 @@ def pseudospatial_categorical(
             text = "% within region"
 
     return plot_polygons(
-        adata_group, values_dict, mask, text=text, plot_format=plot_format, **kwargs
+        adata_group, values_dict, mask_set, text=text, plot_format=plot_format, **kwargs
     )
 
 
 def pseudospatial_continuous(
     adata_group: zarr.Group,
     obs_colname: str,
-    mask: str = "spatial",
+    mask_set: str = "spatial",
     mask_values: list[str] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
-    validate_pseudospatial(adata_group, mask)
+    validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
     if obs_colname not in adata_group.obs:
         raise NotInData(f"Column '{obs_colname}' not found in adata")
 
-    mask_obs_colname = adata_group.uns["masks"][mask]["obs"][()]
+    mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
 
     obs_col = parse_data(adata_group.obs[obs_colname])
@@ -207,7 +210,7 @@ def pseudospatial_continuous(
     return plot_polygons(
         adata_group,
         values_dict,
-        mask,
+        mask_set,
         text="Mean value",
         plot_format=plot_format,
         **kwargs,
@@ -217,7 +220,7 @@ def pseudospatial_continuous(
 def plot_polygons(
     adata_group: zarr.Group,
     values_dict: pd.DataFrame,
-    mask: str = "spatial",
+    mask_set: str = "spatial",
     colormap: str = "viridis",
     show_colorbar: bool = True,
     min_value: float = None,
@@ -260,7 +263,7 @@ def plot_polygons(
 
     fig = go.Figure()
 
-    for polygon in adata_group.uns["masks"][mask]["polygons"].keys():
+    for polygon in adata_group.uns["masks"][mask_set]["polygons"].keys():
         line_color = (
             values_dict.get(polygon) is not None
             and color_values.get(polygon)
@@ -272,10 +275,10 @@ def plot_polygons(
         fig.add_trace(
             go.Scatter(
                 x=list(
-                    *adata_group.uns["masks"][mask]["polygons"][polygon][:, :, 0, 0]
+                    *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
                 ),
                 y=list(
-                    *adata_group.uns["masks"][mask]["polygons"][polygon][:, :, 0, 1]
+                    *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
                 ),
                 line=dict(
                     color=line_color,
@@ -298,7 +301,7 @@ def plot_polygons(
                                 else (
                                     f"{text}{value:,.3f}"
                                     if value is not None
-                                    else "{text}N/A"
+                                    else f"{text}N/A"
                                 )
                             )
                         ),
@@ -343,6 +346,7 @@ def plot_polygons(
         img_str = base64.b64encode(img_bytes).decode()
         return img_str
     elif plot_format == "html":
+        fig.write_html("temp.html", full_html=full_html)
         if isinstance(full_html, str):
             full_html = full_html.lower() in ["true", "1"]
         return fig.to_html(
