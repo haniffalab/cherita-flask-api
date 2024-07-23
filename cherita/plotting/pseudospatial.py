@@ -346,7 +346,6 @@ def plot_polygons(
         img_str = base64.b64encode(img_bytes).decode()
         return img_str
     elif plot_format == "html":
-        fig.write_html("temp.html", full_html=full_html)
         if isinstance(full_html, str):
             full_html = full_html.lower() in ["true", "1"]
         return fig.to_html(
