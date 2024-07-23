@@ -34,9 +34,6 @@ def validate_format(format: str):
         )
 
 
-# @TODO: check for nan values
-
-
 def pseudospatial_gene(
     adata_group: zarr.Group,
     marker_id: str = None,
@@ -235,18 +232,24 @@ def plot_polygons(
     min_value = (
         float(min_value)
         if min_value is not None
-        else min([v for v in values_dict.values() if v is not None] or [0])
+        else min(
+            [v for v in values_dict.values() if v is not None and not np.isnan(v)]
+            or [0]
+        )
     )
     max_value = (
         float(max_value)
         if max_value is not None
-        else max([v for v in values_dict.values() if v is not None] or [1])
+        else max(
+            [v for v in values_dict.values() if v is not None and not np.isnan(v)]
+            or [1]
+        )
     )
 
     normalized_values = {
         k: ((v - min_value) / (max_value - min_value))
         for k, v in values_dict.items()
-        if v is not None
+        if v is not None and not np.isnan(v)
     }
     color_values = {
         k: (
