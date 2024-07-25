@@ -267,22 +267,25 @@ def continuous2categorical(
 ):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
-        return s, None
+        return pd.Categorical(s.astype(str)), None
     else:
         s = pd.Categorical(
-            pd.cut(s, thresholds or nBins, include_lowest=True, labels=False)
+            pd.cut(s, thresholds or nBins, include_lowest=True, labels=False).astype(
+                str
+            )
         )
         return s, len(s.categories)
 
 
-def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwargs):
+def discrete2categorical(array: np.Array, nBins: int = 20, **kwargs):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
-        return s, None
+        return pd.Categorical(s.astype(str)), None
     else:
-        return pd.Categorical(
-            pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
+        s = pd.Categorical(
+            pd.cut(s.index, nBins, include_lowest=True, labels=False).astype(str)
         )
+        return s, len(s.categories)
 
 
 def bool2categorical(array: np.Array, **kwargs):
