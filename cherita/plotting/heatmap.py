@@ -36,6 +36,7 @@ def heatmap(
     adata_group: zarr.Group,
     markers: Union[list[int], list[str]],
     obs_col: dict,
+    obs_values: list[str] = None,
     var_names_col: str = None,
 ) -> Any:
     """Method to generate a Plotly heatmap plot JSON as a Python object
@@ -45,6 +46,7 @@ def heatmap(
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         markers (Union[list[int], list[str]]): List of markers present in var.
         obs_col (dict): The obs column to group data
+        obs_values (list[str], optional): List of values in obs to plot.
         var_names_col (str, optional): Column in var to pull markers' names from.
             Defaults to None.
 
@@ -83,6 +85,10 @@ def heatmap(
     layout = dict(yaxis=dict(title="Markers"))
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
+
+    if obs_values is not None:
+        df = df[df[obs_colname].isin(obs_values)]
+        df[obs_colname] = df[obs_colname].cat.remove_unused_categories()
 
     df = df.sort_values(by=[obs_colname])
     df = df.reset_index()

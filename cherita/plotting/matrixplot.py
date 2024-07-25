@@ -18,6 +18,7 @@ def matrixplot(
     adata_group: zarr.Group,
     markers: Union[list[int], list[str]],
     obs_col: dict,
+    obs_values: list[str] = None,
     standard_scale: str = None,
     var_names_col: str = None,
 ) -> Any:
@@ -28,6 +29,7 @@ def matrixplot(
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         markers (Union[list[int], list[str]]): List of markers present in var.
         obs_col (dict): The obs column to group data.
+        obs_values (list[str], optional): List of values in obs to plot.
         standard_scale (str, optional): Scaling method to use.
             Can be set to None, "var" or "group. Defaults to None.
         var_names_col (str, optional): Column in var to pull markers' names from.
@@ -66,6 +68,10 @@ def matrixplot(
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
+
+    if obs_values is not None:
+        df = df[df[obs_colname].isin(obs_values)]
+        df[obs_colname] = df[obs_colname].cat.remove_unused_categories()
 
     values_df = df.groupby(obs_colname, observed=False).mean()
 
