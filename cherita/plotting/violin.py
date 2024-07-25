@@ -22,6 +22,7 @@ def violin(
     adata_group: zarr.Group,
     keys: Union[list[int], list[str]],
     obs_col: dict = None,
+    obs_values: list[str] = None,
     scale: str = "width",
     var_names_col: str = None,
 ) -> Any:
@@ -32,6 +33,7 @@ def violin(
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         keys (Union[list[int], list[str]]): Keys of .var_names or numerical obs columns.
         obs_col (dict, optional): Obs colum to group by. Defaults to None.
+        obs_values (list[str], optional): List of values in obs to plot.
         standard_scale (str, optional): Method to scale each violin's width.
             Can be set to "width" or "count".
             Defaults to "width".
@@ -81,6 +83,10 @@ def violin(
         df = pd.DataFrame(adata_group.X[:, marker_idx], columns=[keys])
 
         df[obs_colname], bins = to_categorical(obs, **obs_col)
+
+        if obs_values is not None:
+            df = df[df[obs_colname].isin(obs_values)]
+            df[obs_colname] = df[obs_colname].cat.remove_unused_categories()
 
         violins = []
         resampled = False
