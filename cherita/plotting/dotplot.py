@@ -23,6 +23,7 @@ def dotplot(
     adata_group: zarr.Group,
     markers: Union[list[int], list[str]],
     obs_col: dict,
+    obs_values: list[str] = None,
     expression_cutoff: float = 0.0,
     mean_only_expressed: bool = False,
     standard_scale: str = None,
@@ -34,7 +35,9 @@ def dotplot(
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
         markers (Union[list[int], list[str]]): List of markers present in var.
-        obs_col (str): The obs column to group data
+        obs_col (dict): The obs column to group data
+        obs_values (list[str], optional): List of values in obs to plot.
+            Defaults to None, in which case all obs values are plotted.
         expression_cutoff (float, optional): Minimum expression value to consider
             if mean_only_expressed is set to True. Defaults to 0.0.
         mean_only_expressed (bool, optional): Whether to only average values
@@ -77,6 +80,10 @@ def dotplot(
     df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
+
+    if obs_values is not None:
+        df = df[df[obs_colname].isin(obs_values)]
+        df[obs_colname] = df[obs_colname].cat.remove_unused_categories()
 
     df.set_index(obs_colname, append=True, inplace=True)
 
