@@ -2,21 +2,21 @@ from __future__ import annotations
 import json
 from typing import Any, Union
 import zarr
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
+from cherita.resources.errors import BadRequest, InvalidObs
 
 from cherita.utils.adata_utils import (
     to_categorical,
-    get_group_index,
-    get_indices_in_array,
     parse_data,
+    parse_marker,
 )
 
 
 def matrixplot(
     adata_group: zarr.Group,
-    markers: Union[list[int], list[str]],
+    var_keys: list[Union[int, str, dict]],
     obs_col: dict,
     obs_values: list[str] = None,
     standard_scale: str = None,
@@ -27,7 +27,7 @@ def matrixplot(
 
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
-        markers (Union[list[int], list[str]]): List of markers present in var.
+        var_keys (list[Union[int, str, dict]]): List of markers present in var.
         obs_col (dict): The obs column to group data.
         obs_values (list[str], optional): List of values in obs to plot.
         standard_scale (str, optional): Scaling method to use.
@@ -41,23 +41,7 @@ def matrixplot(
     if not isinstance(obs_col, dict):
         raise BadRequest("'selectedObs' must be an object")
 
-    if not all(isinstance(x, int) for x in markers) and not all(
-        isinstance(x, str) for x in markers
-    ):
-        raise InvalidVar("List of features should be all of the same type str or int")
-
-    if isinstance(markers[0], str):
-        try:
-            marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
-        except InvalidKey:
-            raise InvalidVar(f"Invalid feature name {markers}")
-    else:
-        marker_idx = markers
-
-    if var_names_col:
-        markers = adata_group.var[var_names_col][marker_idx]
-    else:
-        markers = get_group_index(adata_group.var)[marker_idx]
+    marker_data = [parse_marker(adata_group, v, var_names_col) for v in var_keys]
 
     obs_colname = obs_col["name"]
     try:
@@ -65,7 +49,10 @@ def matrixplot(
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
-    df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
+    df = pd.DataFrame(
+        np.concatenate([[m.X] for m in marker_data]).T,
+        columns=[m.name for m in marker_data],
+    )
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
 

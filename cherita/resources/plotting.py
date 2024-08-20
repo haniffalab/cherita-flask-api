@@ -19,10 +19,10 @@ heatmap_model = ns.model(
     "HeatmapModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "selectedMultiVar": fields.List(
+        "varKeys": fields.List(
             fields.String, required=True, description="List of selected markers"
         ),
-        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "obsCol": fields.String(required=True, description="Selected obs column"),
         "varNamesCol": fields.String(description="Var names column"),
     },
 )
@@ -49,8 +49,8 @@ class Heatmap(Resource):
             return jsonify(
                 heatmap(
                     adata_group=adata_group,
-                    markers=json_data["selectedMultiVar"],
-                    obs_col=json_data["selectedObs"],
+                    var_keys=json_data["varKeys"],
+                    obs_col=json_data["obsCol"],
                     obs_values=json_data.get("obsValues"),
                     var_names_col=json_data.get("varNamesCol"),
                 )
@@ -63,10 +63,10 @@ dotplot_model = ns.model(
     "DotplotModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "selectedMultiVar": fields.List(
+        "varKeys": fields.List(
             fields.String, required=True, description="List of selected markers"
         ),
-        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "obsCol": fields.String(required=True, description="Selected obs column"),
         "meanOnlyExpressed": fields.Boolean(description="Mean only expressed"),
         "expressionCutoff": fields.Float(description="Expression cutoff"),
         "standardScale": fields.String(description="Standard scale"),
@@ -92,8 +92,8 @@ class Dotplot(Resource):
             return jsonify(
                 dotplot(
                     adata_group=adata_group,
-                    markers=json_data["selectedMultiVar"],
-                    obs_col=json_data["selectedObs"],
+                    var_keys=json_data["varKeys"],
+                    obs_col=json_data["obsCol"],
                     obs_values=json_data.get("obsValues"),
                     mean_only_expressed=json_data.get("meanOnlyExpressed", False),
                     expression_cutoff=json_data.get("expressionCutoff", 0.0),
@@ -109,10 +109,10 @@ matrixplot_model = ns.model(
     "MatrixplotModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "selectedMultiVar": fields.List(
+        "varKeys": fields.List(
             fields.String, required=True, description="List of selected markers"
         ),
-        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "obsCol": fields.String(required=True, description="Selected obs column"),
         "standardScale": fields.String(description="Standard scale"),
         "varNamesCol": fields.String(description="Var names column"),
     },
@@ -136,8 +136,8 @@ class Matrixplot(Resource):
             return jsonify(
                 matrixplot(
                     adata_group=adata_group,
-                    markers=json_data["selectedMultiVar"],
-                    obs_col=json_data["selectedObs"],
+                    var_keys=json_data["varKeys"],
+                    obs_col=json_data["obsCol"],
                     obs_values=json_data.get("obsValues"),
                     standard_scale=json_data.get("standardScale"),
                     var_names_col=json_data.get("varNamesCol"),
@@ -151,10 +151,28 @@ violin_model = ns.model(
     "ViolinModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "keys": fields.List(fields.String, required=True, description="List of keys"),
-        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "mode": fields.String(required=True, description="Mode"),
         "scale": fields.String(description="Scale"),
         "varNamesCol": fields.String(description="Var names column"),
+    },
+)
+
+multikey_violin_model = ns.inherit(
+    "MultikeyViolinModel",
+    violin_model,
+    {
+        "varKeys": fields.List(fields.String, description="List of var keys"),
+        "obsKeys": fields.List(fields.String, description="List of obs keys"),
+    },
+)
+
+groupby_violin_model = ns.inherit(
+    "GroupbyViolinModel",
+    violin_model,
+    {
+        "varKey": fields.String(description="Var key"),
+        "obsCol": fields.String(description="Obs column"),
+        "obsValues": fields.List(fields.String, description="List of obs values"),
     },
 )
 
@@ -173,14 +191,27 @@ class Violin(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
+            mode = json_data["mode"]
+            if mode == "multikey":
+                ns.expect(multikey_violin_model)
+                params = {
+                    "var_keys": json_data.get("varKeys", []),
+                    "obs_keys": json_data.get("obsKeys", []),
+                }
+            elif mode == "groupby":
+                ns.expect(groupby_violin_model)
+                params = {
+                    "var_key": json_data["varKey"],
+                    "obs_col": json_data["obsCol"],
+                    "obs_values": json_data.get("obsValues"),
+                }
             return jsonify(
                 violin(
                     adata_group=adata_group,
-                    keys=json_data["keys"],
-                    obs_col=json_data.get("selectedObs"),
-                    obs_values=json_data.get("obsValues"),
-                    scale=json_data.get("scale"),
+                    mode=mode,
+                    scale=json_data.get("scale", "width"),
                     var_names_col=json_data.get("varNamesCol"),
+                    **params,
                 )
             )
         except KeyError as e:
