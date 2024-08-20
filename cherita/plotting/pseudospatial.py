@@ -34,6 +34,7 @@ def validate_format(format: str):
         )
 
 
+# @TODO: support marker sets
 def pseudospatial_gene(
     adata_group: zarr.Group,
     marker_id: str = None,
