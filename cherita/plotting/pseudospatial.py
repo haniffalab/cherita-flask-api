@@ -11,8 +11,8 @@ from plotly.colors import sample_colorscale
 from cherita.utils.adata_utils import (
     parse_data,
     get_row_from_zarr_df,
-    parse_marker,
 )
+from cherita.utils.models import Marker
 from cherita.resources.errors import BadRequest, NotInData
 
 
@@ -45,7 +45,7 @@ def pseudospatial_gene(
     validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
 
-    marker = parse_marker(adata_group, var_key, var_names_col)
+    marker = Marker.from_any(adata_group, var_key, var_names_col)
 
     if not marker.isSet and "varm" in adata_group.uns["masks"][mask_set].keys():
         # precomputed mean expression
