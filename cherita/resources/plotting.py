@@ -222,17 +222,16 @@ pseudospatial_gene_model = ns.model(
     "PseudospatialGeneModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "varKey": fields.String(required=True, description="Var key"),
         "format": fields.String(description="Plot format"),
-        "marker_id": fields.String(description="Marker ID"),
-        "marker_name": fields.String(description="Marker name"),
-        "mask_set": fields.String(description="Mask set"),
-        "mask_values": fields.List(fields.String, description="Mask values"),
-        "var_names_col": fields.String(description="Var names column"),
+        "maskSet": fields.String(description="Mask set"),
+        "maskValues": fields.List(fields.String, description="Mask values"),
+        "varNamesCol": fields.String(description="Var names column"),
         "colormap": fields.String(description="Colormap"),
-        "full_html": fields.Boolean(description="Full HTML"),
-        "show_colorbar": fields.Boolean(description="Show colorbar"),
-        "min_value": fields.Float(description="Min value"),
-        "max_value": fields.Float(description="Max value"),
+        "fullHtml": fields.Boolean(description="Full HTML"),
+        "showColorbar": fields.Boolean(description="Show colorbar"),
+        "minValue": fields.Float(description="Min value"),
+        "maxValue": fields.Float(description="Max value"),
         "width": fields.Integer(description="Width"),
         "height": fields.Integer(description="Height"),
     },
@@ -252,10 +251,9 @@ class PseudospatialGene(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
+            var_key = json_data["varKey"]
             plot_format = json_data.get("format", "png")
             optional_params = {
-                "marker_id": "varId",
-                "marker_name": "varName",
                 "mask_set": "maskSet",
                 "mask_values": "maskValues",
                 "var_names_col": "varNamesCol",
@@ -274,7 +272,10 @@ class PseudospatialGene(Resource):
             }
 
             plot = pseudospatial_gene(
-                adata_group, plot_format=plot_format, **optional_params_dict
+                adata_group,
+                var_key=var_key,
+                plot_format=plot_format,
+                **optional_params_dict,
             )
 
             if plot_format == "html":

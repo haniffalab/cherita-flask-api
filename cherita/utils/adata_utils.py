@@ -298,7 +298,7 @@ def bool2categorical(array: np.Array, **kwargs):
     return pd.Series(array).astype("category"), None
 
 
-Marker = namedtuple("Marker", ["index", "name", "matrix_index", "X"])
+Marker = namedtuple("Marker", ["index", "name", "matrix_index", "X", "isSet"])
 
 
 # @TODO: make class ? make X a function
@@ -313,11 +313,13 @@ def parse_marker(
         markers = [
             parse_marker(adata_group, m, var_names_col) for m in marker["indices"]
         ]
+
         return Marker(
             index=[m.index for m in markers],
             name=name,
             matrix_index=[m.matrix_index for m in markers],
             X=aggregation_func([m.X for m in markers]),
+            isSet=True,
         )
     else:
         if isinstance(marker, int):
@@ -333,6 +335,13 @@ def parse_marker(
                 raise InvalidVar(f"Invalid feature name {marker}")
         else:
             raise InvalidVar(f"Invalid feature type {type(marker)}")
-        name = adata_group.var[var_names_col][matrix_index] if var_names_col else index
-        X = adata_group.X.oindex[:, matrix_index]
-    return Marker(index, name, matrix_index, X)
+
+        return Marker(
+            index,
+            name=(
+                adata_group.var[var_names_col][matrix_index] if var_names_col else index
+            ),
+            matrix_index=matrix_index,
+            X=adata_group.X.oindex[:, matrix_index],
+            isSet=False,
+        )
