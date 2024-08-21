@@ -10,8 +10,8 @@ from cherita.resources.errors import BadRequest, InvalidObs
 from cherita.utils.adata_utils import (
     to_categorical,
     parse_data,
-    parse_marker,
 )
+from cherita.utils.models import Marker
 from cherita.plotting.resampling import resample
 
 MAX_SAMPLES = 100000
@@ -75,7 +75,7 @@ def groupby_violin(
         tuple[go.Figure, bool]: A tuple containing the Plotly violin plot figure
             and a boolean indicating if resampling was performed.
     """
-    marker = parse_marker(adata_group, var_key, var_names_col)
+    marker = Marker.from_any(adata_group, var_key, var_names_col)
     obs_colname = obs_col["name"]
 
     try:
@@ -150,12 +150,12 @@ def multikey_violin(
             and a boolean indicating if resampling was performed.
     """
 
-    marker_data = [parse_marker(adata_group, m, var_names_col) for m in var_keys]
+    markers = [Marker.from_any(adata_group, m, var_names_col) for m in var_keys]
 
-    if len(marker_data):
+    if len(markers):
         df = pd.DataFrame(
-            np.concatenate([[m.X] for m in marker_data]).T,
-            columns=[m.name for m in marker_data],
+            np.concatenate([[m.X] for m in markers]).T,
+            columns=[m.name for m in markers],
         )
     else:
         df = pd.DataFrame()

@@ -8,11 +8,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from cherita.resources.errors import BadRequest, InvalidObs
 
-from cherita.utils.adata_utils import (
-    parse_data,
-    to_categorical,
-    parse_marker,
-)
+from cherita.utils.adata_utils import parse_data, to_categorical
+from cherita.utils.models import Marker
 
 CHUNK_SIZE = 60000
 
@@ -56,8 +53,8 @@ def heatmap(
     if not isinstance(obs_col, dict):
         raise BadRequest("'selectedObs' must be an object")
 
-    marker_data = [parse_marker(adata_group, v, var_names_col) for v in var_keys]
-    marker_names = [m.name for m in marker_data]
+    markers = [Marker.from_any(adata_group, v, var_names_col) for v in var_keys]
+    marker_names = [m.name for m in markers]
 
     obs_colname = obs_col["name"]
     try:
@@ -66,8 +63,8 @@ def heatmap(
         raise InvalidObs(f"Invalid observation {e}")
 
     df = pd.DataFrame(
-        np.concatenate([[m.X] for m in marker_data]).T,
-        columns=[m.name for m in marker_data],
+        np.concatenate([[m.X] for m in markers]).T,
+        columns=[m.name for m in markers],
     )
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)

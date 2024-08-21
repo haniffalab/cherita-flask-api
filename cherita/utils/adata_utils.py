@@ -3,12 +3,11 @@ import os
 import zarr
 import numpy as np
 import pandas as pd
-from collections import namedtuple
 from zarr.errors import GroupNotFoundError
-from typing import Union, Callable
+from typing import Union
 from urllib.parse import urlparse, ParseResult
 
-from cherita.resources.errors import ReadZarrError, InvalidKey, InvalidVar
+from cherita.resources.errors import ReadZarrError, InvalidKey
 
 
 def get_group_index(group: zarr.Group):
@@ -296,52 +295,3 @@ def discrete2categorical(array: np.Array, nBins: int = 20, **kwargs):
 
 def bool2categorical(array: np.Array, **kwargs):
     return pd.Series(array).astype("category"), None
-
-
-Marker = namedtuple("Marker", ["index", "name", "matrix_index", "X", "isSet"])
-
-
-# @TODO: make class ? make X a function
-def parse_marker(
-    adata_group: zarr.Group,
-    marker: Union[int, str, dict],
-    var_names_col: str = None,
-    aggregation_func: Callable[[np.ndarray], float] = lambda x: np.mean(x, axis=0),
-):
-    if isinstance(marker, dict):
-        name = marker["name"]
-        markers = [
-            parse_marker(adata_group, m, var_names_col) for m in marker["indices"]
-        ]
-
-        return Marker(
-            index=[m.index for m in markers],
-            name=name,
-            matrix_index=[m.matrix_index for m in markers],
-            X=aggregation_func([m.X for m in markers]),
-            isSet=True,
-        )
-    else:
-        if isinstance(marker, int):
-            matrix_index = marker
-            index = get_group_index(adata_group.var)[matrix_index]
-        elif isinstance(marker, str):
-            index = marker
-            try:
-                matrix_index = get_index_in_array(
-                    get_group_index(adata_group.var), marker
-                )
-            except InvalidKey:
-                raise InvalidVar(f"Invalid feature name {marker}")
-        else:
-            raise InvalidVar(f"Invalid feature type {type(marker)}")
-
-        return Marker(
-            index,
-            name=(
-                adata_group.var[var_names_col][matrix_index] if var_names_col else index
-            ),
-            matrix_index=matrix_index,
-            X=adata_group.X.oindex[:, matrix_index],
-            isSet=False,
-        )
