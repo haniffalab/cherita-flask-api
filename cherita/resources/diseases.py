@@ -27,11 +27,11 @@ class GetDiseaseGenes(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            disease_name = json_data["diseaseName"]
+            disease_id = json_data["diseaseId"]
             col = json_data.get("col", None)
             disease_datasets = json_data.get("diseaseDatasets", [])
             return jsonify(
-                get_disease_genes(adata_group, disease_name, col, disease_datasets)
+                get_disease_genes(adata_group, disease_id, col, disease_datasets)
             )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))

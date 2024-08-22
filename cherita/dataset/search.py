@@ -1,6 +1,5 @@
 import zarr
 import pandas as pd
-from collections import defaultdict
 from cherita.dataset.metadata import (
     get_var_names,
     match_var_names,
@@ -48,10 +47,9 @@ def search_diseases(
     return list(res_data.values())
 
 
-# @TODO: change disease_name for disease_id
 def get_disease_genes(
     adata_group: zarr.Group,
-    disease_name: str,
+    disease_id: str,
     col: str = None,
     disease_datasets: list = [],
 ):
@@ -59,7 +57,7 @@ def get_disease_genes(
 
     params = {
         "filters[disease_datasets][name][$contains]": disease_datasets,
-        "filters[disease_name][$eq]": disease_name,
+        "filters[disease_id][$eq]": disease_id,
         "fields": ["disease_id", "disease_name", "gene_id", "gene_name", "uid"],
         "sort": "gene_name",
         "pagination[start]": 0,
