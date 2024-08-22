@@ -1,5 +1,6 @@
 import zarr
 import pandas as pd
+from collections import defaultdict
 from cherita.dataset.metadata import (
     get_var_names,
     match_var_names,
@@ -35,9 +36,16 @@ def search_diseases(
     except Exception as e:
         raise FetchError(f"Error fetching diseases. {e}")
 
-    res_data = [({"id": item["id"]} | item["attributes"]) for item in res["data"]]
+    res_data = {
+        item["attributes"]["disease_id"]: {
+            "id": item["attributes"]["disease_id"],
+            "disease_id": item["attributes"]["disease_id"],
+            "disease_name": item["attributes"]["disease_name"],
+        }
+        for item in res["data"]
+    }
 
-    return res_data
+    return list(res_data.values())
 
 
 # @TODO: change disease_name for disease_id
