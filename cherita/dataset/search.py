@@ -1,5 +1,6 @@
 import zarr
 import pandas as pd
+from collections import defaultdict
 from cherita.dataset.metadata import (
     get_var_names,
     match_var_names,
