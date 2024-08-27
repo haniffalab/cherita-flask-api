@@ -144,7 +144,6 @@ def open_anndata_zarr(url: str):
     return adata_group
 
 
-# @TODO: add undefined category in plotting functions as well
 def get_undefined_category_name(series):
     base_name = "undefined"
     if base_name not in series.cat.categories:
@@ -156,16 +155,27 @@ def get_undefined_category_name(series):
         return f"{base_name}_{i}"
 
 
+def fillna_as_undefined(obs):
+    if obs.hasnans:
+        undefined_cat = get_undefined_category_name(obs)
+        # Add undefined category at end of categories, code will be len(categories)+1
+        obs = obs.cat.add_categories(undefined_cat)
+        obs.fillna(undefined_cat, inplace=True)
+        return obs, undefined_cat
+    return obs, None
+
+
 def type_category(obs):
+    obs, undefined_cat = fillna_as_undefined(obs)
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
     codes = {str(i): idx for idx, i in enumerate(categories)}
     value_counts = {}
 
-    if obs.hasnans:
-        undefined_cat = get_undefined_category_name(obs)
-        categories.append(undefined_cat)
+    if undefined_cat:
+        # -1 code for undefined category for frontend to match zarr data
+        # backend generated plots rely on category name instead of code
+        # so it doesn't matter if the code is -1 in frontend
         codes.update({undefined_cat: -1})
-        value_counts[undefined_cat] = int(obs.isna().sum())
 
     return {
         "type": "categorical",
@@ -251,47 +261,88 @@ def encode_dtype(a):
 
 
 def to_categorical(
-    data: Union[pd.Series, np.Array], type: str, bins: dict = {}, **kwargs
+    data: Union[pd.Series, np.Array],
+    type: str,
+    bins: dict = {},
+    fillna: bool = True,
+    as_str: bool = True,
+    **kwargs,
 ):
     func_dict = {
         "continuous": continuous2categorical,
         "discrete": discrete2categorical,
-        "bool": bool2categorical,
+        "boolean": bool2categorical,
+        "categorical": categorical,
     }
 
-    return func_dict.get(type, lambda data, **kwargs: (data, None))(
-        data, **bins, **kwargs
-    )
+    cat_data, bins = func_dict.get(
+        type,
+        lambda data, **kwargs: (
+            data,
+            None,
+        ),
+    )(data, **bins, fillna=fillna, **kwargs)
+
+    if as_str:
+        cat_data = cat_data.rename_categories(lambda x: str(x))
+
+    return cat_data, bins
+
+
+def categorical(c: pd.Categorical, fillna: bool = True, **kwargs):
+    if fillna:
+        s = pd.Series(c)
+        s, _ = fillna_as_undefined(s)
+        return pd.Categorical(s), None
+    return c, None
 
 
 def continuous2categorical(
     array: np.Array,
     thresholds: list[Union[int, float]] = None,
     nBins: int = 20,
+    fillna: bool = True,
     **kwargs,
 ):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
-        return pd.Categorical(s.astype(str)), None
+        if fillna:
+            s, _ = fillna_as_undefined(s)
+        return pd.Categorical(s), None
     else:
-        s = pd.Categorical(
-            pd.cut(s, thresholds or nBins, include_lowest=True, labels=False).astype(
-                str
-            )
+        s_cut = (
+            pd.cut(s, thresholds or nBins, include_lowest=True, labels=False)
+            .astype("Int64")
+            .astype("category")
         )
-        return s, len(s.categories)
+        if fillna:
+            s_cut, _ = fillna_as_undefined(s_cut)
+        s_cat = pd.Categorical(s_cut)
+        return s_cat, len(s_cat.categories)
 
 
-def discrete2categorical(array: np.Array, nBins: int = 20, **kwargs):
+def discrete2categorical(
+    array: np.Array, nBins: int = 20, fillna: bool = True, **kwargs
+):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
-        return pd.Categorical(s.astype(str)), None
+        if fillna:
+            s, _ = fillna_as_undefined(s)
+        return pd.Categorical(s), None
     else:
-        s = pd.Categorical(
-            pd.cut(s.index, nBins, include_lowest=True, labels=False).astype(str)
+        s_cut = (
+            pd.cut(s.index, nBins, include_lowest=True, labels=False)
+            .astype("Int64")
+            .astype("category")
         )
-        return s, len(s.categories)
+        if fillna:
+            s_cut, _ = fillna_as_undefined(s_cut)
+        s_cat = pd.Categorical(s_cut)
+        return s_cat, len(s_cat.categories)
 
 
-def bool2categorical(array: np.Array, **kwargs):
-    return pd.Series(array).astype("category"), None
+def bool2categorical(array: np.Array, fillna: bool = True, **kwargs):
+    s = pd.Series(array).astype("category")
+    if fillna:
+        s, _ = fillna_as_undefined(s)
+    return pd.Categorical(s), None
