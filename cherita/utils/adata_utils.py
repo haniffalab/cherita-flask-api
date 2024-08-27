@@ -199,13 +199,12 @@ def type_bool(obs):
 
 
 def type_numeric(obs):
-    accuracy = 4
     return {
         "type": "continuous",
-        "min": encode_dtype(round(ndarray_min(obs), accuracy)),
-        "max": encode_dtype(round(ndarray_max(obs), accuracy)),
-        "mean": encode_dtype(round(ndarray_mean(obs), accuracy)),
-        "median": encode_dtype(round(ndarray_median(obs), accuracy)),
+        "min": encode_dtype(ndarray_min(obs)),
+        "max": encode_dtype(ndarray_max(obs)),
+        "mean": encode_dtype(ndarray_mean(obs)),
+        "median": encode_dtype(ndarray_median(obs)),
     }
 
 
