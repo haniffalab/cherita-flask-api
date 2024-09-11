@@ -1,10 +1,14 @@
+import os
+import click
+import json
 from flask import Flask, render_template
+from flask.cli import with_appcontext
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from flask_cors import CORS
 
 from config import Config
-from cherita import api
+from cherita.api import api, bp
 
 
 def create_app(test_config=None):
@@ -38,6 +42,17 @@ def create_app(test_config=None):
         return render_template("index.html")
 
     # apply the blueprints to the app
-    app.register_blueprint(api.bp, url_prefix=app.config["API_PREFIX"])
+    app.register_blueprint(bp, url_prefix=app.config["API_PREFIX"])
+
+    @click.command("docs")
+    @with_appcontext
+    def generate_docs():
+        with app.test_request_context():
+            os.makedirs(os.path.dirname(app.config["DOCS_JSON"]), exist_ok=True)
+            with open(app.config["DOCS_JSON"], "w") as f:
+                json.dump(api.__schema__, f, indent=4)
+            click.echo("Generated docs")
+
+    app.cli.add_command(generate_docs)
 
     return app
