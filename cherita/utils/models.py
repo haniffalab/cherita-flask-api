@@ -146,6 +146,32 @@ class Marker:
 
         return marker_instance
 
+    @classmethod
+    def get_X_at(self, indices: list[int] = None) -> np.ndarray:
+        """
+        Get the data associated with the marker at the specified indices.
+
+        Args:
+            indices (list[int], optional): The indices to get the data for.
+                Defaults to None.
+
+        Returns:
+            np.ndarray: The data associated with the marker at the specified indices.
+        """
+        if self.isSet:
+            if self._aggregation_function is None:
+                raise ValueError(
+                    "Aggregation function is not set for a set of markers."
+                )
+            return self._aggregation_function(
+                [
+                    self.adata_group.X[indices or slice(None), i]
+                    for i in self.matrix_index
+                ]
+            )
+        else:
+            return self.adata_group.X[indices or slice(None), self.matrix_index]
+
     @property
     def X(self) -> np.ndarray:
         """

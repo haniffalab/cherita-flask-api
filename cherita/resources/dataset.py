@@ -257,6 +257,14 @@ class MatrixMean(Resource):
             adata_group = open_anndata_zarr(json_data["url"])
             var_keys = json_data["varKeys"]
             var_names_col = json_data.get("varNamesCol", None)
-            return jsonify(get_var_x_mean(adata_group, var_keys, var_names_col))
+            obs_indices = json_data.get("obsIndices", None)
+            return jsonify(
+                get_var_x_mean(
+                    adata_group,
+                    var_keys,
+                    obs_indices=obs_indices,
+                    var_names_col=var_names_col,
+                )
+            )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))

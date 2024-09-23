@@ -62,7 +62,7 @@ def get_var_col_names(adata_group: zarr.Group):
 def get_var_histograms(
     adata_group: zarr.Group,
     var_key: int,
-    obs_indices: Union[list, dict] = None,
+    obs_indices: list[int] = None,
 ):
     marker = Marker.from_any(adata_group, var_key)
     hist, bin_edges = np.histogram(
