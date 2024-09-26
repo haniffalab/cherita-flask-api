@@ -3,16 +3,13 @@ import math
 import json
 from typing import Union, Any
 import zarr
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from cherita.resources.errors import BadRequest, InvalidKey, InvalidObs, InvalidVar
+from cherita.resources.errors import BadRequest, InvalidObs
 
-from cherita.utils.adata_utils import (
-    get_group_index,
-    get_indices_in_array,
-    parse_data,
-    to_categorical,
-)
+from cherita.utils.adata_utils import parse_data, to_categorical
+from cherita.utils.models import Marker
 
 CHUNK_SIZE = 60000
 
@@ -34,7 +31,7 @@ def split_df(df, chunk_size):
 
 def heatmap(
     adata_group: zarr.Group,
-    markers: Union[list[int], list[str]],
+    var_keys: list[Union[int, str, dict]],
     obs_col: dict,
     obs_values: list[str] = None,
     var_names_col: str = None,
@@ -44,7 +41,7 @@ def heatmap(
 
     Args:
         adata_group (zarr.Group): Root zarr Group of an Anndata-Zarr object
-        markers (Union[list[int], list[str]]): List of markers present in var.
+        var_keys (list[Union[int, str, dict]]): List of markers present in var.
         obs_col (dict): The obs column to group data
         obs_values (list[str], optional): List of values in obs to plot.
         var_names_col (str, optional): Column in var to pull markers' names from.
@@ -56,23 +53,8 @@ def heatmap(
     if not isinstance(obs_col, dict):
         raise BadRequest("'selectedObs' must be an object")
 
-    if not all(isinstance(x, int) for x in markers) and not all(
-        isinstance(x, str) for x in markers
-    ):
-        raise InvalidVar("List of features should be all of the same type str or int")
-
-    if isinstance(markers[0], str):
-        try:
-            marker_idx = get_indices_in_array(get_group_index(adata_group.var), markers)
-        except InvalidKey:
-            raise InvalidVar(f"Invalid feature name {markers}")
-    else:
-        marker_idx = markers
-
-    if var_names_col:
-        markers = adata_group.var[var_names_col][marker_idx]
-    else:
-        markers = get_group_index(adata_group.var)[marker_idx]
+    markers = [Marker.from_any(adata_group, v, var_names_col) for v in var_keys]
+    marker_names = [m.name for m in markers]
 
     obs_colname = obs_col["name"]
     try:
@@ -80,9 +62,10 @@ def heatmap(
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
-    df = pd.DataFrame(adata_group.X.oindex[:, marker_idx], columns=markers)
-
-    layout = dict(yaxis=dict(title="Markers"))
+    df = pd.DataFrame(
+        np.concatenate([[m.X] for m in markers]).T,
+        columns=[m.name for m in markers],
+    )
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
 
@@ -93,17 +76,18 @@ def heatmap(
     df = df.sort_values(by=[obs_colname])
     df = df.reset_index()
 
+    layout = dict(yaxis=dict(title="Markers"))
     ticks = set([])
     middle_ticks = []
     for c in df[obs_colname].cat.categories:
-        ticks.add(df[df[obs_colname] == c][markers].index.min())
-        ticks.add(df[df[obs_colname] == c][markers].index.max() + 1)
+        ticks.add(df[df[obs_colname] == c][marker_names].index.min())
+        ticks.add(df[df[obs_colname] == c][marker_names].index.max() + 1)
         middle_ticks.append(
             (
-                df[df[obs_colname] == c][markers].index.min()
+                df[df[obs_colname] == c][marker_names].index.min()
                 + (
-                    df[df[obs_colname] == c][markers].index.max()
-                    - df[df[obs_colname] == c][markers].index.min()
+                    df[df[obs_colname] == c][marker_names].index.max()
+                    - df[df[obs_colname] == c][marker_names].index.min()
                 )
                 // 2
             )
@@ -128,8 +112,8 @@ def heatmap(
     for d in sub_dfs:
         sub_heatmaps.append(
             go.Heatmap(
-                z=d[markers].transpose(),
-                y=markers,
+                z=d[marker_names].transpose(),
+                y=marker_names,
                 x=d.index.union([d.index.max() + 1]),
                 coloraxis="coloraxis",
                 name="",
@@ -138,7 +122,7 @@ def heatmap(
 
     fig = go.Figure(data=sub_heatmaps, layout=layout)
 
-    if not len(markers) > 2:
+    if not len(var_keys) > 2:
         fig.update_yaxes(fixedrange=True)
 
     return json.loads(fig.to_json())

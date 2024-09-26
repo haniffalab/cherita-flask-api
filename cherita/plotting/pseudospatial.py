@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Literal
+from typing import Union, Literal
 import base64
 import json
 import zarr
@@ -10,11 +10,10 @@ import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
 from cherita.utils.adata_utils import (
     parse_data,
-    get_index_in_array,
-    get_group_index,
     get_row_from_zarr_df,
 )
-from cherita.resources.errors import BadRequest, NotInData, InvalidKey
+from cherita.utils.models import Marker
+from cherita.resources.errors import BadRequest, NotInData
 
 
 def validate_pseudospatial(adata_group: zarr.Group, mask_set: str):
@@ -36,8 +35,7 @@ def validate_format(format: str):
 
 def pseudospatial_gene(
     adata_group: zarr.Group,
-    marker_id: str = None,
-    marker_name: str = None,
+    var_key: Union[int, str, dict],
     mask_set: str = "spatial",
     mask_values: list[str] = None,
     var_names_col: str = None,
@@ -46,32 +44,17 @@ def pseudospatial_gene(
 ):
     validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
-    if not marker_id and not marker_name:
-        raise BadRequest("Either 'varId' or 'varName' must be provided")
 
-    try:
-        if marker_name:
-            if var_names_col:
-                marker_idx = get_index_in_array(
-                    adata_group.var[var_names_col], marker_name
-                )
-                marker_id = get_group_index(adata_group.var)[marker_idx]
-            else:
-                marker_id = marker_name
-                marker_idx = get_index_in_array(
-                    get_group_index(adata_group.var), marker_id
-                )
-    except (KeyError, InvalidKey):
-        raise NotInData(f"Marker '{marker_name}' not found in dataset")
+    marker = Marker.from_any(adata_group, var_key, var_names_col)
 
-    if "varm" in adata_group.uns["masks"][mask_set].keys():
+    if not marker.isSet and "varm" in adata_group.uns["masks"][mask_set].keys():
         # precomputed mean expression
-        logging.info(f"Using precomputed mean expression of {marker_id}")
+        logging.info(f"Using precomputed mean expression of {marker.name}")
         mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
         masks = parse_data(adata_group.obs[mask_obs_colname]).categories
         values_dict = get_row_from_zarr_df(
             adata_group.varm[adata_group.uns["masks"][mask_set]["varm"][()]],
-            marker_id,
+            marker.index,
             masks,
         )
         if mask_values:
@@ -79,7 +62,7 @@ def pseudospatial_gene(
                 values_dict[m] = None
     else:
         # compute mean expression
-        logging.info(f"Computing mean expression for {marker_id}")
+        logging.info(f"Computing mean expression for {marker.name}")
         mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
         mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
         masks = mask_obs_col.categories
@@ -87,9 +70,7 @@ def pseudospatial_gene(
             m: (
                 None
                 if mask_values and m not in mask_values
-                else adata_group.X[
-                    np.flatnonzero(mask_obs_col.isin([m])), marker_idx
-                ].mean(0)
+                else marker.X[np.flatnonzero(mask_obs_col.isin([m]))].mean(0)
             )
             for m in masks
         }

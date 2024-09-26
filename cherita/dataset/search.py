@@ -35,15 +35,21 @@ def search_diseases(
     except Exception as e:
         raise FetchError(f"Error fetching diseases. {e}")
 
-    res_data = [({"id": item["id"]} | item["attributes"]) for item in res["data"]]
+    res_data = {
+        item["attributes"]["disease_id"]: {
+            "id": item["attributes"]["disease_id"],
+            "disease_id": item["attributes"]["disease_id"],
+            "disease_name": item["attributes"]["disease_name"],
+        }
+        for item in res["data"]
+    }
 
-    return res_data
+    return list(res_data.values())
 
 
-# @TODO: change disease_name for disease_id
 def get_disease_genes(
     adata_group: zarr.Group,
-    disease_name: str,
+    disease_id: str,
     col: str = None,
     disease_datasets: list = [],
 ):
@@ -51,7 +57,7 @@ def get_disease_genes(
 
     params = {
         "filters[disease_datasets][name][$contains]": disease_datasets,
-        "filters[disease_name][$eq]": disease_name,
+        "filters[disease_id][$eq]": disease_id,
         "fields": ["disease_id", "disease_name", "gene_id", "gene_name", "uid"],
         "sort": "gene_name",
         "pagination[start]": 0,
