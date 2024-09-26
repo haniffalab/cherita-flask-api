@@ -1,5 +1,5 @@
 from flask import request, jsonify, Response
-from flask_restful import Resource
+from flask_restx import Resource, fields, Namespace
 from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import open_anndata_zarr
@@ -13,8 +13,35 @@ from cherita.plotting.pseudospatial import (
     pseudospatial_continuous,
 )
 
+ns = Namespace("plotting", description="Plotting operations", path="/")
 
+heatmap_model = ns.model(
+    "HeatmapModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "selectedMultiVar": fields.List(
+            fields.String, required=True, description="List of selected markers"
+        ),
+        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "varNamesCol": fields.String(description="Var names column"),
+    },
+)
+
+
+@ns.route("/heatmap")
 class Heatmap(Resource):
+    @ns.doc(
+        description=(
+            "Generate a heatmap from the given AnnData object"
+            "for the selected markers and obs column"
+        ),
+        responses={
+            200: "Success",
+            400: "Bad request",
+            500: "Internal server error",
+        },
+    )
+    @ns.expect(heatmap_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -32,7 +59,32 @@ class Heatmap(Resource):
             raise BadRequest(f"Missing required parameter: {e}")
 
 
+dotplot_model = ns.model(
+    "DotplotModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "selectedMultiVar": fields.List(
+            fields.String, required=True, description="List of selected markers"
+        ),
+        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "meanOnlyExpressed": fields.Boolean(description="Mean only expressed"),
+        "expressionCutoff": fields.Float(description="Expression cutoff"),
+        "standardScale": fields.String(description="Standard scale"),
+        "varNamesCol": fields.String(description="Var names column"),
+    },
+)
+
+
+@ns.route("/dotplot")
 class Dotplot(Resource):
+    @ns.doc(
+        description=(
+            "Generate a dotplot from the given AnnData object"
+            "for the selected markers and obs column"
+        ),
+        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+    )
+    @ns.expect(dotplot_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -53,7 +105,30 @@ class Dotplot(Resource):
             raise BadRequest(f"Missing required parameter: {e}")
 
 
+matrixplot_model = ns.model(
+    "MatrixplotModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "selectedMultiVar": fields.List(
+            fields.String, required=True, description="List of selected markers"
+        ),
+        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "standardScale": fields.String(description="Standard scale"),
+        "varNamesCol": fields.String(description="Var names column"),
+    },
+)
+
+
+@ns.route("/matrixplot")
 class Matrixplot(Resource):
+    @ns.doc(
+        description=(
+            "Generate a matrixplot from the given AnnData object"
+            "for the selected markers and obs column"
+        ),
+        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+    )
+    @ns.expect(matrixplot_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -72,7 +147,28 @@ class Matrixplot(Resource):
             raise BadRequest(f"Missing required parameter: {e}")
 
 
+violin_model = ns.model(
+    "ViolinModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "keys": fields.List(fields.String, required=True, description="List of keys"),
+        "selectedObs": fields.String(required=True, description="Selected obs column"),
+        "scale": fields.String(description="Scale"),
+        "varNamesCol": fields.String(description="Var names column"),
+    },
+)
+
+
+@ns.route("/violin")
 class Violin(Resource):
+    @ns.doc(
+        description=(
+            "Generate a violin plot from the given AnnData object"
+            "for the selected keys and obs column"
+        ),
+        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+    )
+    @ns.expect(violin_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -91,7 +187,36 @@ class Violin(Resource):
             raise BadRequest(f"Missing required parameter: {e}")
 
 
+pseudospatial_gene_model = ns.model(
+    "PseudospatialGeneModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "format": fields.String(description="Plot format"),
+        "marker_id": fields.String(description="Marker ID"),
+        "marker_name": fields.String(description="Marker name"),
+        "mask_set": fields.String(description="Mask set"),
+        "mask_values": fields.List(fields.String, description="Mask values"),
+        "var_names_col": fields.String(description="Var names column"),
+        "colormap": fields.String(description="Colormap"),
+        "full_html": fields.Boolean(description="Full HTML"),
+        "show_colorbar": fields.Boolean(description="Show colorbar"),
+        "min_value": fields.Float(description="Min value"),
+        "max_value": fields.Float(description="Max value"),
+        "width": fields.Integer(description="Width"),
+        "height": fields.Integer(description="Height"),
+    },
+)
+
+
+@ns.route("/pseudospatial/gene")
 class PseudospatialGene(Resource):
+    @ns.doc(
+        description=(
+            "Generate a pseudospatial plot for the given gene in the AnnData object"
+        ),
+        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+    )
+    @ns.expect(pseudospatial_gene_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -131,7 +256,39 @@ class PseudospatialGene(Resource):
             raise BadRequest(f"Missing required parameter: {e}")
 
 
+pseudospatial_categorical_model = ns.model(
+    "PseudospatialCategoricalModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "obsName": fields.String(required=True, description="Obs name"),
+        "obsValues": fields.List(
+            fields.String, required=True, description="Obs values"
+        ),
+        "format": fields.String(description="Plot format"),
+        "maskSet": fields.String(description="Mask set"),
+        "mode": fields.String(description="Mode"),
+        "maskValues": fields.List(fields.String, description="Mask values"),
+        "colormap": fields.String(description="Colormap"),
+        "fullHtml": fields.Boolean(description="Full HTML"),
+        "showColorbar": fields.Boolean(description="Show colorbar"),
+        "minValue": fields.Float(description="Min value"),
+        "maxValue": fields.Float(description="Max value"),
+        "width": fields.Integer(description="Width"),
+        "height": fields.Integer(description="Height"),
+    },
+)
+
+
+@ns.route("/pseudospatial/categorical")
 class PseudospatialCategorical(Resource):
+    @ns.doc(
+        description=(
+            "Generate a pseudospatial plot for the given categorical obs column"
+            "in the AnnData object"
+        ),
+        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+    )
+    @ns.expect(pseudospatial_categorical_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -176,7 +333,35 @@ class PseudospatialCategorical(Resource):
             raise BadRequest(f"Missing required parameter: {e}")
 
 
+pseudospatial_continuous_model = ns.model(
+    "PseudospatialContinuousModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "obsName": fields.String(required=True, description="Obs name"),
+        "format": fields.String(description="Plot format"),
+        "maskSet": fields.String(description="Mask set"),
+        "maskValues": fields.List(fields.String, description="Mask values"),
+        "colormap": fields.String(description="Colormap"),
+        "fullHtml": fields.Boolean(description="Full HTML"),
+        "showColorbar": fields.Boolean(description="Show colorbar"),
+        "minValue": fields.Float(description="Min value"),
+        "maxValue": fields.Float(description="Max value"),
+        "width": fields.Integer(description="Width"),
+        "height": fields.Integer(description="Height"),
+    },
+)
+
+
+@ns.route("/pseudospatial/continuous")
 class PseudospatialContinuous(Resource):
+    @ns.doc(
+        description=(
+            "Generate a pseudospatial plot for the given continuous obs column"
+            "in the AnnData object"
+        ),
+        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+    )
+    @ns.expect(pseudospatial_continuous_model)
     def post(self):
         json_data = request.get_json()
         try:

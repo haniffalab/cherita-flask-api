@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from flask_restful import Resource
+from flask_restx import Resource, fields, Namespace
 from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import open_anndata_zarr
@@ -14,8 +14,23 @@ from cherita.dataset.metadata import (
 )
 from cherita.dataset.search import search_var_names
 
+ns = Namespace("dataset", description="Dataset related data", path="/")
 
+obs_cols_name_model = ns.model(
+    "ObsColsNamesModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+    },
+)
+
+
+@ns.route("/obs/cols/names")
 class ObsColsNames(Resource):
+    @ns.doc(
+        description="Get the names of the observation columns in the dataset",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_cols_name_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -25,7 +40,21 @@ class ObsColsNames(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
+obs_cols_model = ns.model(
+    "ObsColsModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+    },
+)
+
+
+@ns.route("/obs/cols")
 class ObsCols(Resource):
+    @ns.doc(
+        description="Get the metadata of the observation columns in the dataset",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_cols_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -35,7 +64,26 @@ class ObsCols(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
+obs_bin_data_model = ns.model(
+    "ObsBinDataModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "obs_col": fields.String(
+            description="Name of the observation column", required=True
+        ),
+        "thresholds": fields.List(fields.Float, description="Thresholds for binning"),
+        "nBins": fields.Integer(description="Number of bins"),
+    },
+)
+
+
+@ns.route("/obs/bins")
 class ObsBinData(Resource):
+    @ns.doc(
+        description="Get the binned data for the observation column",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_bin_data_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -50,7 +98,24 @@ class ObsBinData(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
+obs_distribution_model = ns.model(
+    "ObsDistributionModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "obs_colname": fields.String(
+            description="Name of the observation column", required=True
+        ),
+    },
+)
+
+
+@ns.route("/obs/distribution")
 class ObsDistribution(Resource):
+    @ns.doc(
+        description="Get the distribution of the observation column",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_distribution_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -61,7 +126,21 @@ class ObsDistribution(Resource):
             raise BadRequest(f"Missing required parameter: {e}")
 
 
+obsm_keys_model = ns.model(
+    "ObsmKeysModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+    },
+)
+
+
+@ns.route("/obsm/keys")
 class ObsmKeys(Resource):
+    @ns.doc(
+        description="Get the keys of the observation metadata in the dataset",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obsm_keys_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -71,7 +150,21 @@ class ObsmKeys(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
+var_cols_name_model = ns.model(
+    "VarColsNamesModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+    },
+)
+
+
+@ns.route("/var/cols/names")
 class VarColsNames(Resource):
+    @ns.doc(
+        description="Get the names of the variable columns in the dataset",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(var_cols_name_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -81,7 +174,23 @@ class VarColsNames(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
+var_names_model = ns.model(
+    "VarNamesModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "col": fields.String(description="Name of the variable column"),
+        "text": fields.String(description="Text to search for in variable names"),
+    },
+)
+
+
+@ns.route("/var/names")
 class VarNames(Resource):
+    @ns.doc(
+        description="Search for variable names in the dataset",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(var_names_model)
     def post(self):
         json_data = request.get_json()
         try:
@@ -93,7 +202,25 @@ class VarNames(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
+var_histograms_model = ns.model(
+    "VarHistogramsModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "var_index": fields.Integer(description="Index of the variable"),
+        "obs_indices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
+    },
+)
+
+
+@ns.route("/var/histograms")
 class VarHistograms(Resource):
+    @ns.doc(
+        description="Get the histograms of the variable",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(var_histograms_model)
     def post(self):
         json_data = request.get_json()
         try:

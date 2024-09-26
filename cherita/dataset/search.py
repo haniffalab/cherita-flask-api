@@ -16,8 +16,8 @@ def search_var_names(adata_group: zarr.Group, col: str = None, text: str = ""):
 
 
 def search_diseases(
+    disease_datasets: list,
     text: str = "",
-    disease_datasets: list = [],
 ):
     ENDPOINT = "disease-genes"
 
