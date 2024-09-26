@@ -1,6 +1,6 @@
 from __future__ import annotations
 import json
-from typing import Union, Any
+from typing import Any, Union
 import zarr
 import pandas as pd
 import plotly.graph_objects as go
