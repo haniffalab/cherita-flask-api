@@ -11,7 +11,7 @@ from cherita.utils.adata_utils import (
     type_discrete,
     type_numeric,
     type_bool,
-    continuous2categorical,
+    to_categorical,
 )
 from cherita.plotting.resampling import resample
 
@@ -46,7 +46,9 @@ def get_obs_bin_data(
     adata_group: zarr.Group, obs_col: str, thresholds: list, nBins: int
 ):
     obs_s = parse_data(adata_group.obs[obs_col])
-    cat, _ = continuous2categorical(obs_s, thresholds, nBins)
+    cat, _ = to_categorical(
+        obs_s, type="continuous", thresholds=thresholds, nBins=nBins, fillna=False
+    )
     return {**type_category(pd.Series(cat)), "type": "continuous"}
 
 
