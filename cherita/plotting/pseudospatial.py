@@ -8,10 +8,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
-from cherita.utils.adata_utils import (
-    parse_data,
-    get_row_from_zarr_df,
-)
+from cherita.utils.adata_utils import parse_data
 from cherita.utils.models import Marker
 from cherita.resources.errors import BadRequest, NotInData
 
@@ -47,33 +44,19 @@ def pseudospatial_gene(
 
     marker = Marker.from_any(adata_group, var_key, var_names_col)
 
-    if not marker.isSet and "varm" in adata_group.uns["masks"][mask_set].keys():
-        # precomputed mean expression
-        logging.info(f"Using precomputed mean expression of {marker.name}")
-        mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
-        masks = parse_data(adata_group.obs[mask_obs_colname]).categories
-        values_dict = get_row_from_zarr_df(
-            adata_group.varm[adata_group.uns["masks"][mask_set]["varm"][()]],
-            marker.index,
-            masks,
+    # compute mean expression
+    logging.info(f"Computing mean expression for {marker.name}")
+    mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
+    mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+    masks = mask_obs_col.categories
+    values_dict = {
+        m: (
+            None
+            if mask_values and m not in mask_values
+            else marker.X[np.flatnonzero(mask_obs_col.isin([m]))].mean(0)
         )
-        if mask_values:
-            for m in mask_values:
-                values_dict[m] = None
-    else:
-        # compute mean expression
-        logging.info(f"Computing mean expression for {marker.name}")
-        mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
-        mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
-        masks = mask_obs_col.categories
-        values_dict = {
-            m: (
-                None
-                if mask_values and m not in mask_values
-                else marker.X[np.flatnonzero(mask_obs_col.isin([m]))].mean(0)
-            )
-            for m in masks
-        }
+        for m in masks
+    }
 
     return plot_polygons(
         adata_group,
