@@ -171,6 +171,7 @@ class Marker:
         else:
             return self.adata_group.X[indices or slice(None), self.matrix_index]
 
+    # @TODO: handle returning all values for computing mean so it is not mean of means
     @property
     def X(self) -> np.ndarray:
         """
