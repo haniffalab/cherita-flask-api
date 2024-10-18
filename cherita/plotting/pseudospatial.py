@@ -24,9 +24,9 @@ def validate_pseudospatial(adata_group: zarr.Group, mask_set: str):
 
 
 def validate_format(format: str):
-    if format not in ["png", "svg", "html"]:
+    if format not in ["png", "svg", "html", "json"]:
         raise BadRequest(
-            f"Invalid format '{format}'. Must be one of 'png', 'svg', 'html'"
+            f"Invalid format '{format}'. Must be one of 'png', 'svg', 'html', 'json'"
         )
 
 
@@ -178,6 +178,33 @@ def pseudospatial_continuous(
     )
 
 
+def pseudospatial_masks(
+    adata_group: zarr.Group,
+    mask_set: str = "spatial",
+    plot_format: Literal["png", "svg", "html", "json"] = "png",
+    width: int = 500,
+    height: int = 500,
+    full_html: bool = False,
+):
+    validate_pseudospatial(adata_group, mask_set)
+    validate_format(plot_format)
+
+    values_dict = {
+        k: None for k in adata_group.uns["masks"][mask_set]["polygons"].keys()
+    }
+
+    return plot_polygons(
+        adata_group,
+        values_dict,
+        mask_set,
+        show_colorbar=False,
+        plot_format=plot_format,
+        width=width,
+        height=height,
+        full_html=full_html,
+    )
+
+
 def plot_polygons(
     adata_group: zarr.Group,
     values_dict: pd.DataFrame,
@@ -192,7 +219,6 @@ def plot_polygons(
     height: int = 500,
     full_html: bool = False,
 ):
-
     min_value = (
         float(min_value)
         if min_value is not None
@@ -321,4 +347,4 @@ def plot_polygons(
             full_html=full_html,
         )
     else:  # json
-        json.loads(fig.to_json())
+        return json.loads(fig.to_json())

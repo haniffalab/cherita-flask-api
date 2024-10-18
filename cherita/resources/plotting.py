@@ -11,6 +11,7 @@ from cherita.plotting.pseudospatial import (
     pseudospatial_gene,
     pseudospatial_categorical,
     pseudospatial_continuous,
+    pseudospatial_masks,
 )
 
 ns = Namespace("plotting", description="Plotting operations", path="/")
@@ -283,6 +284,8 @@ class PseudospatialGene(Resource):
                     plot,
                     mimetype="text/html",
                 )
+            elif plot_format == "json":
+                return jsonify(plot)
             return plot
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
@@ -360,6 +363,8 @@ class PseudospatialCategorical(Resource):
                     plot,
                     mimetype="text/html",
                 )
+            elif plot_format == "json":
+                return jsonify(plot)
             return plot
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
@@ -430,6 +435,68 @@ class PseudospatialContinuous(Resource):
                     plot,
                     mimetype="text/html",
                 )
+            elif plot_format == "json":
+                return jsonify(plot)
+            return plot
+        except KeyError as e:
+            raise BadRequest(f"Missing required parameter: {e}")
+
+
+pseudospatial_masks_model = ns.model(
+    "PseudospatialMasksModel",
+    {
+        "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
+        "format": fields.String(description="Plot format"),
+        "maskSet": fields.String(description="Mask set"),
+        "maskValues": fields.List(fields.String, description="Mask values"),
+        "fullHtml": fields.Boolean(description="Full HTML"),
+        "width": fields.Integer(description="Width"),
+        "height": fields.Integer(description="Height"),
+    },
+)
+
+
+@ns.route("/pseudospatial/masks")
+class PseudospatialMasks(Resource):
+    @ns.doc(
+        description=(
+            "Generate a pseudospatial plot of only the masks in the AnnData object"
+        ),
+        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+    )
+    @ns.expect(pseudospatial_masks_model)
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            plot_format = json_data.get("format", "png")
+
+            optional_params = {
+                "mask_set": "maskSet",
+                "mask_values": "maskValues",
+                "full_html": "fullHtml",
+                "width": "width",
+                "height": "height",
+            }
+            optional_params_dict = {
+                p: json_data.get(n)
+                for p, n in optional_params.items()
+                if n in json_data
+            }
+
+            plot = pseudospatial_masks(
+                adata_group,
+                plot_format=plot_format,
+                **optional_params_dict,
+            )
+
+            if plot_format == "html":
+                return Response(
+                    plot,
+                    mimetype="text/html",
+                )
+            elif plot_format == "json":
+                return jsonify(plot)
             return plot
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
