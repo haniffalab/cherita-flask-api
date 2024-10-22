@@ -236,20 +236,15 @@ def plot_polygons(
         )
     )
 
-    normalized_values = {
-        k: ((v - min_value) / (max_value - min_value))
-        for k, v in values_dict.items()
-        if v is not None and not np.isnan(v)
-    }
     color_values = {
         k: (
             sample_colorscale(
                 colormap,
-                [min(max(v, 0), 1)],
+                [(v - min_value) / (max_value - min_value)],
                 colortype="rgb",
             )[0]
         )
-        for k, v in normalized_values.items()
+        for k, v in values_dict.items()
         if v is not None
     }
     text = (text + ": ") if text is not None else ""
@@ -300,6 +295,9 @@ def plot_polygons(
                         ),
                     ]
                 ),
+                meta=dict(
+                    value=value,
+                ),
             )
         )
 
@@ -312,11 +310,9 @@ def plot_polygons(
             mode="markers",
             showlegend=False,
             marker=dict(
-                colorscale=colormap,
+                coloraxis="coloraxis",
                 showscale=True,
                 colorbar=dict(thickness=10, tickmode="auto"),
-                cmin=min_value,
-                cmax=max_value,
             ),
         )
         fig.add_trace(colorbar_trace)
@@ -332,6 +328,11 @@ def plot_polygons(
         height=int(height),
         modebar_remove=["select2d", "lasso2d"],
         margin=dict(pad=0, l=10, r=10, t=10, b=10),
+        coloraxis=dict(
+            colorscale=colormap,
+            cmin=min_value,
+            cmax=max_value,
+        ),
     )
 
     if plot_format in ["png", "svg"]:
@@ -347,4 +348,5 @@ def plot_polygons(
             full_html=full_html,
         )
     else:  # json
+        fig.update_layout(width=None, height=None)
         return json.loads(fig.to_json())
