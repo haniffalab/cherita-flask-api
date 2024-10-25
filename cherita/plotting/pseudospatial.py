@@ -53,7 +53,7 @@ def pseudospatial_gene(
         m: (
             None
             if mask_values and m not in mask_values
-            else marker.X[np.flatnonzero(mask_obs_col.isin([m]))].mean(0)
+            else np.mean(marker.get_X_at(np.flatnonzero(mask_obs_col.isin([m]))))
         )
         for m in masks
     }
@@ -349,4 +349,6 @@ def plot_polygons(
         )
     else:  # json
         fig.update_layout(width=None, height=None)
-        return json.loads(fig.to_json())
+        response_obj = json.loads(fig.to_json())
+        response_obj["range"] = [float(min_value), float(max_value)]
+        return response_obj

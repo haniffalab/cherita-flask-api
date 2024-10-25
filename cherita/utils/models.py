@@ -158,20 +158,16 @@ class Marker:
             np.ndarray: The data associated with the marker at the specified indices.
         """
         if self.isSet:
-            if self._aggregation_function is None:
-                raise ValueError(
-                    "Aggregation function is not set for a set of markers."
-                )
-            return self._aggregation_function(
-                [
-                    self.adata_group.X[indices or slice(None), i]
-                    for i in self.matrix_index
-                ]
-            )
+            # return all data for each marker in the set instead of aggregated data
+            return [
+                self.adata_group.X[indices if indices is not None else slice(None), i]
+                for i in self.matrix_index
+            ]
         else:
-            return self.adata_group.X[indices or slice(None), self.matrix_index]
+            return self.adata_group.X[
+                indices if indices is not None else slice(None), self.matrix_index
+            ]
 
-    # @TODO: handle returning all values for computing mean so it is not mean of means
     @property
     def X(self) -> np.ndarray:
         """

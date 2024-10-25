@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Union
 import zarr
+import numpy as np
 from cherita.utils.models import Marker
 
 
@@ -14,4 +15,4 @@ def get_var_x_mean(
     markers = [
         Marker.from_any(adata_group, v, var_names_col=var_names_col) for v in var_keys
     ]
-    return {m.name: float(m.get_X_at(obs_indices).mean()) for m in markers}
+    return {m.name: float(np.mean(m.get_X_at(obs_indices))) for m in markers}
