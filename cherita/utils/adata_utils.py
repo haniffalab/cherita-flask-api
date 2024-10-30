@@ -70,7 +70,9 @@ def parse_group(group: zarr.Group):
             if np.array_equal(
                 np.sort(series.categories.values), np.sort(["True", "False"])
             ):
-                return series.map({"True": True, "False": False}).astype(bool)
+                return series.map(
+                    {"True": True, "False": False}, na_action="ignore"
+                ).astype(bool)
             return series
         else:
             raise ReadZarrError(
@@ -102,6 +104,11 @@ def parse_array(array: zarr.Array, store: zarr.Group = None):
         return array[:]
 
 
+def get_row_from_zarr_df(group: zarr.Group, idx: str, cols: list):
+    df_idx = get_index_in_array(get_group_index(group), idx)
+    return {c: group[c][df_idx] for c in cols}
+
+
 def get_s3_http_options(o: ParseResult):
     bucket, endpoint = o.hostname.split(".", 1)
     s3url = "s3://" + bucket + o.path
@@ -117,7 +124,10 @@ def open_anndata_zarr(url: str):
     elif o.netloc == "storage.googleapis.com":
         storage_options = None
     else:
-        url, storage_options = get_s3_http_options(o)
+        try:
+            url, storage_options = get_s3_http_options(o)
+        except:
+            url, storage_options = url, None
 
     try:
         adata_group = zarr.open_consolidated(
@@ -134,42 +144,76 @@ def open_anndata_zarr(url: str):
     return adata_group
 
 
+def get_undefined_category_name(series):
+    base_name = "undefined"
+    if base_name not in series.cat.categories:
+        return base_name
+    else:
+        i = 1
+        while f"{base_name}_{i}" in series.cat.categories:
+            i += 1
+        return f"{base_name}_{i}"
+
+
+def fillna_as_undefined(obs):
+    if obs.hasnans:
+        undefined_cat = get_undefined_category_name(obs)
+        # Add undefined category at end of categories, code will be len(categories)+1
+        obs = obs.cat.add_categories(undefined_cat)
+        obs.fillna(undefined_cat, inplace=True)
+        return obs, undefined_cat
+    return obs, None
+
+
 def type_category(obs):
+    obs, undefined_cat = fillna_as_undefined(obs)
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
+    codes = {str(i): idx for idx, i in enumerate(categories)}
+    value_counts = {}
+
+    if undefined_cat:
+        # -1 code for undefined category for frontend to match zarr data
+        # backend generated plots rely on category name instead of code
+        # so it doesn't matter if the code is -1 in frontend
+        codes.update({undefined_cat: -1})
 
     return {
         "type": "categorical",
-        "is_truncated": True,
-        "values": categories[:99] if len(categories) > 100 else categories,
+        "values": categories,
         "n_values": len(categories),
+        "codes": codes,
+        "hasnans": obs.hasnans,
+        "value_counts": {
+            **value_counts,
+            **{str(k): v for k, v in obs.value_counts().to_dict().items()},
+        },
     }
 
 
 def type_bool(obs):
-    return {"type": "bool", "values": {1: "True", 0: "False"}}
+    obs = obs.astype("category")
+    data = type_category(obs)
+    data["type"] = "boolean"
+
+    return data
 
 
 def type_numeric(obs):
-    accuracy = 4
     return {
         "type": "continuous",
-        "min": encode_dtype(round(ndarray_min(obs), accuracy)),
-        "max": encode_dtype(round(ndarray_max(obs), accuracy)),
-        "mean": encode_dtype(round(ndarray_mean(obs), accuracy)),
-        "median": encode_dtype(round(ndarray_median(obs), accuracy)),
+        "min": encode_dtype(ndarray_min(obs)),
+        "max": encode_dtype(ndarray_max(obs)),
+        "mean": encode_dtype(ndarray_mean(obs)),
+        "median": encode_dtype(ndarray_median(obs)),
     }
 
 
 def type_discrete(obs):
     obs = obs.astype("category")
-    categories = [str(i) for i in obs.cat.categories.values.flatten()]
+    data = type_category(obs)
+    data["type"] = "discrete"
 
-    return {
-        "type": "discrete",
-        "is_truncated": True,
-        "values": categories[:99] if len(categories) > 100 else categories,
-        "n_values": len(categories),
-    }
+    return data
 
 
 def ndarray_max(a):
@@ -215,42 +259,89 @@ def encode_dtype(a):
         return a
 
 
-def to_categorical(data: Union[pd.Series, np.Array], type: str, **kwargs):
+def to_categorical(
+    data: Union[pd.Series, np.Array],
+    type: str,
+    bins: dict = {},
+    fillna: bool = True,
+    as_str: bool = True,
+    **kwargs,
+):
     func_dict = {
         "continuous": continuous2categorical,
         "discrete": discrete2categorical,
-        "bool": bool2categorical,
+        "boolean": bool2categorical,
+        "categorical": categorical,
     }
 
-    return func_dict.get(type, lambda data, **kwargs: (data, None))(data, **kwargs)
+    cat_data, bins = func_dict.get(
+        type,
+        lambda data, **kwargs: (
+            data,
+            None,
+        ),
+    )(data, **bins, fillna=fillna, **kwargs)
+
+    if as_str:
+        cat_data = cat_data.rename_categories(lambda x: str(x))
+
+    return cat_data, bins
+
+
+def categorical(c: pd.Categorical, fillna: bool = True, **kwargs):
+    if fillna:
+        s = pd.Series(c)
+        s, _ = fillna_as_undefined(s)
+        return pd.Categorical(s), None
+    return c, None
 
 
 def continuous2categorical(
-    s: pd.Series,
+    array: np.Array,
     thresholds: list[Union[int, float]] = None,
     nBins: int = 20,
-    start: int = 1,
+    fillna: bool = True,
     **kwargs,
 ):
-    return (
-        pd.Categorical(pd.cut(s, thresholds, include_lowest=True, labels=False) + start)
-        if thresholds
-        else pd.Categorical(pd.cut(s, nBins, include_lowest=True, labels=False))
-    ), nBins
-
-
-def discrete2categorical(array: np.Array, nBins: int = 20, start: int = 1, **kwargs):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):
-        return s, None
+        if fillna:
+            s, _ = fillna_as_undefined(s)
+        return pd.Categorical(s), None
     else:
-        return (
-            pd.Categorical(
-                pd.cut(s.index, nBins, include_lowest=True, labels=False) + start
-            ),
-            nBins,
+        s_cut = (
+            pd.cut(s, thresholds or nBins, include_lowest=True, labels=False)
+            .astype("Int64")
+            .astype("category")
         )
+        if fillna:
+            s_cut, _ = fillna_as_undefined(s_cut)
+        s_cat = pd.Categorical(s_cut)
+        return s_cat, len(s_cat.categories)
 
 
-def bool2categorical(array: np.Array, **kwargs):
-    return pd.Series(array).astype("category"), None
+def discrete2categorical(
+    array: np.Array, nBins: int = 20, fillna: bool = True, **kwargs
+):
+    s = pd.Series(array).astype("category")
+    if nBins >= len(s.cat.categories):
+        if fillna:
+            s, _ = fillna_as_undefined(s)
+        return pd.Categorical(s), None
+    else:
+        s_cut = (
+            pd.cut(s.index, nBins, include_lowest=True, labels=False)
+            .astype("Int64")
+            .astype("category")
+        )
+        if fillna:
+            s_cut, _ = fillna_as_undefined(s_cut)
+        s_cat = pd.Categorical(s_cut)
+        return s_cat, len(s_cat.categories)
+
+
+def bool2categorical(array: np.Array, fillna: bool = True, **kwargs):
+    s = pd.Series(array).astype("category")
+    if fillna:
+        s, _ = fillna_as_undefined(s)
+    return pd.Categorical(s), None
