@@ -23,7 +23,10 @@ heatmap_model = ns.model(
         "varKeys": fields.List(
             fields.String, required=True, description="List of selected markers"
         ),
-        "obsCol": fields.String(required=True, description="Selected obs column"),
+        "obsCol": fields.Raw(required=True, description="Selected obs column"),
+        "obsValues": fields.List(
+            fields.String, required=False, description="Selected obs values"
+        ),
         "varNamesCol": fields.String(description="Var names column"),
     },
 )
@@ -67,7 +70,10 @@ dotplot_model = ns.model(
         "varKeys": fields.List(
             fields.String, required=True, description="List of selected markers"
         ),
-        "obsCol": fields.String(required=True, description="Selected obs column"),
+        "obsCol": fields.Raw(required=True, description="Selected obs column"),
+        "obsValues": fields.List(
+            fields.String, required=False, description="Selected obs values"
+        ),
         "meanOnlyExpressed": fields.Boolean(description="Mean only expressed"),
         "expressionCutoff": fields.Float(description="Expression cutoff"),
         "standardScale": fields.String(description="Standard scale"),
@@ -113,7 +119,10 @@ matrixplot_model = ns.model(
         "varKeys": fields.List(
             fields.String, required=True, description="List of selected markers"
         ),
-        "obsCol": fields.String(required=True, description="Selected obs column"),
+        "obsCol": fields.Raw(required=True, description="Selected obs column"),
+        "obsValues": fields.List(
+            fields.String, required=False, description="Selected obs values"
+        ),
         "standardScale": fields.String(description="Standard scale"),
         "varNamesCol": fields.String(description="Var names column"),
     },
@@ -223,18 +232,43 @@ pseudospatial_gene_model = ns.model(
     "PseudospatialGeneModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "varKey": fields.String(required=True, description="Var key"),
-        "format": fields.String(description="Plot format"),
-        "maskSet": fields.String(description="Mask set"),
-        "maskValues": fields.List(fields.String, description="Mask values"),
-        "varNamesCol": fields.String(description="Var names column"),
-        "colormap": fields.String(description="Colormap"),
-        "fullHtml": fields.Boolean(description="Full HTML"),
-        "showColorbar": fields.Boolean(description="Show colorbar"),
-        "minValue": fields.Float(description="Min value"),
-        "maxValue": fields.Float(description="Max value"),
-        "width": fields.Integer(description="Width"),
-        "height": fields.Integer(description="Height"),
+        "varKey": fields.String(
+            required=True,
+            description=(
+                "Var key to plot like gene name or gene symbol."
+                " The key must exist in the AnnData.var index"
+                "or in the `varNamesCol` column if provided"
+            ),
+        ),
+        "format": fields.String(
+            description="Plot format. Can be 'png', 'html', or 'json'. Defaults to `png`"
+        ),
+        "maskSet": fields.String(
+            description=(
+                "Mask set to use. Must exist in AnnData.uns.masks."
+                " Defaults to `spatial`"
+            )
+        ),
+        "maskValues": fields.List(
+            fields.String,
+            description="Mask values to plot. If left unset, all masks will be plotted",
+        ),
+        "varNamesCol": fields.String(
+            description="Column in var that contains `varKey` names"
+        ),
+        "colormap": fields.String(description="Colormap name"),
+        "fullHtml": fields.Boolean(
+            description=(
+                "Whether to return a full HTML document" " or just the `div` element"
+            )
+        ),
+        "showColorbar": fields.Boolean(
+            description="Whether to include a colorbar in the plot"
+        ),
+        "minValue": fields.Float(description="Min value for the color scale"),
+        "maxValue": fields.Float(description="Max value for the color scale"),
+        "width": fields.Integer(description="Plot width in pixels. Defaults to 500"),
+        "height": fields.Integer(description="Plot height in pixels. Defaults to 500"),
     },
 )
 
@@ -295,9 +329,9 @@ pseudospatial_categorical_model = ns.model(
     "PseudospatialCategoricalModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "obsName": fields.String(required=True, description="Obs name"),
+        "obsCol": fields.Raw(required=False, description="Obs column"),
         "obsValues": fields.List(
-            fields.String, required=True, description="Obs values"
+            fields.String, required=False, description="Obs values"
         ),
         "format": fields.String(description="Plot format"),
         "maskSet": fields.String(description="Mask set"),
@@ -328,8 +362,8 @@ class PseudospatialCategorical(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            obs_colname = json_data["obsName"]
-            obs_values = json_data["obsValues"]
+            obs_col = json_data["obsCol"]
+            obs_values = json_data.get("obsValues")
             plot_format = json_data.get("format", "png")
 
             optional_params = {
@@ -352,7 +386,7 @@ class PseudospatialCategorical(Resource):
 
             plot = pseudospatial_categorical(
                 adata_group,
-                obs_colname,
+                obs_col,
                 obs_values,
                 plot_format=plot_format,
                 **optional_params_dict,
@@ -374,7 +408,10 @@ pseudospatial_continuous_model = ns.model(
     "PseudospatialContinuousModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "obsName": fields.String(required=True, description="Obs name"),
+        "obsCol": fields.Raw(required=True, description="Obs column"),
+        "obsValues": fields.List(
+            fields.String, required=False, description="Obs values"
+        ),
         "format": fields.String(description="Plot format"),
         "maskSet": fields.String(description="Mask set"),
         "maskValues": fields.List(fields.String, description="Mask values"),
@@ -403,7 +440,8 @@ class PseudospatialContinuous(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            obs_colname = json_data["obsName"]
+            obs_col = json_data["obsCol"]
+            obs_values = json_data.get("obsValues")
             plot_format = json_data.get("format", "png")
 
             optional_params = {
@@ -425,7 +463,8 @@ class PseudospatialContinuous(Resource):
 
             plot = pseudospatial_continuous(
                 adata_group,
-                obs_colname,
+                obs_col,
+                obs_values,
                 plot_format=plot_format,
                 **optional_params_dict,
             )
