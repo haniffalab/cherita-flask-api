@@ -14,6 +14,7 @@ from cherita.utils.adata_utils import (
     to_categorical,
 )
 from cherita.plotting.resampling import resample
+from cherita.utils.models import Marker
 
 parse_dtype = {
     "category": type_category,
@@ -60,10 +61,13 @@ def get_var_col_names(adata_group: zarr.Group):
 # @TODO: optional obs_categories input
 def get_var_histograms(
     adata_group: zarr.Group,
-    var_index: int,
-    obs_indices: Union[list, dict] = None,
+    var_key: int,
+    obs_indices: list[int] = None,
 ):
-    hist, bin_edges = np.histogram(adata_group.X[obs_indices or slice(None), var_index])
+    marker = Marker.from_any(adata_group, var_key)
+    hist, bin_edges = np.histogram(
+        adata_group.X[obs_indices or slice(None), marker.matrix_index]
+    )
     bin_edges = [
         [float(bin_edges[i]), float(bin_edges[i + 1])]
         for i in range(len(bin_edges) - 1)

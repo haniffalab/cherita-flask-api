@@ -12,6 +12,7 @@ from cherita.dataset.metadata import (
     get_obs_bin_data,
     get_obs_distribution,
 )
+from cherita.dataset.matrix import get_var_x_mean
 from cherita.dataset.search import search_var_names
 
 ns = Namespace("dataset", description="Dataset related data", path="/")
@@ -68,7 +69,7 @@ obs_bin_data_model = ns.model(
     "ObsBinDataModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
-        "obs_col": fields.String(
+        "obsCol": fields.String(
             description="Name of the observation column", required=True
         ),
         "thresholds": fields.List(fields.Float, description="Thresholds for binning"),
@@ -88,7 +89,7 @@ class ObsBinData(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            obs_col = json_data["obs_col"]
+            obs_col = json_data["obsCol"]
             thresholds = json_data.get("thresholds", None)
             nBins = json_data.get("nBins", None)
             if not thresholds and not nBins:
@@ -102,7 +103,7 @@ obs_distribution_model = ns.model(
     "ObsDistributionModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
-        "obs_colname": fields.String(
+        "obsColname": fields.String(
             description="Name of the observation column", required=True
         ),
     },
@@ -120,7 +121,7 @@ class ObsDistribution(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            obs_colname = json_data["obs_colname"]
+            obs_colname = json_data["obsColname"]
             return jsonify(get_obs_distribution(adata_group, obs_colname))
         except KeyError as e:
             raise BadRequest(f"Missing required parameter: {e}")
@@ -206,8 +207,8 @@ var_histograms_model = ns.model(
     "VarHistogramsModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
-        "var_index": fields.Integer(description="Index of the variable"),
-        "obs_indices": fields.List(
+        "varKey": fields.Integer(description="Index of the variable"),
+        "obsIndices": fields.List(
             fields.Integer, description="List of observation indices"
         ),
     },
@@ -225,8 +226,45 @@ class VarHistograms(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            var_index = json_data["var_index"]
-            obs_indices = json_data.get("obs_indices", None)
-            return jsonify(get_var_histograms(adata_group, var_index, obs_indices))
+            var_key = json_data["varKey"]
+            obs_indices = json_data.get("obsIndices", None)
+            return jsonify(get_var_histograms(adata_group, var_key, obs_indices))
+        except KeyError as e:
+            raise BadRequest("Missing required parameter: {}".format(e))
+
+
+# @TODO: add optional filters by obs or indices
+matrix_mean_model = ns.model(
+    "VarXMeanModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "varKeys": fields.List(fields.String, description="List of variable keys"),
+        "varNamesCol": fields.String(description="Name of the variable names column"),
+    },
+)
+
+
+@ns.route("/matrix/mean")
+class MatrixMean(Resource):
+    @ns.doc(
+        description="Get the mean of the variables",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(matrix_mean_model)
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            var_keys = json_data["varKeys"]
+            var_names_col = json_data.get("varNamesCol", None)
+            obs_indices = json_data.get("obsIndices", None)
+            return jsonify(
+                get_var_x_mean(
+                    adata_group,
+                    var_keys,
+                    obs_indices=obs_indices,
+                    var_names_col=var_names_col,
+                )
+            )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))

@@ -19,8 +19,8 @@ class Marker:
         index (Union[int, list[int]]): The index or indices of the marker.
         name (str): The name of the marker.
         matrix_index (Union[int, list[int]]): The matrix index or indices of the marker.
-        isSet (bool): Indicates whether the marker is a set of markers or not.
         adata_group (zarr.Group): The zarr group containing the data.
+        isSet (bool): Indicates whether the marker is a set of markers or not.
         _aggregation_function (Callable[[np.ndarray]]): The aggregation function to
             apply to the data.
     """
@@ -28,8 +28,8 @@ class Marker:
     index: Union[int, list[int]]
     name: str
     matrix_index: Union[int, list[int]]
-    isSet: bool
     adata_group: zarr.Group
+    isSet: bool = False
     _aggregation_function: Callable[[np.ndarray]] = None
 
     @classmethod
@@ -146,7 +146,28 @@ class Marker:
 
         return marker_instance
 
-    # @TODO: handle returning all values for computing mean so it is not mean of means
+    def get_X_at(self, indices: list[int] = None) -> np.ndarray:
+        """
+        Get the data associated with the marker at the specified indices.
+
+        Args:
+            indices (list[int], optional): The indices to get the data for.
+                Defaults to None.
+
+        Returns:
+            np.ndarray: The data associated with the marker at the specified indices.
+        """
+        if self.isSet:
+            # return all data for each marker in the set instead of aggregated data
+            return [
+                self.adata_group.X[indices if indices is not None else slice(None), i]
+                for i in self.matrix_index
+            ]
+        else:
+            return self.adata_group.X[
+                indices if indices is not None else slice(None), self.matrix_index
+            ]
+
     @property
     def X(self) -> np.ndarray:
         """
