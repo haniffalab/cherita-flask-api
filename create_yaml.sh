@@ -2,7 +2,7 @@
 
 FILE="app.yaml"
 /bin/cat <<EOM >$FILE
-runtime: python39
+runtime: python310
 service: $APP_SERVICE
 service_account: $SERVICE_ACCOUNT
 entrypoint: gunicorn -b :$PORT -w 2 'cherita:create_app()'
