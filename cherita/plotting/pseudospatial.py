@@ -8,9 +8,9 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
-from cherita.utils.adata_utils import parse_data
+from cherita.utils.adata_utils import parse_data, to_categorical
 from cherita.utils.models import Marker
-from cherita.resources.errors import BadRequest, NotInData
+from cherita.resources.errors import BadRequest, InvalidObs, NotInData
 
 
 def validate_pseudospatial(adata_group: zarr.Group, mask_set: str):
@@ -33,6 +33,8 @@ def validate_format(format: str):
 def pseudospatial_gene(
     adata_group: zarr.Group,
     var_key: Union[int, str, dict],
+    obs_col: dict = None,
+    obs_values: list[str] = None,
     mask_set: str = "spatial",
     mask_values: list[str] = None,
     var_names_col: str = None,
@@ -49,6 +51,19 @@ def pseudospatial_gene(
     mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
     masks = mask_obs_col.categories
+
+    if obs_col and obs_values is not None:
+        obs_colname = obs_col["name"]
+        try:
+            obs = parse_data(adata_group.obs[obs_colname])
+        except KeyError as e:
+            raise InvalidObs(f"Invalid observation {e}")
+
+        categorical_obs, _ = to_categorical(obs, **obs_col)
+
+        if obs_values is not None:
+            mask_obs_col[np.flatnonzero(~categorical_obs.isin(obs_values))] = None
+
     values_dict = {
         m: (
             None
@@ -70,7 +85,7 @@ def pseudospatial_gene(
 
 def pseudospatial_categorical(
     adata_group: zarr.Group,
-    obs_colname: str,
+    obs_col: dict,
     obs_values: list[str] = None,
     mode: Literal["counts", "across", "within"] = "counts",
     mask_set: str = "spatial",
@@ -80,6 +95,9 @@ def pseudospatial_categorical(
 ):
     validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
+
+    obs_colname = obs_col["name"]
+
     if obs_colname not in adata_group.obs:
         raise NotInData(f"Column '{obs_colname}' not found in adata")
     if mode not in ["counts", "across", "within"]:
@@ -91,12 +109,22 @@ def pseudospatial_categorical(
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
     masks = mask_obs_col.categories
 
-    obs_col = parse_data(adata_group.obs[obs_colname])
+    try:
+        obs = parse_data(adata_group.obs[obs_colname])
+    except KeyError as e:
+        raise InvalidObs(f"Invalid observation {e}")
+
+    # could be removed as obs is supposed to be categorical?
+    cat_obs, _ = to_categorical(obs, **obs_col)
+
+    if obs_values is None:
+        obs_values = cat_obs.categories
 
     if not len(obs_values):
         values_dict = {m: None for m in masks}
+        text = ""
     else:
-        crosstab = pd.crosstab(mask_obs_col, obs_col)
+        crosstab = pd.crosstab(mask_obs_col, cat_obs)
         if mask_values:
             crosstab = crosstab.loc[mask_values]
 
@@ -135,6 +163,10 @@ def pseudospatial_categorical(
                 for m in masks
             }
             text = "% within region"
+        else:
+            raise BadRequest(
+                f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
+            )
 
     return plot_polygons(
         adata_group, values_dict, mask_set, text=text, plot_format=plot_format, **kwargs
@@ -143,7 +175,8 @@ def pseudospatial_categorical(
 
 def pseudospatial_continuous(
     adata_group: zarr.Group,
-    obs_colname: str,
+    obs_col: dict,
+    obs_values: list[str] = None,
     mask_set: str = "spatial",
     mask_values: list[str] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
@@ -151,15 +184,26 @@ def pseudospatial_continuous(
 ):
     validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
+
+    obs_colname = obs_col["name"]
+
     if obs_colname not in adata_group.obs:
         raise NotInData(f"Column '{obs_colname}' not found in adata")
 
     mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
 
-    obs_col = parse_data(adata_group.obs[obs_colname])
+    try:
+        obs = parse_data(adata_group.obs[obs_colname])
+    except KeyError as e:
+        raise InvalidObs(f"Invalid observation {e}")
 
-    df = pd.DataFrame({mask_obs_colname: mask_obs_col, obs_colname: obs_col})
+    df = pd.DataFrame({mask_obs_colname: mask_obs_col, obs_colname: obs})
+    categorical_obs, _ = to_categorical(obs, **obs_col)
+
+    if obs_values is not None:
+        df = df[categorical_obs.isin(obs_values)]
+
     if mask_values:
         df = df[df[mask_obs_colname].isin(mask_values)]
     mean_table = df.pivot_table(
@@ -205,6 +249,7 @@ def pseudospatial_masks(
     )
 
 
+# @TODO: fix runtime warnings when all values are None/nan like "Mean of empty slice"
 def plot_polygons(
     adata_group: zarr.Group,
     values_dict: pd.DataFrame,
@@ -236,16 +281,26 @@ def plot_polygons(
         )
     )
 
+    max_value = max_value + (np.spacing(1) if max_value == min_value else 0)
+
     color_values = {
         k: (
             sample_colorscale(
                 colormap,
-                [(v - min_value) / (max_value - min_value)],
+                [
+                    min(
+                        max(
+                            (v - min_value) / (max_value - min_value),
+                            0,
+                        ),
+                        1,
+                    )
+                ],  # use np.spacing to avoid division by zero
                 colortype="rgb",
             )[0]
         )
         for k, v in values_dict.items()
-        if v is not None
+        if v is not None and not np.isnan(v)
     }
     text = (text + ": ") if text is not None else ""
 

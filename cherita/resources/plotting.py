@@ -235,7 +235,7 @@ pseudospatial_gene_model = ns.model(
         "varKey": fields.String(
             required=True,
             description=(
-                "Var key to plot like gene name or gene symbol."
+                "Var key to plot, e.g. gene name or gene symbol."
                 " The key must exist in the AnnData.var index"
                 "or in the `varNamesCol` column if provided"
             ),
@@ -255,6 +255,12 @@ pseudospatial_gene_model = ns.model(
         ),
         "varNamesCol": fields.String(
             description="Column in var that contains `varKey` names"
+        ),
+        "obsCol": fields.Raw(
+            description="Optional obs column to filter data by. To be used alongside `obsValues`"
+        ),
+        "obsValues": fields.List(
+            fields.String, description="Obs values to filter data by"
         ),
         "colormap": fields.String(description="Colormap name"),
         "fullHtml": fields.Boolean(
@@ -292,6 +298,8 @@ class PseudospatialGene(Resource):
                 "mask_set": "maskSet",
                 "mask_values": "maskValues",
                 "var_names_col": "varNamesCol",
+                "obs_col": "obsCol",
+                "obs_values": "obsValues",
                 "colormap": "colormap",
                 "full_html": "fullHtml",
                 "show_colorbar": "showColorbar",
@@ -329,9 +337,11 @@ pseudospatial_categorical_model = ns.model(
     "PseudospatialCategoricalModel",
     {
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
-        "obsCol": fields.Raw(required=False, description="Obs column"),
+        "obsCol": fields.Raw(required=True, description="Obs column to plot"),
         "obsValues": fields.List(
-            fields.String, required=False, description="Obs values"
+            fields.String,
+            required=False,
+            description="Obs values to plot. If left unset, all values will be plotted",
         ),
         "format": fields.String(description="Plot format"),
         "maskSet": fields.String(description="Mask set"),
@@ -363,10 +373,10 @@ class PseudospatialCategorical(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             obs_col = json_data["obsCol"]
-            obs_values = json_data.get("obsValues")
             plot_format = json_data.get("format", "png")
 
             optional_params = {
+                "obs_values": "obsValues",
                 "mask_set": "maskSet",
                 "mode": "mode",
                 "mask_values": "maskValues",
@@ -387,7 +397,6 @@ class PseudospatialCategorical(Resource):
             plot = pseudospatial_categorical(
                 adata_group,
                 obs_col,
-                obs_values,
                 plot_format=plot_format,
                 **optional_params_dict,
             )
@@ -410,7 +419,9 @@ pseudospatial_continuous_model = ns.model(
         "url": fields.String(required=True, description="URL to the AnnData-Zarr file"),
         "obsCol": fields.Raw(required=True, description="Obs column"),
         "obsValues": fields.List(
-            fields.String, required=False, description="Obs values"
+            fields.String,
+            required=False,
+            description="Obs values to plot. If left unset, all values will be plotted",
         ),
         "format": fields.String(description="Plot format"),
         "maskSet": fields.String(description="Mask set"),
@@ -441,10 +452,10 @@ class PseudospatialContinuous(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             obs_col = json_data["obsCol"]
-            obs_values = json_data.get("obsValues")
             plot_format = json_data.get("format", "png")
 
             optional_params = {
+                "obs_values": "obsValues",
                 "mask_set": "maskSet",
                 "mask_values": "maskValues",
                 "colormap": "colormap",
@@ -464,7 +475,6 @@ class PseudospatialContinuous(Resource):
             plot = pseudospatial_continuous(
                 adata_group,
                 obs_col,
-                obs_values,
                 plot_format=plot_format,
                 **optional_params_dict,
             )
