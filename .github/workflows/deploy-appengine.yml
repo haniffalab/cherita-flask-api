@@ -17,6 +17,7 @@ jobs:
       MAX_INSTANCES: ${{ secrets.MAX_INSTANCES }}
       TARGET_CPU_UTILIZATION: ${{ secrets.TARGET_CPU_UTILIZATION }}
       MAX_CONCURRENT_REQUETS: ${{ secrets.MAX_CONCURRENT_REQUESTS }}
+      INSTANCE_CLASS: ${{ secrets.INSTANCE_CLASS }}
       
     steps:
       - uses: actions/checkout@v3

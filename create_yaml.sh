@@ -5,6 +5,7 @@ FILE="app.yaml"
 runtime: python310
 service: $APP_SERVICE
 service_account: $SERVICE_ACCOUNT
+instance_class: $INSTANCE_CLASS
 entrypoint: gunicorn -b :$PORT -w 2 'cherita:create_app()'
 env_variables:
   FLASK_APP: $FLASK_APP
