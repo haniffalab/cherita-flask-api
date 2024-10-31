@@ -285,7 +285,12 @@ class PseudospatialGene(Resource):
         description=(
             "Generate a pseudospatial plot for the given gene in the AnnData object"
         ),
-        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+        responses={
+            200: "Success",
+            400: "Bad request",
+            500: "Internal server error",
+            404: "Not found",
+        },
     )
     @ns.expect(pseudospatial_gene_model)
     def post(self):
@@ -365,7 +370,12 @@ class PseudospatialCategorical(Resource):
             "Generate a pseudospatial plot for the given categorical obs column"
             "in the AnnData object"
         ),
-        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+        responses={
+            200: "Success",
+            400: "Bad request",
+            500: "Internal server error",
+            404: "Not found",
+        },
     )
     @ns.expect(pseudospatial_categorical_model)
     def post(self):
@@ -444,7 +454,12 @@ class PseudospatialContinuous(Resource):
             "Generate a pseudospatial plot for the given continuous obs column"
             "in the AnnData object"
         ),
-        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+        responses={
+            200: "Success",
+            400: "Bad request",
+            500: "Internal server error",
+            404: "Not found",
+        },
     )
     @ns.expect(pseudospatial_continuous_model)
     def post(self):
@@ -511,7 +526,12 @@ class PseudospatialMasks(Resource):
         description=(
             "Generate a pseudospatial plot of only the masks in the AnnData object"
         ),
-        responses={200: "Success", 400: "Bad request", 500: "Internal server error"},
+        responses={
+            200: "Success",
+            400: "Bad request",
+            500: "Internal server error",
+            404: "Not found",
+        },
     )
     @ns.expect(pseudospatial_masks_model)
     def post(self):

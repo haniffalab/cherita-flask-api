@@ -85,7 +85,10 @@ class Marker:
         """
         if isinstance(index, int):
             matrix_index = index
-            index = get_group_index(adata_group.var)[matrix_index]
+            try:
+                index = get_group_index(adata_group.var)[matrix_index]
+            except:
+                raise InvalidVar(f"Invalid feature index {index}")
         elif isinstance(index, str):
             index = index
             try:

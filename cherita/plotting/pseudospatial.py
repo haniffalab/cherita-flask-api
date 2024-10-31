@@ -10,12 +10,12 @@ import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
 from cherita.utils.adata_utils import parse_data, to_categorical
 from cherita.utils.models import Marker
-from cherita.resources.errors import BadRequest, InvalidObs, NotInData
+from cherita.resources.errors import BadRequest, InvalidObs, InvalidVar, NotInData
 
 
 def validate_pseudospatial(adata_group: zarr.Group, mask_set: str):
     if "masks" not in adata_group.uns or mask_set not in adata_group.uns["masks"]:
-        raise NotInData(f"Mask '{mask_set}' not found in adata")
+        raise NotInData(f"Mask '{mask_set}' not found in AnnData")
 
     if "polygons" not in adata_group.uns["masks"][mask_set] or not len(
         adata_group.uns["masks"][mask_set]["polygons"]
@@ -44,7 +44,10 @@ def pseudospatial_gene(
     validate_pseudospatial(adata_group, mask_set)
     validate_format(plot_format)
 
-    marker = Marker.from_any(adata_group, var_key, var_names_col)
+    try:
+        marker = Marker.from_any(adata_group, var_key, var_names_col)
+    except InvalidVar:
+        raise NotInData(f"{var_key} not found in data")
 
     # compute mean expression
     logging.info(f"Computing mean expression for {marker.name}")
@@ -99,7 +102,7 @@ def pseudospatial_categorical(
     obs_colname = obs_col["name"]
 
     if obs_colname not in adata_group.obs:
-        raise NotInData(f"Column '{obs_colname}' not found in adata")
+        raise NotInData(f"Column '{obs_colname}' not found in AnnData")
     if mode not in ["counts", "across", "within"]:
         raise BadRequest(
             f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
@@ -188,7 +191,7 @@ def pseudospatial_continuous(
     obs_colname = obs_col["name"]
 
     if obs_colname not in adata_group.obs:
-        raise NotInData(f"Column '{obs_colname}' not found in adata")
+        raise NotInData(f"Column '{obs_colname}' not found in AnnData")
 
     mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
