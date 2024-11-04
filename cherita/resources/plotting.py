@@ -547,7 +547,6 @@ class PseudospatialMasks(Resource):
 
             optional_params = {
                 "mask_set": "maskSet",
-                "mask_values": "maskValues",
                 "full_html": "fullHtml",
                 "width": "width",
                 "height": "height",

@@ -6,6 +6,7 @@ from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.dataset.metadata import (
     get_obs_col_names,
     get_obs_col_metadata,
+    get_pseudospatial_masks,
     get_var_col_names,
     get_obsm_keys,
     get_var_histograms,
@@ -268,3 +269,15 @@ class MatrixMean(Resource):
             )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+
+
+@ns.route("/masks")
+class Masks(Resource):
+    @ns.doc(
+        description="Get the pseudospatial masks data",
+        responses={200: "Success", 404: "Not found", 500: "Internal server error"},
+    )
+    def post(self):
+        json_data = request.get_json()
+        adata_group = open_anndata_zarr(json_data["url"])
+        return jsonify(get_pseudospatial_masks(adata_group))
