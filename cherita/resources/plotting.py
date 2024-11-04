@@ -350,7 +350,12 @@ pseudospatial_categorical_model = ns.model(
         ),
         "format": fields.String(description="Plot format"),
         "maskSet": fields.String(description="Mask set"),
-        "mode": fields.String(description="Mode"),
+        "mode": fields.String(
+            description=(
+                "Plotting mode. `across` for percentage across masks"
+                "or `within` for percentage within masks"
+            )
+        ),
         "maskValues": fields.List(fields.String, description="Mask values"),
         "colormap": fields.String(description="Colormap"),
         "fullHtml": fields.Boolean(description="Full HTML"),

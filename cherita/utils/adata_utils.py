@@ -259,6 +259,7 @@ def encode_dtype(a):
         return a
 
 
+# @TODO: get type from AnnData
 def to_categorical(
     data: Union[pd.Series, np.Array],
     type: str,

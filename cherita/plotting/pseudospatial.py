@@ -90,7 +90,7 @@ def pseudospatial_categorical(
     adata_group: zarr.Group,
     obs_col: dict,
     obs_values: list[str] = None,
-    mode: Literal["counts", "across", "within"] = "counts",
+    mode: Literal["across", "within"] = "across",
     mask_set: str = "spatial",
     mask_values: list[str] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
@@ -103,10 +103,8 @@ def pseudospatial_categorical(
 
     if obs_colname not in adata_group.obs:
         raise NotInData(f"Column '{obs_colname}' not found in AnnData")
-    if mode not in ["counts", "across", "within"]:
-        raise BadRequest(
-            f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
-        )
+    if mode not in ["across", "within"]:
+        raise BadRequest(f"Invalid mode '{mode}'. Must be 'across' or 'within'")
 
     mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
@@ -125,54 +123,38 @@ def pseudospatial_categorical(
 
     if not len(obs_values):
         values_dict = {m: None for m in masks}
-        text = ""
+        text = None
+        add_text = {m: None for m in masks}
     else:
         crosstab = pd.crosstab(mask_obs_col, cat_obs)
         if mask_values:
             crosstab = crosstab.loc[mask_values]
 
-        if mode == "counts":
-            values_dict = {
-                m: (
-                    None
-                    if mask_values and m not in mask_values
-                    else crosstab[obs_values].loc[m].sum()
-                )
-                for m in masks
-            }
-            text = "Counts"
-        elif mode == "across":
-            values_dict = {
-                m: (
-                    None
-                    if mask_values and m not in mask_values
-                    else (
-                        crosstab[obs_values].loc[m].sum()
-                        / crosstab[obs_values].sum().sum()
-                    )
-                    * 100
-                )
-                for m in masks
-            }
-            text = "% across regions"
-        elif mode == "within":
-            values_dict = {
-                m: (
-                    None
-                    if mask_values and m not in mask_values
-                    else (crosstab[obs_values].loc[m].sum() / crosstab.loc[m].sum())
-                    * 100
-                )
-                for m in masks
-            }
-            text = "% within region"
-        else:
-            raise BadRequest(
-                f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
-            )
+        values_dict = {}
+        add_text = {}
 
+        for m in masks:
+            if mask_values and m not in mask_values:
+                values_dict[m] = None
+            else:
+                if mode == "across":
+                    s = crosstab[obs_values].loc[m].sum()
+                    total = crosstab[obs_values].sum().sum()
+                elif mode == "within":
+                    s = crosstab[obs_values].loc[m].sum()
+                    total = crosstab.loc[m].sum()
+                values_dict[m] = s / total * 100
+                add_text[m] = f"{s:,} out of {total:,}"
+
+        text = "% across masks" if mode == "across" else "% within mask"
     return plot_polygons(
-        adata_group, values_dict, mask_set, text=text, plot_format=plot_format, **kwargs
+        adata_group,
+        values_dict,
+        mask_set,
+        text=text,
+        add_text=add_text,
+        plot_format=plot_format,
+        **kwargs,
     )
 
 
@@ -262,6 +244,7 @@ def plot_polygons(
     min_value: float = None,
     max_value: float = None,
     text: str = None,
+    add_text: dict = {},
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     width: int = 500,
     height: int = 500,
@@ -284,8 +267,6 @@ def plot_polygons(
         )
     )
 
-    max_value = max_value + (np.spacing(1) if max_value == min_value else 0)
-
     color_values = {
         k: (
             sample_colorscale(
@@ -293,7 +274,11 @@ def plot_polygons(
                 [
                     min(
                         max(
-                            (v - min_value) / (max_value - min_value),
+                            (v - min_value)
+                            / (
+                                (max_value - min_value)
+                                + (np.spacing(1) if max_value == min_value else 0)
+                            ),
                             0,
                         ),
                         1,
@@ -351,6 +336,7 @@ def plot_polygons(
                                 )
                             )
                         ),
+                        add_text.get(polygon, "") or "",
                     ]
                 ),
                 meta=dict(
