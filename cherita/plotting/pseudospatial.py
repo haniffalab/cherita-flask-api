@@ -55,6 +55,9 @@ def pseudospatial_gene(
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
     masks = mask_obs_col.categories
 
+    if mask_values is None:
+        mask_values = masks
+
     if obs_col and obs_values is not None:
         obs_colname = obs_col["name"]
         try:
@@ -70,7 +73,7 @@ def pseudospatial_gene(
     values_dict = {
         m: (
             None
-            if mask_values and m not in mask_values
+            if m not in mask_values
             else np.mean(marker.get_X_at(np.flatnonzero(mask_obs_col.isin([m]))))
         )
         for m in masks
@@ -110,6 +113,9 @@ def pseudospatial_categorical(
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
     masks = mask_obs_col.categories
 
+    if mask_values is None:
+        mask_values = masks
+
     try:
         obs = parse_data(adata_group.obs[obs_colname])
     except KeyError as e:
@@ -127,14 +133,13 @@ def pseudospatial_categorical(
         add_text = {m: None for m in masks}
     else:
         crosstab = pd.crosstab(mask_obs_col, cat_obs)
-        if mask_values:
-            crosstab = crosstab.loc[mask_values]
+        crosstab = crosstab.loc[mask_values]
 
         values_dict = {}
         add_text = {}
 
         for m in masks:
-            if mask_values and m not in mask_values:
+            if m not in mask_values:
                 values_dict[m] = None
             else:
                 if mode == "across":
@@ -185,12 +190,13 @@ def pseudospatial_continuous(
 
     df = pd.DataFrame({mask_obs_colname: mask_obs_col, obs_colname: obs})
     categorical_obs, _ = to_categorical(obs, **obs_col)
+    if mask_values is None:
+        mask_values = categorical_obs.categories
 
     if obs_values is not None:
         df = df[categorical_obs.isin(obs_values)]
 
-    if mask_values:
-        df = df[df[mask_obs_colname].isin(mask_values)]
+    df = df[df[mask_obs_colname].isin(mask_values)]
     mean_table = df.pivot_table(
         index=mask_obs_colname, values=obs_colname, aggfunc="mean"
     )
