@@ -70,20 +70,23 @@ def pseudospatial_gene(
         if obs_values is not None:
             mask_obs_col[np.flatnonzero(~categorical_obs.isin(obs_values))] = None
 
-    values_dict = {
-        m: (
-            None
-            if m not in mask_values
-            else np.mean(marker.get_X_at(np.flatnonzero(mask_obs_col.isin([m]))))
-        )
-        for m in masks
-    }
+    values_dict = {}
+    add_text = {}
+    for m in masks:
+        if m not in mask_values:
+            values_dict[m] = None
+            add_text[m] = "0 cells"
+        else:
+            vals = marker.get_X_at(np.flatnonzero(mask_obs_col.isin([m])))
+            values_dict[m] = np.mean(vals)
+            add_text[m] = f"{len(vals):,} cells"
 
     return plot_polygons(
         adata_group,
         values_dict,
         mask_set,
         text="Mean expression",
+        add_text=add_text,
         plot_format=plot_format,
         **kwargs,
     )
@@ -137,10 +140,10 @@ def pseudospatial_categorical(
 
         values_dict = {}
         add_text = {}
-
         for m in masks:
             if m not in mask_values:
                 values_dict[m] = None
+                add_text[m] = "0 cells"
             else:
                 if mode == "across":
                     s = crosstab[obs_values].loc[m].sum()
@@ -188,26 +191,37 @@ def pseudospatial_continuous(
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
-    df = pd.DataFrame({mask_obs_colname: mask_obs_col, obs_colname: obs})
     categorical_obs, _ = to_categorical(obs, **obs_col)
+    df = pd.DataFrame(
+        {mask_obs_colname: mask_obs_col, obs_colname: obs, "_cat": categorical_obs}
+    )
+
     if mask_values is None:
-        mask_values = categorical_obs.categories
+        mask_values = mask_obs_col.categories
 
     if obs_values is not None:
-        df = df[categorical_obs.isin(obs_values)]
+        df = df[df["_cat"].isin(obs_values)]
 
     df = df[df[mask_obs_colname].isin(mask_values)]
+
     mean_table = df.pivot_table(
         index=mask_obs_colname, values=obs_colname, aggfunc="mean"
     )
+    count_table = df.pivot_table(
+        index=mask_obs_colname, values=obs_colname, aggfunc="count"
+    )
 
     values_dict = mean_table.to_dict()[obs_colname]
+    add_text = {
+        k: f"{v:,} cells" for k, v in count_table.to_dict()[obs_colname].items()
+    }
 
     return plot_polygons(
         adata_group,
         values_dict,
         mask_set,
         text="Mean value",
+        add_text=add_text,
         plot_format=plot_format,
         **kwargs,
     )
