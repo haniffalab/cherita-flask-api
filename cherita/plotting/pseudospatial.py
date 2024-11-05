@@ -318,9 +318,9 @@ def plot_polygons(
         line_color = (
             values_dict.get(polygon) is not None
             and color_values.get(polygon)
-            or "rgb(0,0,0)"
+            or "rgb(0,0,0,0.5)"
         )
-        fill_color = color_values.get(polygon, "rgba(0,0,0,0)")
+        fill_color = color_values.get(polygon)
         value = values_dict.get(polygon)
 
         fig.add_trace(
@@ -338,7 +338,18 @@ def plot_polygons(
                 mode="lines",
                 showlegend=False,
                 fill="toself",
-                fillcolor=fill_color,
+                fillcolor=fill_color or "rgba(0,0,0,0)",
+                fillpattern=(
+                    dict(
+                        shape="/",
+                        bgcolor="rgba(0,0,0,0)",
+                        fgcolor="rgba(0,0,0,0.5)",
+                        size=5,
+                        solidity=0.2,
+                    )
+                    if not fill_color
+                    else None
+                ),
                 hoverinfo="text",
                 text="<br>".join(
                     [
