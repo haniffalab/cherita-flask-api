@@ -77,9 +77,10 @@ def pseudospatial_gene(
             values_dict[m] = None
             add_text[m] = "0 cells"
         else:
-            vals = marker.get_X_at(np.flatnonzero(mask_obs_col.isin([m])))
+            mask_indx = np.flatnonzero(mask_obs_col.isin([m]))
+            vals = marker.get_X_at(mask_indx)
             values_dict[m] = np.mean(vals)
-            add_text[m] = f"{len(vals):,} cells"
+            add_text[m] = f"{len(mask_indx):,} cells"
 
     return plot_polygons(
         adata_group,
