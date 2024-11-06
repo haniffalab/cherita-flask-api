@@ -323,14 +323,21 @@ def plot_polygons(
         fill_color = color_values.get(polygon)
         value = values_dict.get(polygon)
 
+        x_coords = list(
+            *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
+        )
+        y_coords = list(
+            *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
+        )
+
+        # Add first coord to end to close the polygon
+        x_coords.append(x_coords[0])
+        y_coords.append(y_coords[0])
+
         fig.add_trace(
             go.Scatter(
-                x=list(
-                    *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
-                ),
-                y=list(
-                    *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
-                ),
+                x=x_coords,
+                y=y_coords,
                 line=dict(
                     color=line_color,
                     width=1,
