@@ -79,7 +79,7 @@ def pseudospatial_gene(
         else:
             mask_indx = np.flatnonzero(mask_obs_col.isin([m]))
             vals = marker.get_X_at(mask_indx)
-            values_dict[m] = np.mean(vals)
+            values_dict[m] = np.mean(vals) if len(vals) else None
             add_text[m] = f"{len(mask_indx):,} cells"
 
     return plot_polygons(
@@ -255,7 +255,6 @@ def pseudospatial_masks(
     )
 
 
-# @TODO: fix runtime warnings when all values are None/nan like "Mean of empty slice"
 def plot_polygons(
     adata_group: zarr.Group,
     values_dict: pd.DataFrame,
