@@ -4,6 +4,7 @@ from cherita.resources.errors import BadRequest
 
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.dataset.metadata import (
+    get_obs_col_histograms,
     get_obs_col_names,
     get_obs_col_metadata,
     get_pseudospatial_masks,
@@ -230,6 +231,34 @@ class VarHistograms(Resource):
             var_key = json_data["varKey"]
             obs_indices = json_data.get("obsIndices", None)
             return jsonify(get_var_histograms(adata_group, var_key, obs_indices))
+        except KeyError as e:
+            raise BadRequest("Missing required parameter: {}".format(e))
+
+
+obs_histograms_model = ns.model(
+    "ObsHistogramsModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "varKey": fields.Integer(description="Index of the variable"),
+        "obsCol": fields.Raw(required=True, description="Selected obs column"),
+    },
+)
+
+
+@ns.route("/obs/histograms")
+class ObsHistograms(Resource):
+    @ns.doc(
+        description="Get the histograms of the observation column",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_histograms_model)
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            var_key = json_data["varKey"]
+            obs_col = json_data["obsCol"]
+            return jsonify(get_obs_col_histograms(adata_group, var_key, obs_col))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
 

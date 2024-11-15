@@ -5,7 +5,7 @@ import zarr
 import pandas as pd
 import numpy as np
 from scipy.stats import gaussian_kde
-from cherita.resources.errors import NotInData
+from cherita.resources.errors import InvalidObs, NotInData
 from cherita.utils.adata_utils import (
     get_group_index_name,
     parse_data,
@@ -60,22 +60,50 @@ def get_var_col_names(adata_group: zarr.Group):
     return var_col_names
 
 
-# @TODO: optional obs_categories input
-def get_var_histograms(
-    adata_group: zarr.Group,
-    var_key: int,
-    obs_indices: list[int] = None,
-):
-    marker = Marker.from_any(adata_group, var_key)
-    hist, bin_edges = np.histogram(
-        adata_group.X[obs_indices or slice(None), marker.matrix_index]
-    )
+def histogram(a: np.ndarray, hist_range: tuple[float, float] = None):
+    hist, bin_edges = np.histogram(a, range=hist_range)
     bin_edges = [
         [float(bin_edges[i]), float(bin_edges[i + 1])]
         for i in range(len(bin_edges) - 1)
     ]
     log10_hist = np.log10(hist + 1)
     return {"hist": hist.tolist(), "bin_edges": bin_edges, "log10": log10_hist.tolist()}
+
+
+def get_var_histograms(
+    adata_group: zarr.Group,
+    var_key: Union[int, str, dict],
+    obs_indices: list[int] = None,
+):
+    marker = Marker.from_any(adata_group, var_key)
+    return histogram(marker.get_X_at(obs_indices))
+
+
+# @TODO: support obs_indices
+def get_obs_col_histograms(
+    adata_group: zarr.Group, var_key: Union[int, str, dict], obs_col: dict
+):
+    obs_colname = obs_col["name"]
+    if obs_colname not in adata_group.obs:
+        raise NotInData(f"Column '{obs_colname}' not found in AnnData")
+    try:
+        obs = parse_data(adata_group.obs[obs_colname])
+    except KeyError as e:
+        raise InvalidObs(f"Invalid observation {e}")
+
+    categorical_obs, _ = to_categorical(obs, **obs_col)
+
+    marker = Marker.from_any(adata_group, var_key)
+    X = marker.X
+    min_X, max_X = X.min(), X.max()
+
+    obs_data = {}
+    for cat in categorical_obs.categories:
+        obs_data[cat] = histogram(
+            X[np.flatnonzero(categorical_obs == cat)], [min_X, max_X]
+        )
+
+    return obs_data
 
 
 def get_var_names(adata_group: zarr.Group, col: str = None):
