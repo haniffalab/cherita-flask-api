@@ -241,6 +241,9 @@ obs_histograms_model = ns.model(
         "url": fields.String(description="URL to the zarr file", required=True),
         "varKey": fields.Integer(description="Index of the variable"),
         "obsCol": fields.Raw(required=True, description="Selected obs column"),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
     },
 )
 
@@ -258,7 +261,10 @@ class ObsHistograms(Resource):
             adata_group = open_anndata_zarr(json_data["url"])
             var_key = json_data["varKey"]
             obs_col = json_data["obsCol"]
-            return jsonify(get_obs_col_histograms(adata_group, var_key, obs_col))
+            obs_indices = json_data.get("obsIndices", None)
+            return jsonify(
+                get_obs_col_histograms(adata_group, var_key, obs_col, obs_indices)
+            )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
 

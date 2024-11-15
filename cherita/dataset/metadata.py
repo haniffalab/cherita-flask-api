@@ -79,9 +79,11 @@ def get_var_histograms(
     return histogram(marker.get_X_at(obs_indices))
 
 
-# @TODO: support obs_indices
 def get_obs_col_histograms(
-    adata_group: zarr.Group, var_key: Union[int, str, dict], obs_col: dict
+    adata_group: zarr.Group,
+    var_key: Union[int, str, dict],
+    obs_col: dict,
+    obs_indices: list[int] = None,
 ):
     obs_colname = obs_col["name"]
     if obs_colname not in adata_group.obs:
@@ -92,10 +94,14 @@ def get_obs_col_histograms(
         raise InvalidObs(f"Invalid observation {e}")
 
     categorical_obs, _ = to_categorical(obs, **obs_col)
+    categorical_obs = categorical_obs[obs_indices] if obs_indices else categorical_obs
 
     marker = Marker.from_any(adata_group, var_key)
-    X = marker.X
+    X = marker.get_X_at(obs_indices)
     min_X, max_X = X.min(), X.max()
+
+    if min_X == max_X:
+        max_X += 1
 
     obs_data = {}
     for cat in categorical_obs.categories:
