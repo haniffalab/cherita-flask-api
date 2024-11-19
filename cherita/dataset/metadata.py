@@ -94,7 +94,9 @@ def get_obs_col_histograms(
         raise InvalidObs(f"Invalid observation {e}")
 
     categorical_obs, _ = to_categorical(obs, **obs_col)
-    categorical_obs = categorical_obs[obs_indices] if obs_indices else categorical_obs
+    categorical_obs = (
+        categorical_obs[obs_indices] if obs_indices is not None else categorical_obs
+    )
 
     marker = Marker.from_any(adata_group, var_key)
     X = marker.get_X_at(obs_indices)

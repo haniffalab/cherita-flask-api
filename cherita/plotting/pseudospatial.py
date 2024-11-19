@@ -30,6 +30,9 @@ def validate_format(format: str):
         )
 
 
+# @TODO: support obs_indices
+
+
 def pseudospatial_gene(
     adata_group: zarr.Group,
     var_key: Union[int, str, dict],
@@ -58,6 +61,7 @@ def pseudospatial_gene(
     if mask_values is None:
         mask_values = masks
 
+    obs_indices = None
     if obs_col and obs_values is not None:
         obs_colname = obs_col["name"]
         try:
@@ -68,17 +72,22 @@ def pseudospatial_gene(
         categorical_obs, _ = to_categorical(obs, **obs_col)
 
         if obs_values is not None:
-            mask_obs_col[np.flatnonzero(~categorical_obs.isin(obs_values))] = None
+            obs_indices = np.flatnonzero(categorical_obs.isin(obs_values))
+
+    mask_obs_col = (
+        mask_obs_col[obs_indices] if obs_indices is not None else mask_obs_col
+    )
 
     values_dict = {}
     add_text = {}
+    X = marker.get_X_at(obs_indices)
     for m in masks:
         if m not in mask_values:
             values_dict[m] = None
             add_text[m] = "0 cells"
         else:
             mask_indx = np.flatnonzero(mask_obs_col.isin([m]))
-            vals = marker.get_X_at(mask_indx)
+            vals = X[mask_indx] if not marker.isSet else X[:, mask_indx]
             values_dict[m] = np.mean(vals) if len(vals) else None
             add_text[m] = f"{len(mask_indx):,} cells"
 
