@@ -35,6 +35,7 @@ def heatmap(
     obs_col: dict,
     obs_values: list[str] = None,
     var_names_col: str = None,
+    obs_indices: list[int] = None,
 ) -> Any:
     """Method to generate a Plotly heatmap plot JSON as a Python object
     from an Anndata-Zarr object.
@@ -68,6 +69,9 @@ def heatmap(
     )
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
+
+    if obs_indices is not None:
+        df = df.iloc[obs_indices]
 
     if obs_values is not None:
         df = df[df[obs_colname].isin(obs_values)]

@@ -41,6 +41,7 @@ def pseudospatial_gene(
     mask_set: str = "spatial",
     mask_values: list[str] = None,
     var_names_col: str = None,
+    obs_indices: list[int] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -61,7 +62,7 @@ def pseudospatial_gene(
     if mask_values is None:
         mask_values = masks
 
-    obs_indices = None
+    obs_values_indices = None
     if obs_col and obs_values is not None:
         obs_colname = obs_col["name"]
         try:
@@ -72,11 +73,26 @@ def pseudospatial_gene(
         categorical_obs, _ = to_categorical(obs, **obs_col)
 
         if obs_values is not None:
-            obs_indices = np.flatnonzero(categorical_obs.isin(obs_values))
+            obs_values_indices = np.flatnonzero(categorical_obs.isin(obs_values))
 
-    mask_obs_col = (
-        mask_obs_col[obs_indices] if obs_indices is not None else mask_obs_col
-    )
+    if obs_indices is not None and obs_values_indices is not None:
+        obs_indices = np.intersect1d(obs_indices, obs_values_indices)
+    elif obs_indices is None:
+        obs_indices = obs_values_indices
+
+    if obs_indices is not None:
+        if len(obs_indices):
+            mask_obs_col = mask_obs_col[obs_indices]
+        else:
+            return plot_polygons(
+                adata_group,
+                {m: None for m in masks},
+                mask_set,
+                text="Mean expression",
+                add_text={m: "0 cells" for m in masks},
+                plot_format=plot_format,
+                **kwargs,
+            )
 
     values_dict = {}
     add_text = {}
@@ -109,6 +125,7 @@ def pseudospatial_categorical(
     mode: Literal["across", "within"] = "across",
     mask_set: str = "spatial",
     mask_values: list[str] = None,
+    obs_indices: list[int] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -139,6 +156,10 @@ def pseudospatial_categorical(
 
     if obs_values is None:
         obs_values = cat_obs.categories
+
+    if obs_indices is not None:
+        cat_obs = cat_obs[obs_indices]
+        mask_obs_col = mask_obs_col[obs_indices]
 
     if not len(obs_values):
         values_dict = {m: None for m in masks}
@@ -182,6 +203,7 @@ def pseudospatial_continuous(
     obs_values: list[str] = None,
     mask_set: str = "spatial",
     mask_values: list[str] = None,
+    obs_indices: list[int] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -205,6 +227,9 @@ def pseudospatial_continuous(
     df = pd.DataFrame(
         {mask_obs_colname: mask_obs_col, obs_colname: obs, "_cat": categorical_obs}
     )
+
+    if obs_indices is not None:
+        df = df.iloc[obs_indices]
 
     if mask_values is None:
         mask_values = mask_obs_col.categories
