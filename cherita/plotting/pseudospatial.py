@@ -30,9 +30,6 @@ def validate_format(format: str):
         )
 
 
-# @TODO: support obs_indices
-
-
 def pseudospatial_gene(
     adata_group: zarr.Group,
     var_key: Union[int, str, dict],
@@ -141,6 +138,7 @@ def pseudospatial_categorical(
 
     mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+    total_mask_counts = mask_obs_col.value_counts()
     masks = mask_obs_col.categories
 
     if mask_values is None:
@@ -181,7 +179,7 @@ def pseudospatial_categorical(
                     total = crosstab[obs_values].sum().sum()
                 elif mode == "within":
                     s = crosstab[obs_values].loc[m].sum()
-                    total = crosstab.loc[m].sum()
+                    total = total_mask_counts[m]
                 values_dict[m] = s / total * 100
                 add_text[m] = f"{s:,} out of {total:,}"
 
