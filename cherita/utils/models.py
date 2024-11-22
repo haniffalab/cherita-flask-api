@@ -161,7 +161,7 @@ class Marker:
             np.ndarray: The data associated with the marker at the specified indices.
         """
         if indices is not None and not len(indices):
-            return []
+            return np.array([])
         if self.isSet:
             # return all data for each marker in the set instead of aggregated data
             return [
