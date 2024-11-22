@@ -167,7 +167,7 @@ def pseudospatial_categorical(
         add_text = {m: None for m in masks}
     else:
         crosstab = pd.crosstab(mask_obs_col, cat_obs)
-        crosstab = crosstab.loc[mask_values]
+        crosstab = crosstab.reindex(mask_values, fill_value=0)
 
         values_dict = {}
         add_text = {}
