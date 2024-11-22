@@ -85,18 +85,18 @@ def dotplot(
     dot_size_df = (
         bool_df.groupby(obs_colname, observed=False).sum()
         / bool_df.groupby(obs_colname, observed=False).count()
-    )
+    ).fillna(0)
 
     if mean_only_expressed:
         dot_color_df = (
             df.mask(~bool_df).groupby(obs_colname, observed=False).mean().fillna(0)
         )
     else:
-        dot_color_df = df.groupby(obs_colname, observed=False).mean()
+        dot_color_df = df.groupby(obs_colname, observed=False).mean().fillna(0)
     mean_df = dot_color_df
 
     if standard_scale == "group":
-        dot_color_df = dot_color_df.sub(dot_color_df.min(1), axis=0)
+        dot_color_df = dot_color_df.sub(dot_color_df.min(1), axis=0).fillna(0)
         dot_color_df = dot_color_df.div(dot_color_df.max(1), axis=0).fillna(0)
     elif standard_scale == "var":
         dot_color_df -= dot_color_df.min(0)
