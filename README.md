@@ -5,8 +5,8 @@
 
 # Cherita Flask API
 
-[![docs](https://img.shields.io/badge/Documentation-online-blue)](https://haniffalab.github.io/webatlas-pipeline)
-[![demo](https://img.shields.io/badge/Demos-view-blue)](https://cellatlas.io/webatlas)
+[![docs](https://img.shields.io/badge/Documentation-online-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/api/docs/)
+[![demo](https://img.shields.io/badge/Demos-view-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/)
 [![doi](https://zenodo.org/badge/DOI/10.5281/zenodo.7405818.svg)](https://doi.org/10.5281/zenodo.7405818)
 
 Desc
