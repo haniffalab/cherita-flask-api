@@ -21,6 +21,7 @@ def matrixplot(
     obs_values: list[str] = None,
     standard_scale: str = None,
     var_names_col: str = None,
+    obs_indices: list[int] = None,
 ) -> Any:
     """Method to generate a Plotly matrixplot JSON as a Python object
     from an Anndata-Zarr object.
@@ -55,6 +56,9 @@ def matrixplot(
     )
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
+
+    if obs_indices is not None:
+        df = df.iloc[obs_indices]
 
     if obs_values is not None:
         df = df[df[obs_colname].isin(obs_values)]

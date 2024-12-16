@@ -205,6 +205,7 @@ def type_numeric(obs):
         "max": encode_dtype(ndarray_max(obs)),
         "mean": encode_dtype(ndarray_mean(obs)),
         "median": encode_dtype(ndarray_median(obs)),
+        "n_unique": np.unique(obs).size,
     }
 
 
@@ -259,6 +260,7 @@ def encode_dtype(a):
         return a
 
 
+# @TODO: get type from AnnData
 def to_categorical(
     data: Union[pd.Series, np.Array],
     type: str,
@@ -299,7 +301,7 @@ def categorical(c: pd.Categorical, fillna: bool = True, **kwargs):
 def continuous2categorical(
     array: np.Array,
     thresholds: list[Union[int, float]] = None,
-    nBins: int = 20,
+    nBins: int = 5,
     fillna: bool = True,
     **kwargs,
 ):
@@ -321,7 +323,7 @@ def continuous2categorical(
 
 
 def discrete2categorical(
-    array: np.Array, nBins: int = 20, fillna: bool = True, **kwargs
+    array: np.Array, nBins: int = 5, fillna: bool = True, **kwargs
 ):
     s = pd.Series(array).astype("category")
     if nBins >= len(s.cat.categories):

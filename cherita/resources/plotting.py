@@ -28,6 +28,9 @@ heatmap_model = ns.model(
             fields.String, required=False, description="Selected obs values"
         ),
         "varNamesCol": fields.String(description="Var names column"),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
     },
 )
 
@@ -57,6 +60,7 @@ class Heatmap(Resource):
                     obs_col=json_data["obsCol"],
                     obs_values=json_data.get("obsValues"),
                     var_names_col=json_data.get("varNamesCol"),
+                    obs_indices=json_data.get("obsIndices"),
                 )
             )
         except KeyError as e:
@@ -78,6 +82,9 @@ dotplot_model = ns.model(
         "expressionCutoff": fields.Float(description="Expression cutoff"),
         "standardScale": fields.String(description="Standard scale"),
         "varNamesCol": fields.String(description="Var names column"),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
     },
 )
 
@@ -106,6 +113,7 @@ class Dotplot(Resource):
                     expression_cutoff=json_data.get("expressionCutoff", 0.0),
                     standard_scale=json_data.get("standardScale"),
                     var_names_col=json_data.get("varNamesCol"),
+                    obs_indices=json_data.get("obsIndices"),
                 )
             )
         except KeyError as e:
@@ -125,6 +133,9 @@ matrixplot_model = ns.model(
         ),
         "standardScale": fields.String(description="Standard scale"),
         "varNamesCol": fields.String(description="Var names column"),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
     },
 )
 
@@ -151,6 +162,7 @@ class Matrixplot(Resource):
                     obs_values=json_data.get("obsValues"),
                     standard_scale=json_data.get("standardScale"),
                     var_names_col=json_data.get("varNamesCol"),
+                    obs_indices=json_data.get("obsIndices"),
                 )
             )
         except KeyError as e:
@@ -183,6 +195,9 @@ groupby_violin_model = ns.inherit(
         "varKey": fields.String(description="Var key"),
         "obsCol": fields.String(description="Obs column"),
         "obsValues": fields.List(fields.String, description="List of obs values"),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
     },
 )
 
@@ -204,17 +219,18 @@ class Violin(Resource):
             mode = json_data["mode"]
             if mode == "multikey":
                 ns.expect(multikey_violin_model)
-                params = {
-                    "var_keys": json_data.get("varKeys", []),
-                    "obs_keys": json_data.get("obsKeys", []),
-                }
+                params = dict(
+                    var_keys=json_data.get("varKeys", []),
+                    obs_keys=json_data.get("obsKeys", []),
+                )
             elif mode == "groupby":
                 ns.expect(groupby_violin_model)
-                params = {
-                    "var_key": json_data["varKey"],
-                    "obs_col": json_data["obsCol"],
-                    "obs_values": json_data.get("obsValues"),
-                }
+                params = dict(
+                    var_key=json_data["varKey"],
+                    obs_col=json_data["obsCol"],
+                    obs_values=json_data.get("obsValues"),
+                    obs_indices=json_data.get("obsIndices"),
+                )
             return jsonify(
                 violin(
                     adata_group=adata_group,
@@ -262,6 +278,9 @@ pseudospatial_gene_model = ns.model(
         "obsValues": fields.List(
             fields.String, description="Obs values to filter data by"
         ),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
         "colormap": fields.String(description="Colormap name"),
         "fullHtml": fields.Boolean(
             description=(
@@ -299,20 +318,21 @@ class PseudospatialGene(Resource):
             adata_group = open_anndata_zarr(json_data["url"])
             var_key = json_data["varKey"]
             plot_format = json_data.get("format", "png")
-            optional_params = {
-                "mask_set": "maskSet",
-                "mask_values": "maskValues",
-                "var_names_col": "varNamesCol",
-                "obs_col": "obsCol",
-                "obs_values": "obsValues",
-                "colormap": "colormap",
-                "full_html": "fullHtml",
-                "show_colorbar": "showColorbar",
-                "min_value": "minValue",
-                "max_value": "maxValue",
-                "width": "width",
-                "height": "height",
-            }
+            optional_params = dict(
+                mask_set="maskSet",
+                mask_values="maskValues",
+                var_names_col="varNamesCol",
+                obs_col="obsCol",
+                obs_values="obsValues",
+                colormap="colormap",
+                full_html="fullHtml",
+                show_colorbar="showColorbar",
+                min_value="minValue",
+                max_value="maxValue",
+                width="width",
+                height="height",
+                obs_indices="obsIndices",
+            )
             optional_params_dict = {
                 p: json_data.get(n)
                 for p, n in optional_params.items()
@@ -350,8 +370,16 @@ pseudospatial_categorical_model = ns.model(
         ),
         "format": fields.String(description="Plot format"),
         "maskSet": fields.String(description="Mask set"),
-        "mode": fields.String(description="Mode"),
+        "mode": fields.String(
+            description=(
+                "Plotting mode. `across` for percentage across masks"
+                "or `within` for percentage within masks"
+            )
+        ),
         "maskValues": fields.List(fields.String, description="Mask values"),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
         "colormap": fields.String(description="Colormap"),
         "fullHtml": fields.Boolean(description="Full HTML"),
         "showColorbar": fields.Boolean(description="Show colorbar"),
@@ -385,19 +413,20 @@ class PseudospatialCategorical(Resource):
             obs_col = json_data["obsCol"]
             plot_format = json_data.get("format", "png")
 
-            optional_params = {
-                "obs_values": "obsValues",
-                "mask_set": "maskSet",
-                "mode": "mode",
-                "mask_values": "maskValues",
-                "colormap": "colormap",
-                "full_html": "fullHtml",
-                "show_colorbar": "showColorbar",
-                "min_value": "minValue",
-                "max_value": "maxValue",
-                "width": "width",
-                "height": "height",
-            }
+            optional_params = dict(
+                obs_values="obsValues",
+                mask_set="maskSet",
+                mode="mode",
+                mask_values="maskValues",
+                colormap="colormap",
+                full_html="fullHtml",
+                show_colorbar="showColorbar",
+                min_value="minValue",
+                max_value="maxValue",
+                width="width",
+                height="height",
+                obs_indices="obsIndices",
+            )
             optional_params_dict = {
                 p: json_data.get(n)
                 for p, n in optional_params.items()
@@ -436,6 +465,9 @@ pseudospatial_continuous_model = ns.model(
         "format": fields.String(description="Plot format"),
         "maskSet": fields.String(description="Mask set"),
         "maskValues": fields.List(fields.String, description="Mask values"),
+        "obsIndices": fields.List(
+            fields.Integer, description="List of observation indices"
+        ),
         "colormap": fields.String(description="Colormap"),
         "fullHtml": fields.Boolean(description="Full HTML"),
         "showColorbar": fields.Boolean(description="Show colorbar"),
@@ -469,18 +501,19 @@ class PseudospatialContinuous(Resource):
             obs_col = json_data["obsCol"]
             plot_format = json_data.get("format", "png")
 
-            optional_params = {
-                "obs_values": "obsValues",
-                "mask_set": "maskSet",
-                "mask_values": "maskValues",
-                "colormap": "colormap",
-                "full_html": "fullHtml",
-                "show_colorbar": "showColorbar",
-                "min_value": "minValue",
-                "max_value": "maxValue",
-                "width": "width",
-                "height": "height",
-            }
+            optional_params = dict(
+                obs_values="obsValues",
+                mask_set="maskSet",
+                mask_values="maskValues",
+                colormap="colormap",
+                full_html="fullHtml",
+                show_colorbar="showColorbar",
+                min_value="minValue",
+                max_value="maxValue",
+                width="width",
+                height="height",
+                obs_indices="obsIndices",
+            )
             optional_params_dict = {
                 p: json_data.get(n)
                 for p, n in optional_params.items()
@@ -542,7 +575,6 @@ class PseudospatialMasks(Resource):
 
             optional_params = {
                 "mask_set": "maskSet",
-                "mask_values": "maskValues",
                 "full_html": "fullHtml",
                 "width": "width",
                 "height": "height",
