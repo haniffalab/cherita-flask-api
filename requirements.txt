@@ -1,4 +1,4 @@
-aiohttp==3.8.6
+aiohttp==3.10.11
 anndata==0.9.1
 Flask==2.3.2
 flask-cors==3.0.10
