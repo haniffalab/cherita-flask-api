@@ -1,6 +1,13 @@
-## Development
+[![dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](https://github.com/haniffalab/cherita-flask-api/security)
+[![python](https://shields.io/badge/python-3.10-blue)](https://github.com/haniffalab/cherita-flask-api?tab=readme-ov-file#development)
 
-Requires Python3.10
+# Cherita Flask API
+
+[![docs](https://img.shields.io/badge/Documentation-online-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/api/docs/)
+[![demo](https://img.shields.io/badge/Demos-view-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/)
+[![doi](https://zenodo.org/badge/DOI/10.5281/zenodo.7405818.svg)](https://doi.org/10.5281/zenodo.7405818)
+
+## Development
 
 Create a development environment with the `requirements.txt` file
 

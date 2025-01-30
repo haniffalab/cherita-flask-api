@@ -1,9 +1,11 @@
+import logging
 import re
 from typing import Union
 import zarr
 import pandas as pd
 import numpy as np
 from scipy.stats import gaussian_kde
+from cherita.resources.errors import InvalidObs, NotInData
 from cherita.utils.adata_utils import (
     get_group_index_name,
     parse_data,
@@ -58,22 +60,58 @@ def get_var_col_names(adata_group: zarr.Group):
     return var_col_names
 
 
-# @TODO: optional obs_categories input
-def get_var_histograms(
-    adata_group: zarr.Group,
-    var_key: int,
-    obs_indices: list[int] = None,
-):
-    marker = Marker.from_any(adata_group, var_key)
-    hist, bin_edges = np.histogram(
-        adata_group.X[obs_indices or slice(None), marker.matrix_index]
-    )
+def histogram(a: np.ndarray, hist_range: tuple[float, float] = None):
+    hist, bin_edges = np.histogram(a, range=hist_range)
     bin_edges = [
         [float(bin_edges[i]), float(bin_edges[i + 1])]
         for i in range(len(bin_edges) - 1)
     ]
     log10_hist = np.log10(hist + 1)
     return {"hist": hist.tolist(), "bin_edges": bin_edges, "log10": log10_hist.tolist()}
+
+
+def get_var_histograms(
+    adata_group: zarr.Group,
+    var_key: Union[int, str, dict],
+    obs_indices: list[int] = None,
+):
+    marker = Marker.from_any(adata_group, var_key)
+    return histogram(marker.get_X_at(obs_indices))
+
+
+def get_obs_col_histograms(
+    adata_group: zarr.Group,
+    var_key: Union[int, str, dict],
+    obs_col: dict,
+    obs_indices: list[int] = None,
+):
+    obs_colname = obs_col["name"]
+    if obs_colname not in adata_group.obs:
+        raise NotInData(f"Column '{obs_colname}' not found in AnnData")
+    try:
+        obs = parse_data(adata_group.obs[obs_colname])
+    except KeyError as e:
+        raise InvalidObs(f"Invalid observation {e}")
+
+    categorical_obs, _ = to_categorical(obs, **obs_col)
+    categorical_obs = (
+        categorical_obs[obs_indices] if obs_indices is not None else categorical_obs
+    )
+
+    marker = Marker.from_any(adata_group, var_key)
+    X = marker.get_X_at(obs_indices)
+    min_X, max_X = X.min(), X.max()
+
+    if min_X == max_X:
+        max_X += 1
+
+    obs_data = {}
+    for cat in categorical_obs.categories:
+        obs_data[cat] = histogram(
+            X[np.flatnonzero(categorical_obs == cat)], [min_X, max_X]
+        )
+
+    return obs_data
 
 
 def get_var_names(adata_group: zarr.Group, col: str = None):
@@ -141,3 +179,22 @@ def get_obs_distribution(adata_group: zarr.Group, obs_colname: str):
         "log_kde_values": [log_kde_values[0].tolist(), log_kde_values[1].tolist()],
         "resampled": resampled,
     }
+
+
+def get_pseudospatial_masks(adata_group: zarr.Group):
+    if "masks" not in adata_group.uns:
+        raise NotInData("masks not found in adata_group.uns")
+
+    mask_data = {}
+    for mask in adata_group.uns["masks"]:
+        m = adata_group.uns["masks"][mask]
+        if "polygons" not in m or "obs" not in m:
+            logging.err(f"polygons not found in adata_group.uns['masks'][{mask}]")
+        else:
+            obs = parse_data(adata_group.obs[m["obs"][()]])
+            mask_data[mask] = obs.categories.tolist()
+
+    if not mask_data:
+        raise NotInData("No masks found in adata_group.uns['masks']")
+
+    return mask_data

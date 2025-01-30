@@ -27,6 +27,7 @@ def dotplot(
     mean_only_expressed: bool = False,
     standard_scale: str = None,
     var_names_col: str = None,
+    obs_indices: list[int] = None,
 ) -> Any:
     """Method to generate a Plotly dotplot JSON as a Python object
     from an Anndata-Zarr object.
@@ -67,6 +68,9 @@ def dotplot(
 
     df[obs_colname], bins = to_categorical(obs, **obs_col)
 
+    if obs_indices is not None:
+        df = df.iloc[obs_indices]
+
     if obs_values is not None:
         df = df[df[obs_colname].isin(obs_values)]
         df[obs_colname] = df[obs_colname].cat.remove_unused_categories()
@@ -81,18 +85,18 @@ def dotplot(
     dot_size_df = (
         bool_df.groupby(obs_colname, observed=False).sum()
         / bool_df.groupby(obs_colname, observed=False).count()
-    )
+    ).fillna(0)
 
     if mean_only_expressed:
         dot_color_df = (
             df.mask(~bool_df).groupby(obs_colname, observed=False).mean().fillna(0)
         )
     else:
-        dot_color_df = df.groupby(obs_colname, observed=False).mean()
+        dot_color_df = df.groupby(obs_colname, observed=False).mean().fillna(0)
     mean_df = dot_color_df
 
     if standard_scale == "group":
-        dot_color_df = dot_color_df.sub(dot_color_df.min(1), axis=0)
+        dot_color_df = dot_color_df.sub(dot_color_df.min(1), axis=0).fillna(0)
         dot_color_df = dot_color_df.div(dot_color_df.max(1), axis=0).fillna(0)
     elif standard_scale == "var":
         dot_color_df -= dot_color_df.min(0)

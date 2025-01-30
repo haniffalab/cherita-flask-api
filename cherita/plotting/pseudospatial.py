@@ -38,6 +38,7 @@ def pseudospatial_gene(
     mask_set: str = "spatial",
     mask_values: list[str] = None,
     var_names_col: str = None,
+    obs_indices: list[int] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -55,6 +56,10 @@ def pseudospatial_gene(
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
     masks = mask_obs_col.categories
 
+    if mask_values is None:
+        mask_values = masks
+
+    obs_values_indices = None
     if obs_col and obs_values is not None:
         obs_colname = obs_col["name"]
         try:
@@ -65,22 +70,46 @@ def pseudospatial_gene(
         categorical_obs, _ = to_categorical(obs, **obs_col)
 
         if obs_values is not None:
-            mask_obs_col[np.flatnonzero(~categorical_obs.isin(obs_values))] = None
+            obs_values_indices = np.flatnonzero(categorical_obs.isin(obs_values))
 
-    values_dict = {
-        m: (
-            None
-            if mask_values and m not in mask_values
-            else np.mean(marker.get_X_at(np.flatnonzero(mask_obs_col.isin([m]))))
-        )
-        for m in masks
-    }
+    if obs_indices is not None and obs_values_indices is not None:
+        obs_indices = np.intersect1d(obs_indices, obs_values_indices)
+    elif obs_indices is None:
+        obs_indices = obs_values_indices
+
+    if obs_indices is not None:
+        if len(obs_indices):
+            mask_obs_col = mask_obs_col[obs_indices]
+        else:
+            return plot_polygons(
+                adata_group,
+                {m: None for m in masks},
+                mask_set,
+                text="Mean expression",
+                add_text={m: "0 cells" for m in masks},
+                plot_format=plot_format,
+                **kwargs,
+            )
+
+    values_dict = {}
+    add_text = {}
+    X = marker.get_X_at(obs_indices)
+    for m in masks:
+        if m not in mask_values:
+            values_dict[m] = None
+            add_text[m] = "0 cells"
+        else:
+            mask_indx = np.flatnonzero(mask_obs_col.isin([m]))
+            vals = X[mask_indx] if not marker.isSet else X[:, mask_indx]
+            values_dict[m] = np.mean(vals) if len(vals) else None
+            add_text[m] = f"{len(mask_indx):,} cells"
 
     return plot_polygons(
         adata_group,
         values_dict,
         mask_set,
         text="Mean expression",
+        add_text=add_text,
         plot_format=plot_format,
         **kwargs,
     )
@@ -90,9 +119,10 @@ def pseudospatial_categorical(
     adata_group: zarr.Group,
     obs_col: dict,
     obs_values: list[str] = None,
-    mode: Literal["counts", "across", "within"] = "counts",
+    mode: Literal["across", "within"] = "across",
     mask_set: str = "spatial",
     mask_values: list[str] = None,
+    obs_indices: list[int] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -103,14 +133,16 @@ def pseudospatial_categorical(
 
     if obs_colname not in adata_group.obs:
         raise NotInData(f"Column '{obs_colname}' not found in AnnData")
-    if mode not in ["counts", "across", "within"]:
-        raise BadRequest(
-            f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
-        )
+    if mode not in ["across", "within"]:
+        raise BadRequest(f"Invalid mode '{mode}'. Must be 'across' or 'within'")
 
     mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+    total_mask_counts = mask_obs_col.value_counts()
     masks = mask_obs_col.categories
+
+    if mask_values is None:
+        mask_values = masks
 
     try:
         obs = parse_data(adata_group.obs[obs_colname])
@@ -123,56 +155,44 @@ def pseudospatial_categorical(
     if obs_values is None:
         obs_values = cat_obs.categories
 
+    if obs_indices is not None:
+        cat_obs = cat_obs[obs_indices]
+        mask_obs_col = mask_obs_col[obs_indices]
+
     if not len(obs_values):
         values_dict = {m: None for m in masks}
-        text = ""
+        text = None
+        add_text = {m: None for m in masks}
     else:
         crosstab = pd.crosstab(mask_obs_col, cat_obs)
-        if mask_values:
-            crosstab = crosstab.loc[mask_values]
+        crosstab = crosstab.reindex(mask_values, fill_value=0)
+        crosstab = crosstab.reindex(obs_values, axis=1, fill_value=0)
 
-        if mode == "counts":
-            values_dict = {
-                m: (
-                    None
-                    if mask_values and m not in mask_values
-                    else crosstab[obs_values].loc[m].sum()
-                )
-                for m in masks
-            }
-            text = "Counts"
-        elif mode == "across":
-            values_dict = {
-                m: (
-                    None
-                    if mask_values and m not in mask_values
-                    else (
-                        crosstab[obs_values].loc[m].sum()
-                        / crosstab[obs_values].sum().sum()
-                    )
-                    * 100
-                )
-                for m in masks
-            }
-            text = "% across regions"
-        elif mode == "within":
-            values_dict = {
-                m: (
-                    None
-                    if mask_values and m not in mask_values
-                    else (crosstab[obs_values].loc[m].sum() / crosstab.loc[m].sum())
-                    * 100
-                )
-                for m in masks
-            }
-            text = "% within region"
-        else:
-            raise BadRequest(
-                f"Invalid mode '{mode}'. Must be one of 'counts', 'across', 'within'"
-            )
+        values_dict = {}
+        add_text = {}
+        for m in masks:
+            if m not in mask_values:
+                values_dict[m] = None
+                add_text[m] = "0 cells"
+            else:
+                if mode == "across":
+                    s = crosstab[obs_values].loc[m].sum()
+                    total = crosstab[obs_values].sum().sum()
+                elif mode == "within":
+                    s = crosstab[obs_values].loc[m].sum()
+                    total = total_mask_counts[m]
+                values_dict[m] = s / total * 100
+                add_text[m] = f"{s:,} out of {total:,}"
 
+        text = "% across masks" if mode == "across" else "% within mask"
     return plot_polygons(
-        adata_group, values_dict, mask_set, text=text, plot_format=plot_format, **kwargs
+        adata_group,
+        values_dict,
+        mask_set,
+        text=text,
+        add_text=add_text,
+        plot_format=plot_format,
+        **kwargs,
     )
 
 
@@ -182,6 +202,7 @@ def pseudospatial_continuous(
     obs_values: list[str] = None,
     mask_set: str = "spatial",
     mask_values: list[str] = None,
+    obs_indices: list[int] = None,
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     **kwargs,
 ):
@@ -201,25 +222,40 @@ def pseudospatial_continuous(
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
-    df = pd.DataFrame({mask_obs_colname: mask_obs_col, obs_colname: obs})
     categorical_obs, _ = to_categorical(obs, **obs_col)
+    df = pd.DataFrame(
+        {mask_obs_colname: mask_obs_col, obs_colname: obs, "_cat": categorical_obs}
+    )
+
+    if obs_indices is not None:
+        df = df.iloc[obs_indices]
+
+    if mask_values is None:
+        mask_values = mask_obs_col.categories
 
     if obs_values is not None:
-        df = df[categorical_obs.isin(obs_values)]
+        df = df[df["_cat"].isin(obs_values)]
 
-    if mask_values:
-        df = df[df[mask_obs_colname].isin(mask_values)]
+    df = df[df[mask_obs_colname].isin(mask_values)]
+
     mean_table = df.pivot_table(
         index=mask_obs_colname, values=obs_colname, aggfunc="mean"
     )
+    count_table = df.pivot_table(
+        index=mask_obs_colname, values=obs_colname, aggfunc="count"
+    )
 
     values_dict = mean_table.to_dict()[obs_colname]
+    add_text = {
+        k: f"{v:,} cells" for k, v in count_table.to_dict()[obs_colname].items()
+    }
 
     return plot_polygons(
         adata_group,
         values_dict,
         mask_set,
         text="Mean value",
+        add_text=add_text,
         plot_format=plot_format,
         **kwargs,
     )
@@ -252,7 +288,6 @@ def pseudospatial_masks(
     )
 
 
-# @TODO: fix runtime warnings when all values are None/nan like "Mean of empty slice"
 def plot_polygons(
     adata_group: zarr.Group,
     values_dict: pd.DataFrame,
@@ -262,6 +297,7 @@ def plot_polygons(
     min_value: float = None,
     max_value: float = None,
     text: str = None,
+    add_text: dict = {},
     plot_format: Literal["png", "svg", "html", "json"] = "png",
     width: int = 500,
     height: int = 500,
@@ -284,8 +320,6 @@ def plot_polygons(
         )
     )
 
-    max_value = max_value + (np.spacing(1) if max_value == min_value else 0)
-
     color_values = {
         k: (
             sample_colorscale(
@@ -293,7 +327,11 @@ def plot_polygons(
                 [
                     min(
                         max(
-                            (v - min_value) / (max_value - min_value),
+                            (v - min_value)
+                            / (
+                                (max_value - min_value)
+                                + (np.spacing(1) if max_value == min_value else 0)
+                            ),
                             0,
                         ),
                         1,
@@ -313,19 +351,26 @@ def plot_polygons(
         line_color = (
             values_dict.get(polygon) is not None
             and color_values.get(polygon)
-            or "rgb(0,0,0)"
+            or "rgb(0,0,0,0.5)"
         )
-        fill_color = color_values.get(polygon, "rgba(0,0,0,0)")
+        fill_color = color_values.get(polygon)
         value = values_dict.get(polygon)
+
+        x_coords = list(
+            *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
+        )
+        y_coords = list(
+            *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
+        )
+
+        # Add first coord to end to close the polygon
+        x_coords.append(x_coords[0])
+        y_coords.append(y_coords[0])
 
         fig.add_trace(
             go.Scatter(
-                x=list(
-                    *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
-                ),
-                y=list(
-                    *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
-                ),
+                x=x_coords,
+                y=y_coords,
                 line=dict(
                     color=line_color,
                     width=1,
@@ -333,7 +378,18 @@ def plot_polygons(
                 mode="lines",
                 showlegend=False,
                 fill="toself",
-                fillcolor=fill_color,
+                fillcolor=fill_color or "rgba(0,0,0,0)",
+                fillpattern=(
+                    dict(
+                        shape="/",
+                        bgcolor="rgba(0,0,0,0)",
+                        fgcolor="rgba(0,0,0,0.5)",
+                        size=5,
+                        solidity=0.2,
+                    )
+                    if not fill_color
+                    else None
+                ),
                 hoverinfo="text",
                 text="<br>".join(
                     [
@@ -351,6 +407,7 @@ def plot_polygons(
                                 )
                             )
                         ),
+                        add_text.get(polygon, "") or "",
                     ]
                 ),
                 meta=dict(
