@@ -18,6 +18,7 @@ jobs:
       TARGET_CPU_UTILIZATION: ${{ secrets.TARGET_CPU_UTILIZATION }}
       MAX_CONCURRENT_REQUETS: ${{ secrets.MAX_CONCURRENT_REQUESTS }}
       INSTANCE_CLASS: ${{ secrets.INSTANCE_CLASS }}
+      STRAPI_API: ${{ secrets.STRAPI_API }}
       
     steps:
       - uses: actions/checkout@v3

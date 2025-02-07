@@ -9,6 +9,7 @@ instance_class: $INSTANCE_CLASS
 entrypoint: gunicorn -b :$PORT -w 2 'cherita:create_app()'
 env_variables:
   FLASK_APP: $FLASK_APP
+  STRAPI_API: $STRAPI_API
 automatic_scaling:
   min_instances: $MIN_INSTANCES
   max_instances: $MAX_INSTANCES

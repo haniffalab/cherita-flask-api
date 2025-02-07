@@ -100,6 +100,8 @@ def get_obs_col_histograms(
 
     marker = Marker.from_any(adata_group, var_key)
     X = marker.get_X_at(obs_indices)
+    if len(X.shape) > 1:
+        X = X.mean(0)
     min_X, max_X = X.min(), X.max()
 
     if min_X == max_X:
@@ -108,7 +110,8 @@ def get_obs_col_histograms(
     obs_data = {}
     for cat in categorical_obs.categories:
         obs_data[cat] = histogram(
-            X[np.flatnonzero(categorical_obs == cat)], [min_X, max_X]
+            X[np.flatnonzero(categorical_obs == cat)],
+            [min_X, max_X],
         )
 
     return obs_data
