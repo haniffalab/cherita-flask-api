@@ -164,10 +164,14 @@ class Marker:
             return np.array([])
         if self.isSet:
             # return all data for each marker in the set instead of aggregated data
-            return [
-                self.adata_group.X[indices if indices is not None else slice(None), i]
-                for i in self.matrix_index
-            ]
+            return np.array(
+                [
+                    self.adata_group.X[
+                        indices if indices is not None else slice(None), i
+                    ]
+                    for i in self.matrix_index
+                ]
+            )
         else:
             return self.adata_group.X[
                 indices if indices is not None else slice(None), self.matrix_index
