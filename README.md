@@ -1,5 +1,3 @@
-[![python-tests](https://github.com/haniffalab/webatlas-pipeline/actions/workflows/tests-python.yml/badge.svg)](https://github.com/haniffalab/webatlas-pipeline/actions/workflows/tests-python.yml)
-[![codecov](https://codecov.io/gh/haniffalab/webatlas-pipeline/branch/main/graph/badge.svg?token=7HQVFH08WJ)](https://app.codecov.io/gh/haniffalab/webatlas-pipeline)
 [![dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](https://github.com/haniffalab/cherita-flask-api/security)
 [![python](https://shields.io/badge/python-3.10-blue)](https://github.com/haniffalab/cherita-flask-api?tab=readme-ov-file#development)
 
@@ -8,8 +6,6 @@
 [![docs](https://img.shields.io/badge/Documentation-online-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/api/docs/)
 [![demo](https://img.shields.io/badge/Demos-view-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/)
 [![doi](https://zenodo.org/badge/DOI/10.5281/zenodo.7405818.svg)](https://doi.org/10.5281/zenodo.7405818)
-
-Desc
 
 ## Development
 
