@@ -160,8 +160,8 @@ def get_kde_values(data):
 
 
 def get_obs_distribution(adata_group: zarr.Group, obs_colname: str):
-    MAX_SAMPLES = 100000
-    N_SAMPLES = 100000
+    MAX_SAMPLES = 25000
+    N_SAMPLES = 25000
 
     obs = parse_data(adata_group.obs[obs_colname])
 
