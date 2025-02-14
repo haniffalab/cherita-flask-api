@@ -5,7 +5,12 @@ from flask import current_app, jsonify, request
 from google.appengine.api import memcache
 
 
-def generate_cache_key(data):
+def generate_cache_key():
+    data = {
+        "method": request.method,
+        "path": request.path,
+        "body": request.get_json(silent=True) or {},
+    }
     data_str = json.dumps(data, sort_keys=True)
     return hashlib.md5(data_str.encode("utf-8")).hexdigest()
 
@@ -18,18 +23,17 @@ def cached(expiration=3600):
             if not current_app.config["IS_PRODUCTION"]:
                 return func(*args, **kwargs)
 
-            json_data = request.get_json()
-            cache_key = generate_cache_key(json_data)
+            cache_key = generate_cache_key()
 
             cached_result = memcache.get(cache_key)
             if cached_result:
-                return jsonify(cached_result)
+                return jsonify(json.loads(cached_result))
 
-            jsonified_result = func(*args, **kwargs)
+            response = func(*args, **kwargs)
 
-            memcache.set(cache_key, json.loads(jsonified_result), expiration)
+            memcache.set(cache_key, json.dumps(response.get_json()), expiration)
 
-            return jsonified_result
+            return response
 
         return wrapper
 
