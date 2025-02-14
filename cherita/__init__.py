@@ -4,6 +4,7 @@ import json
 from flask import Flask, render_template
 from flask.cli import with_appcontext
 from werkzeug.middleware.proxy_fix import ProxyFix
+from google.appengine.api import wrap_wsgi_app
 
 from flask_cors import CORS
 
@@ -22,8 +23,8 @@ def create_app(test_config=None):
     )
 
     # rewrite headers for proxy deployments
-    app.wsgi_app = ProxyFix(
-        app.wsgi_app, x_for=1, x_proto=0, x_host=0, x_port=0, x_prefix=1
+    app.wsgi_app = wrap_wsgi_app(
+        ProxyFix(app.wsgi_app, x_for=1, x_proto=0, x_host=0, x_port=0, x_prefix=1)
     )
 
     # load config

@@ -32,3 +32,5 @@ htmlcov/
 
 # Sphinx
 sphinx/_build
+
+app.yaml

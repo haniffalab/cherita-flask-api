@@ -8,3 +8,4 @@ class Config(object):
     STRAPI_API = os.environ.get("STRAPI_API") or "http://localhost:1337/api/"
     DOCS_ROUTE = os.environ.get("DOCS_ROUTE") or "/docs/"
     DOCS_JSON = os.environ.get("DOCS_JSON") or "docs/swagger.json"
+    IS_PRODUCTION = os.environ.get("GAE_ENV", "").startswith("standard") or False

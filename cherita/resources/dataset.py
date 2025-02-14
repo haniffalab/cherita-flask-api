@@ -1,21 +1,23 @@
-from flask import request, jsonify
-from flask_restx import Resource, fields, Namespace
-from cherita.resources.errors import BadRequest
+from flask import jsonify, request
+from flask_restx import Namespace, Resource, fields
+from google.appengine.api import memcache
 
-from cherita.utils.adata_utils import open_anndata_zarr
+from cherita.dataset.matrix import get_var_x_mean
 from cherita.dataset.metadata import (
+    get_obs_bin_data,
     get_obs_col_histograms,
-    get_obs_col_names,
     get_obs_col_metadata,
+    get_obs_col_names,
+    get_obs_distribution,
+    get_obsm_keys,
     get_pseudospatial_masks,
     get_var_col_names,
-    get_obsm_keys,
     get_var_histograms,
-    get_obs_bin_data,
-    get_obs_distribution,
 )
-from cherita.dataset.matrix import get_var_x_mean
 from cherita.dataset.search import search_var_names
+from cherita.resources.errors import BadRequest
+from cherita.utils.adata_utils import open_anndata_zarr
+from cherita.utils.caching import cached
 
 ns = Namespace("dataset", description="Dataset related data", path="/")
 
@@ -34,6 +36,7 @@ class ObsColsNames(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_cols_name_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -58,6 +61,7 @@ class ObsCols(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_cols_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -87,6 +91,7 @@ class ObsBinData(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_bin_data_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -119,6 +124,7 @@ class ObsDistribution(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_distribution_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -144,6 +150,7 @@ class ObsmKeys(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obsm_keys_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -164,10 +171,11 @@ var_cols_name_model = ns.model(
 @ns.route("/var/cols/names")
 class VarColsNames(Resource):
     @ns.doc(
-        description="Get the names of the variable columns in the dataset",
+        description="Get the names of the var columns in the dataset",
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_cols_name_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -194,6 +202,7 @@ class VarNames(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_names_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -220,7 +229,7 @@ var_histograms_model = ns.model(
 @ns.route("/var/histograms")
 class VarHistograms(Resource):
     @ns.doc(
-        description="Get the histograms of the variable",
+        description="Get the histograms of var expression",
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_histograms_model)
@@ -283,7 +292,7 @@ matrix_mean_model = ns.model(
 @ns.route("/matrix/mean")
 class MatrixMean(Resource):
     @ns.doc(
-        description="Get the mean of the variables",
+        description="Get the mean of the vars",
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(matrix_mean_model)
@@ -312,6 +321,7 @@ class Masks(Resource):
         description="Get the pseudospatial masks data",
         responses={200: "Success", 404: "Not found", 500: "Internal server error"},
     )
+    @cached(expiration=3600 * 24 * 30)
     def post(self):
         json_data = request.get_json()
         adata_group = open_anndata_zarr(json_data["url"])
