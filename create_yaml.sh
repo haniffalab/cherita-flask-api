@@ -6,6 +6,7 @@ runtime: python310
 service: $APP_SERVICE
 service_account: $SERVICE_ACCOUNT
 instance_class: $INSTANCE_CLASS
+app_engine_apis: true
 entrypoint: gunicorn -b :$PORT -w 2 'cherita:create_app()'
 env_variables:
   FLASK_APP: $FLASK_APP
