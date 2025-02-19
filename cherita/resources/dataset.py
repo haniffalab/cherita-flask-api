@@ -1,6 +1,5 @@
 from flask import jsonify, request
 from flask_restx import Namespace, Resource, fields
-from google.appengine.api import memcache
 
 from cherita.dataset.matrix import get_var_x_mean
 from cherita.dataset.metadata import (
@@ -233,6 +232,7 @@ class VarHistograms(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_histograms_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -264,6 +264,7 @@ class ObsHistograms(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_histograms_model)
+    @cached(expiration=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
