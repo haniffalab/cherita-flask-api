@@ -153,15 +153,15 @@ def get_kde_values(data):
     data = data[~np.isnan(data)]
     data = data[~np.isinf(data)]
 
-    x = np.linspace(data.min(), data.max(), 1000)
+    x = np.linspace(data.min(), data.max(), 250)
     kde = gaussian_kde(data)
     kde_values = kde.evaluate(x)
     return x, kde_values
 
 
 def get_obs_distribution(adata_group: zarr.Group, obs_colname: str):
-    MAX_SAMPLES = 100000
-    N_SAMPLES = 100000
+    MAX_SAMPLES = 25000
+    N_SAMPLES = 25000
 
     obs = parse_data(adata_group.obs[obs_colname])
 
