@@ -8,3 +8,5 @@ class Config(object):
     STRAPI_API = os.environ.get("STRAPI_API") or "http://localhost:1337/api/"
     DOCS_ROUTE = os.environ.get("DOCS_ROUTE") or "/docs/"
     DOCS_JSON = os.environ.get("DOCS_JSON") or "docs/swagger.json"
+    REDIS_HOST = os.environ.get("REDIS_HOST") or "localhost"
+    REDIS_PORT = os.environ.get("REDIS_PORT") or 6379

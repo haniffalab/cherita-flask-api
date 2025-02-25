@@ -2,6 +2,7 @@ import os
 import click
 import json
 from flask import Flask, render_template
+from flask_caching import Cache
 from flask.cli import with_appcontext
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -9,6 +10,7 @@ from flask_cors import CORS
 
 from config import Config
 from cherita.api import api, bp
+from cherita.extensions import cache
 
 
 def create_app(test_config=None):
@@ -34,6 +36,15 @@ def create_app(test_config=None):
     else:
         # load the test config if passed in
         app.config.update(test_config)
+
+    cache.init_app(
+        app,
+        config={
+            "CACHE_TYPE": "RedisCache",
+            "CACHE_REDIS_HOST": app.config["REDIS_HOST"],
+            "CACHE_REDIS_PORT": app.config["REDIS_PORT"],
+        },
+    )
 
     CORS(app)
 
