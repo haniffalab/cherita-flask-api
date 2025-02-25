@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: cloudrun
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+
+      - name: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          service: ${{ secrets.APP_SERVICE }}
+          source: ./
+          region: ${{ secrets.REGION }}
+          env_vars: |-
+            FLASK_APP=${{ secrets.FLASK_APP }}
+            STRAPI_API=${{ secrets.STRAPI_API }}
+            flags: ${{ secrets.ALLOW_UNAUTHENTICATED }} ${{ secrets.CPU_THROTTLING }} --base-image=python310 --concurrency=${{ secrets.MAX_CONCURRENT_REQUESTS }} --min-instances=${{ secrets.MIN_INSTANCES }} --max-instances=${{ secrets.MAX_INSTANCES }} --cpu=${{ secrets.CPU }} --memory=${{ secrets.MEMORY }}Gi
