@@ -27,4 +27,4 @@ jobs:
           env_vars: |-
             FLASK_APP=${{ secrets.FLASK_APP }}
             STRAPI_API=${{ secrets.STRAPI_API }}
-            flags: ${{ secrets.ALLOW_UNAUTHENTICATED }} ${{ secrets.CPU_THROTTLING }} --base-image=python310 --concurrency=${{ secrets.MAX_CONCURRENT_REQUESTS }} --min-instances=${{ secrets.MIN_INSTANCES }} --max-instances=${{ secrets.MAX_INSTANCES }} --cpu=${{ secrets.CPU }} --memory=${{ secrets.MEMORY }}Gi
+          flags: ${{ secrets.ALLOW_UNAUTHENTICATED }} ${{ secrets.CPU_THROTTLING }} --base-image=python310 --concurrency=${{ secrets.MAX_CONCURRENT_REQUESTS }} --min-instances=${{ secrets.MIN_INSTANCES }} --max-instances=${{ secrets.MAX_INSTANCES }} --cpu=${{ secrets.CPU }} --memory=${{ secrets.MEMORY }}Gi

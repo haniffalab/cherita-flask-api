@@ -1,0 +1,1 @@
+web: gunicorn -b :$PORT -w 2 'cherita:create_app()'
