@@ -1,8 +1,8 @@
 import os
 import click
+import logging
 import json
 from flask import Flask, render_template
-from flask_caching import Cache
 from flask.cli import with_appcontext
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -37,14 +37,18 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.update(test_config)
 
-    cache.init_app(
-        app,
-        config={
-            "CACHE_TYPE": "RedisCache",
-            "CACHE_REDIS_HOST": app.config["REDIS_HOST"],
-            "CACHE_REDIS_PORT": app.config["REDIS_PORT"],
-        },
-    )
+    if app.config["REDIS_HOST"] is not None:
+        cache.init_app(
+            app,
+            config={
+                "CACHE_TYPE": "cherita.utils.caching.SafeRedisCache",
+                "CACHE_REDIS_HOST": app.config["REDIS_HOST"],
+                "CACHE_REDIS_PORT": app.config["REDIS_PORT"],
+            },
+        )
+    else:
+        logging.warning("No REDIS_HOST provided, using NullCache")
+        cache.init_app(app, config={"CACHE_TYPE": "NullCache"})
 
     CORS(app)
 
