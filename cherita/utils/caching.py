@@ -18,47 +18,47 @@ def make_cache_key(*args, **kwargs) -> str:
 
 
 class SafeRedisCache(RedisCache):
-    def _log_connection_error(self):
-        logging.error("Redis connection error")
+    def _log_connection_error(self, e):
+        logging.error("Redis connection error", e)
 
     def get(self, *args, **kwargs):
         try:
             return super().get(*args, **kwargs)
-        except redis.ConnectionError:
-            self._log_connection_error()
+        except redis.ConnectionError as e:
+            self._log_connection_error(e)
             return None
 
     def set(self, *args, **kwargs):
         try:
             return super().set(*args, **kwargs)
-        except redis.ConnectionError:
-            self._log_connection_error()
+        except redis.ConnectionError as e:
+            self._log_connection_error(e)
             return False
 
     def delete(self, *args, **kwargs):
         try:
             return super().delete(*args, **kwargs)
-        except redis.ConnectionError:
-            self._log_connection_error()
+        except redis.ConnectionError as e:
+            self._log_connection_error(e)
             return False
 
     def clear(self):
         try:
             return super().clear()
-        except redis.ConnectionError:
-            self._log_connection_error()
+        except redis.ConnectionError as e:
+            self._log_connection_error(e)
             return False
 
     def inc(self):
         try:
             return super().inc()
-        except redis.ConnectionError:
-            self._log_connection_error()
+        except redis.ConnectionError as e:
+            self._log_connection_error(e)
             return False
 
     def dec(self):
         try:
             return super().dec()
-        except redis.ConnectionError:
-            self._log_connection_error()
+        except redis.ConnectionError as e:
+            self._log_connection_error(e)
             return False

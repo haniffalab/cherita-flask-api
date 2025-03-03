@@ -29,4 +29,4 @@ jobs:
             STRAPI_API=${{ secrets.STRAPI_API }}
             REDIS_HOST=${{ secrets.REDIS_HOST }}
             REDIS_PORT=${{ secrets.REDIS_PORT }}
-          flags: ${{ secrets.ALLOW_UNAUTHENTICATED }} ${{ secrets.CPU_THROTTLING }} --base-image=python310 --concurrency=${{ secrets.MAX_CONCURRENT_REQUESTS }} --min-instances=${{ secrets.MIN_INSTANCES }} --max-instances=${{ secrets.MAX_INSTANCES }} --cpu=${{ secrets.CPU }} --memory=${{ secrets.MEMORY }}Gi
+          flags: ${{ secrets.ALLOW_UNAUTHENTICATED }} ${{ secrets.CPU_THROTTLING }} --base-image=python310 --concurrency=${{ secrets.MAX_CONCURRENT_REQUESTS }} --min-instances=${{ secrets.MIN_INSTANCES }} --max-instances=${{ secrets.MAX_INSTANCES }} --cpu=${{ secrets.CPU }} --memory=${{ secrets.MEMORY }}Gi --network=${{ secrets.NETWORK }} --subnet=${{ secrets.SUBNET }}

@@ -38,6 +38,7 @@ def create_app(test_config=None):
         app.config.update(test_config)
 
     if app.config["REDIS_HOST"] is not None:
+        logging.info("Using RedisCache")
         cache.init_app(
             app,
             config={
