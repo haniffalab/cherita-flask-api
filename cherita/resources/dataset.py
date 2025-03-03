@@ -2,7 +2,9 @@ from flask import request, jsonify
 from flask_restx import Resource, fields, Namespace
 from cherita.resources.errors import BadRequest
 
+from cherita.extensions import cache
 from cherita.utils.adata_utils import open_anndata_zarr
+from cherita.utils.caching import make_cache_key
 from cherita.dataset.metadata import (
     get_obs_col_histograms,
     get_obs_col_names,
@@ -34,6 +36,7 @@ class ObsColsNames(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_cols_name_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -58,6 +61,7 @@ class ObsCols(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_cols_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -87,6 +91,7 @@ class ObsBinData(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_bin_data_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -119,6 +124,7 @@ class ObsDistribution(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_distribution_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -144,6 +150,7 @@ class ObsmKeys(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obsm_keys_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -168,6 +175,7 @@ class VarColsNames(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_cols_name_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -194,6 +202,7 @@ class VarNames(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_names_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -224,6 +233,7 @@ class VarHistograms(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_histograms_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -255,6 +265,7 @@ class ObsHistograms(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_histograms_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -287,6 +298,7 @@ class MatrixMean(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(matrix_mean_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -312,6 +324,7 @@ class Masks(Resource):
         description="Get the pseudospatial masks data",
         responses={200: "Success", 404: "Not found", 500: "Internal server error"},
     )
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         adata_group = open_anndata_zarr(json_data["url"])

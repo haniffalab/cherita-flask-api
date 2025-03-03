@@ -2,7 +2,9 @@ from flask import request, jsonify, Response
 from flask_restx import Resource, fields, Namespace
 from cherita.resources.errors import BadRequest
 
+from cherita.extensions import cache
 from cherita.utils.adata_utils import open_anndata_zarr
+from cherita.utils.caching import make_cache_key
 from cherita.plotting.heatmap import heatmap
 from cherita.plotting.dotplot import dotplot
 from cherita.plotting.matrixplot import matrixplot
@@ -312,6 +314,7 @@ class PseudospatialGene(Resource):
         },
     )
     @ns.expect(pseudospatial_gene_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -406,6 +409,7 @@ class PseudospatialCategorical(Resource):
         },
     )
     @ns.expect(pseudospatial_categorical_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -494,6 +498,7 @@ class PseudospatialContinuous(Resource):
         },
     )
     @ns.expect(pseudospatial_continuous_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -567,6 +572,7 @@ class PseudospatialMasks(Resource):
         },
     )
     @ns.expect(pseudospatial_masks_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
