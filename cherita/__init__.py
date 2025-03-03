@@ -44,6 +44,7 @@ def create_app(test_config=None):
                 "CACHE_TYPE": "cherita.utils.caching.SafeRedisCache",
                 "CACHE_REDIS_HOST": app.config["REDIS_HOST"],
                 "CACHE_REDIS_PORT": app.config["REDIS_PORT"],
+                "CACHE_KEY_PREFIX": app.config["CACHE_KEY_PREFIX"],
             },
         )
     else:

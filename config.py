@@ -10,3 +10,4 @@ class Config(object):
     DOCS_JSON = os.environ.get("DOCS_JSON", "docs/swagger.json")
     REDIS_HOST = os.environ.get("REDIS_HOST", None)
     REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+    CACHE_KEY_PREFIX = os.environ.get("CACHE_KEY_PREFIX", "cherita-flask-cache_")
