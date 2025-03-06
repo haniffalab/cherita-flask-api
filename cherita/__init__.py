@@ -1,5 +1,6 @@
 import os
 import click
+import logging
 import json
 from flask import Flask, render_template
 from flask.cli import with_appcontext
@@ -9,6 +10,7 @@ from flask_cors import CORS
 
 from config import Config
 from cherita.api import api, bp
+from cherita.extensions import cache
 
 
 def create_app(test_config=None):
@@ -34,6 +36,21 @@ def create_app(test_config=None):
     else:
         # load the test config if passed in
         app.config.update(test_config)
+
+    if app.config["REDIS_HOST"] is not None:
+        logging.info("Using RedisCache")
+        cache.init_app(
+            app,
+            config={
+                "CACHE_TYPE": "cherita.utils.caching.SafeRedisCache",
+                "CACHE_REDIS_HOST": app.config["REDIS_HOST"],
+                "CACHE_REDIS_PORT": app.config["REDIS_PORT"],
+                "CACHE_KEY_PREFIX": app.config["CACHE_KEY_PREFIX"],
+            },
+        )
+    else:
+        logging.warning("No REDIS_HOST provided, using NullCache")
+        cache.init_app(app, config={"CACHE_TYPE": "NullCache"})
 
     CORS(app)
 
