@@ -3,7 +3,7 @@ import os
 
 class Config(object):
     SECRET_KEY = os.environ.get("SECRET_KEY", "best-password-here")
-    API_VERSION = os.environ.get("API_VERSION", "0.1.0")
+    API_VERSION = os.environ.get("API_VERSION", "1.0.0")
     API_PREFIX = os.environ.get("API_PREFIX", "/api")
     STRAPI_API = os.environ.get("STRAPI_API", "http://localhost:1337/api/")
     DOCS_ROUTE = os.environ.get("DOCS_ROUTE", "/docs/")
