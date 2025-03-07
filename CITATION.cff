@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+type: software
+message: "If you use this repo, please cite it"
+title: "Cherita Flask API"
+abstract: "Cherita Flask API is a web service designed to provide a robust and scalable interface for managing and analyzing biological data."
+version: "1.0.0"
+url: "https://github.com/haniffalab/cherita-flask-api"
+repository-code: "git@github.com:haniffalab/cherita-flask-api.git"
+doi: 10.5281/zenodo.14772563
+license: "MIT"
+authors:
+  - family-names: "Basurto-Lozada"
+    given-names: "Daniela"
+    orcid: "https://orcid.org/0000-0003-3943-8424"
+  - family-names: "Horsfall"
+    given-names: "David"
+    orcid: "https://orcid.org/0000-0002-8086-812X"
