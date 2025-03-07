@@ -3,8 +3,7 @@
 
 # Cherita Flask API
 
-[![docs](https://img.shields.io/badge/Documentation-online-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/api/docs/)
-[![demo](https://img.shields.io/badge/Demo-view-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/)
+[![docs](https://img.shields.io/badge/Documentation-online-blue)](https://cherita-flask-api-925164757806.europe-west2.run.app/api/docs/)
 [![doi](https://zenodo.org/badge/DOI/10.5281/zenodo.14772563.svg)](https://doi.org/10.5281/zenodo.14772563)
 
 A web service designed to provide a robust and scalable interface for managing and analyzing biological data. This API leverages Flask, a lightweight WSGI web application framework in Python, to deliver high-performance endpoints for data retrieval, processing, and visualization.
