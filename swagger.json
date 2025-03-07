@@ -1,0 +1,1483 @@
+{
+    "swagger": "2.0",
+    "basePath": "/api",
+    "paths": {
+        "/about": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "operationId": "get_about",
+                "tags": [
+                    "default"
+                ]
+            }
+        },
+        "/disease/gene": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get diseases associated with the given gene",
+                "operationId": "post_get_disease_gene",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/DiseaseGeneModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "disease data"
+                ]
+            }
+        },
+        "/disease/genes": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get genes associated with the given disease",
+                "operationId": "post_get_disease_genes",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/DiseaseGenesModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "disease data"
+                ]
+            }
+        },
+        "/diseases": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Search for diseases in the given datasets",
+                "operationId": "post_search_disease_names",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/DiseaseSearchModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "disease data"
+                ]
+            }
+        },
+        "/diseases/genes": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Search for genes associated with diseases in the given datasets",
+                "operationId": "post_search_disease_genes",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/DiseaseGeneSearchModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "disease data"
+                ]
+            }
+        },
+        "/dotplot": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Generate a dotplot from the given AnnData objectfor the selected markers and obs column",
+                "operationId": "post_dotplot",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/DotplotModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        },
+        "/heatmap": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Generate a heatmap from the given AnnData objectfor the selected markers and obs column",
+                "operationId": "post_heatmap",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/HeatmapModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        },
+        "/masks": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the pseudospatial masks data",
+                "operationId": "post_masks",
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/matrix/mean": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the mean of the variables",
+                "operationId": "post_matrix_mean",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/VarXMeanModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/matrixplot": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Generate a matrixplot from the given AnnData objectfor the selected markers and obs column",
+                "operationId": "post_matrixplot",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/MatrixplotModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        },
+        "/obs/bins": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the binned data for the observation column",
+                "operationId": "post_obs_bin_data",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ObsBinDataModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/obs/cols": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the metadata of the observation columns in the dataset",
+                "operationId": "post_obs_cols",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ObsColsModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/obs/cols/names": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the names of the observation columns in the dataset",
+                "operationId": "post_obs_cols_names",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ObsColsNamesModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/obs/distribution": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the distribution of the observation column",
+                "operationId": "post_obs_distribution",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ObsDistributionModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/obs/histograms": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the histograms of the observation column",
+                "operationId": "post_obs_histograms",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ObsHistogramsModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/obsm/keys": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the keys of the observation metadata in the dataset",
+                "operationId": "post_obsm_keys",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ObsmKeysModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/pseudospatial/categorical": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "description": "Generate a pseudospatial plot for the given categorical obs columnin the AnnData object",
+                "operationId": "post_pseudospatial_categorical",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/PseudospatialCategoricalModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        },
+        "/pseudospatial/continuous": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "description": "Generate a pseudospatial plot for the given continuous obs columnin the AnnData object",
+                "operationId": "post_pseudospatial_continuous",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/PseudospatialContinuousModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        },
+        "/pseudospatial/gene": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "description": "Generate a pseudospatial plot for the given gene in the AnnData object",
+                "operationId": "post_pseudospatial_gene",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/PseudospatialGeneModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        },
+        "/pseudospatial/masks": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "description": "Generate a pseudospatial plot of only the masks in the AnnData object",
+                "operationId": "post_pseudospatial_masks",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/PseudospatialMasksModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        },
+        "/var/cols/names": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the names of the variable columns in the dataset",
+                "operationId": "post_var_cols_names",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/VarColsNamesModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/var/histograms": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Get the histograms of the variable",
+                "operationId": "post_var_histograms",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/VarHistogramsModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/var/names": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Search for variable names in the dataset",
+                "operationId": "post_var_names",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/VarNamesModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "dataset"
+                ]
+            }
+        },
+        "/violin": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "400": {
+                        "description": "Bad request"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                },
+                "description": "Generate a violin plot from the given AnnData objectfor the selected keys and obs column",
+                "operationId": "post_violin",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ViolinModel"
+                        }
+                    }
+                ],
+                "tags": [
+                    "plotting"
+                ]
+            }
+        }
+    },
+    "info": {
+        "title": "API",
+        "version": "1.0.0"
+    },
+    "produces": [
+        "application/json"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "tags": [
+        {
+            "name": "default",
+            "description": "Default namespace"
+        },
+        {
+            "name": "dataset",
+            "description": "Dataset related data"
+        },
+        {
+            "name": "plotting",
+            "description": "Plotting operations"
+        },
+        {
+            "name": "disease data",
+            "description": "Disease related data"
+        }
+    ],
+    "definitions": {
+        "ObsColsNamesModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                }
+            },
+            "type": "object"
+        },
+        "ObsColsModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                }
+            },
+            "type": "object"
+        },
+        "ObsBinDataModel": {
+            "required": [
+                "obsCol",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "obsCol": {
+                    "type": "string",
+                    "description": "Name of the observation column"
+                },
+                "thresholds": {
+                    "type": "array",
+                    "description": "Thresholds for binning",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "nBins": {
+                    "type": "integer",
+                    "description": "Number of bins"
+                }
+            },
+            "type": "object"
+        },
+        "ObsDistributionModel": {
+            "required": [
+                "obsColname",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "obsColname": {
+                    "type": "string",
+                    "description": "Name of the observation column"
+                }
+            },
+            "type": "object"
+        },
+        "ObsmKeysModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                }
+            },
+            "type": "object"
+        },
+        "VarColsNamesModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                }
+            },
+            "type": "object"
+        },
+        "VarNamesModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "col": {
+                    "type": "string",
+                    "description": "Name of the variable column"
+                },
+                "text": {
+                    "type": "string",
+                    "description": "Text to search for in variable names"
+                }
+            },
+            "type": "object"
+        },
+        "VarHistogramsModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "varKey": {
+                    "type": "integer",
+                    "description": "Index of the variable"
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "ObsHistogramsModel": {
+            "required": [
+                "obsCol",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "varKey": {
+                    "type": "integer",
+                    "description": "Index of the variable"
+                },
+                "obsCol": {
+                    "type": "object",
+                    "description": "Selected obs column"
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "VarXMeanModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "varKeys": {
+                    "type": "array",
+                    "description": "List of variable keys",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "varNamesCol": {
+                    "type": "string",
+                    "description": "Name of the variable names column"
+                }
+            },
+            "type": "object"
+        },
+        "HeatmapModel": {
+            "required": [
+                "obsCol",
+                "url",
+                "varKeys"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "varKeys": {
+                    "type": "array",
+                    "description": "List of selected markers",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "obsCol": {
+                    "type": "object",
+                    "description": "Selected obs column"
+                },
+                "obsValues": {
+                    "type": "array",
+                    "description": "Selected obs values",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "varNamesCol": {
+                    "type": "string",
+                    "description": "Var names column"
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "DotplotModel": {
+            "required": [
+                "obsCol",
+                "url",
+                "varKeys"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "varKeys": {
+                    "type": "array",
+                    "description": "List of selected markers",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "obsCol": {
+                    "type": "object",
+                    "description": "Selected obs column"
+                },
+                "obsValues": {
+                    "type": "array",
+                    "description": "Selected obs values",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "meanOnlyExpressed": {
+                    "type": "boolean",
+                    "description": "Mean only expressed"
+                },
+                "expressionCutoff": {
+                    "type": "number",
+                    "description": "Expression cutoff"
+                },
+                "standardScale": {
+                    "type": "string",
+                    "description": "Standard scale"
+                },
+                "varNamesCol": {
+                    "type": "string",
+                    "description": "Var names column"
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "MatrixplotModel": {
+            "required": [
+                "obsCol",
+                "url",
+                "varKeys"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "varKeys": {
+                    "type": "array",
+                    "description": "List of selected markers",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "obsCol": {
+                    "type": "object",
+                    "description": "Selected obs column"
+                },
+                "obsValues": {
+                    "type": "array",
+                    "description": "Selected obs values",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "standardScale": {
+                    "type": "string",
+                    "description": "Standard scale"
+                },
+                "varNamesCol": {
+                    "type": "string",
+                    "description": "Var names column"
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "ViolinModel": {
+            "required": [
+                "mode",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "mode": {
+                    "type": "string",
+                    "description": "Mode"
+                },
+                "scale": {
+                    "type": "string",
+                    "description": "Scale"
+                },
+                "varNamesCol": {
+                    "type": "string",
+                    "description": "Var names column"
+                }
+            },
+            "type": "object"
+        },
+        "PseudospatialGeneModel": {
+            "required": [
+                "url",
+                "varKey"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "varKey": {
+                    "type": "string",
+                    "description": "Var key to plot, e.g. gene name or gene symbol. The key must exist in the AnnData.var indexor in the `varNamesCol` column if provided"
+                },
+                "format": {
+                    "type": "string",
+                    "description": "Plot format. Can be 'png', 'html', or 'json'. Defaults to `png`"
+                },
+                "maskSet": {
+                    "type": "string",
+                    "description": "Mask set to use. Must exist in AnnData.uns.masks. Defaults to `spatial`"
+                },
+                "maskValues": {
+                    "type": "array",
+                    "description": "Mask values to plot. If left unset, all masks will be plotted",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "varNamesCol": {
+                    "type": "string",
+                    "description": "Column in var that contains `varKey` names"
+                },
+                "obsCol": {
+                    "type": "object",
+                    "description": "Optional obs column to filter data by. To be used alongside `obsValues`"
+                },
+                "obsValues": {
+                    "type": "array",
+                    "description": "Obs values to filter data by",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "colormap": {
+                    "type": "string",
+                    "description": "Colormap name"
+                },
+                "fullHtml": {
+                    "type": "boolean",
+                    "description": "Whether to return a full HTML document or just the `div` element"
+                },
+                "showColorbar": {
+                    "type": "boolean",
+                    "description": "Whether to include a colorbar in the plot"
+                },
+                "minValue": {
+                    "type": "number",
+                    "description": "Min value for the color scale"
+                },
+                "maxValue": {
+                    "type": "number",
+                    "description": "Max value for the color scale"
+                },
+                "width": {
+                    "type": "integer",
+                    "description": "Plot width in pixels. Defaults to 500"
+                },
+                "height": {
+                    "type": "integer",
+                    "description": "Plot height in pixels. Defaults to 500"
+                }
+            },
+            "type": "object"
+        },
+        "PseudospatialCategoricalModel": {
+            "required": [
+                "obsCol",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "obsCol": {
+                    "type": "object",
+                    "description": "Obs column to plot"
+                },
+                "obsValues": {
+                    "type": "array",
+                    "description": "Obs values to plot. If left unset, all values will be plotted",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "format": {
+                    "type": "string",
+                    "description": "Plot format"
+                },
+                "maskSet": {
+                    "type": "string",
+                    "description": "Mask set"
+                },
+                "mode": {
+                    "type": "string",
+                    "description": "Plotting mode. `across` for percentage across masksor `within` for percentage within masks"
+                },
+                "maskValues": {
+                    "type": "array",
+                    "description": "Mask values",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "colormap": {
+                    "type": "string",
+                    "description": "Colormap"
+                },
+                "fullHtml": {
+                    "type": "boolean",
+                    "description": "Full HTML"
+                },
+                "showColorbar": {
+                    "type": "boolean",
+                    "description": "Show colorbar"
+                },
+                "minValue": {
+                    "type": "number",
+                    "description": "Min value"
+                },
+                "maxValue": {
+                    "type": "number",
+                    "description": "Max value"
+                },
+                "width": {
+                    "type": "integer",
+                    "description": "Width"
+                },
+                "height": {
+                    "type": "integer",
+                    "description": "Height"
+                }
+            },
+            "type": "object"
+        },
+        "PseudospatialContinuousModel": {
+            "required": [
+                "obsCol",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "obsCol": {
+                    "type": "object",
+                    "description": "Obs column"
+                },
+                "obsValues": {
+                    "type": "array",
+                    "description": "Obs values to plot. If left unset, all values will be plotted",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "format": {
+                    "type": "string",
+                    "description": "Plot format"
+                },
+                "maskSet": {
+                    "type": "string",
+                    "description": "Mask set"
+                },
+                "maskValues": {
+                    "type": "array",
+                    "description": "Mask values",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "obsIndices": {
+                    "type": "array",
+                    "description": "List of observation indices",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "colormap": {
+                    "type": "string",
+                    "description": "Colormap"
+                },
+                "fullHtml": {
+                    "type": "boolean",
+                    "description": "Full HTML"
+                },
+                "showColorbar": {
+                    "type": "boolean",
+                    "description": "Show colorbar"
+                },
+                "minValue": {
+                    "type": "number",
+                    "description": "Min value"
+                },
+                "maxValue": {
+                    "type": "number",
+                    "description": "Max value"
+                },
+                "width": {
+                    "type": "integer",
+                    "description": "Width"
+                },
+                "height": {
+                    "type": "integer",
+                    "description": "Height"
+                }
+            },
+            "type": "object"
+        },
+        "PseudospatialMasksModel": {
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the AnnData-Zarr file"
+                },
+                "format": {
+                    "type": "string",
+                    "description": "Plot format"
+                },
+                "maskSet": {
+                    "type": "string",
+                    "description": "Mask set"
+                },
+                "maskValues": {
+                    "type": "array",
+                    "description": "Mask values",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "fullHtml": {
+                    "type": "boolean",
+                    "description": "Full HTML"
+                },
+                "width": {
+                    "type": "integer",
+                    "description": "Width"
+                },
+                "height": {
+                    "type": "integer",
+                    "description": "Height"
+                }
+            },
+            "type": "object"
+        },
+        "DiseaseSearchModel": {
+            "required": [
+                "diseaseDatasets"
+            ],
+            "properties": {
+                "diseaseDatasets": {
+                    "type": "array",
+                    "description": "List of disease datasets to search in",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "text": {
+                    "type": "string",
+                    "description": "Text to search for in disease names"
+                }
+            },
+            "type": "object"
+        },
+        "DiseaseGenesModel": {
+            "required": [
+                "diseaseDatasets",
+                "diseaseName",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "diseaseName": {
+                    "type": "string",
+                    "description": "Name of the disease"
+                },
+                "col": {
+                    "type": "string",
+                    "description": "Column to search for disease name"
+                },
+                "diseaseDatasets": {
+                    "type": "array",
+                    "description": "List of disease datasets to search in",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "DiseaseGeneModel": {
+            "required": [
+                "diseaseDatasets",
+                "geneName"
+            ],
+            "properties": {
+                "geneName": {
+                    "type": "string",
+                    "description": "Name of the gene"
+                },
+                "diseaseDatasets": {
+                    "type": "array",
+                    "description": "List of disease datasets to search in",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "DiseaseGeneSearchModel": {
+            "required": [
+                "diseaseDatasets",
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "URL to the zarr file"
+                },
+                "text": {
+                    "type": "string",
+                    "description": "Text to search for in gene names"
+                },
+                "col": {
+                    "type": "string",
+                    "description": "Column to search for gene name"
+                },
+                "diseaseDatasets": {
+                    "type": "array",
+                    "description": "List of disease datasets to search in",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        }
+    },
+    "responses": {
+        "ParseError": {
+            "description": "When a mask can't be parsed"
+        },
+        "MaskError": {
+            "description": "When any error occurs on mask"
+        },
+        "InternalServerError": {},
+        "ReadZarrError": {},
+        "InvalidKey": {},
+        "InvalidObs": {},
+        "InvalidVar": {},
+        "BadRequest": {},
+        "FetchError": {},
+        "NotInData": {}
+    }
+}
