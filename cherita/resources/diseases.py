@@ -2,7 +2,9 @@ from flask import request, jsonify
 from flask_restx import Resource, fields, Namespace
 from cherita.resources.errors import BadRequest
 
+from cherita.extensions import cache
 from cherita.utils.adata_utils import open_anndata_zarr
+from cherita.utils.caching import make_cache_key
 from cherita.dataset.search import (
     search_diseases,
     search_disease_genes,
@@ -98,6 +100,7 @@ class GetDiseaseGene(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(disease_gene_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
@@ -130,6 +133,7 @@ class SearchDiseaseGenes(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(disease_gene_search_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:

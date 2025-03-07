@@ -30,5 +30,6 @@ htmlcov/
 .coverage.*
 *,cover
 
-# Sphinx
+# Documnentation
 sphinx/_build
+docs
