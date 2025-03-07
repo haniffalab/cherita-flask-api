@@ -7,7 +7,7 @@
 [![demo](https://img.shields.io/badge/Demo-view-blue)](https://cherita-flask-api-dot-haniffa-lab.nw.r.appspot.com/)
 [![doi](https://zenodo.org/badge/DOI/10.5281/zenodo.14772563.svg)](https://doi.org/10.5281/zenodo.14772563)
 
-Cherita Flask API is a web service designed to provide a robust and scalable interface for managing and analyzing biological data. This API leverages Flask, a lightweight WSGI web application framework in Python, to deliver high-performance endpoints for data retrieval, processing, and visualization.
+A web service designed to provide a robust and scalable interface for managing and analyzing biological data. This API leverages Flask, a lightweight WSGI web application framework in Python, to deliver high-performance endpoints for data retrieval, processing, and visualization.
 
 ## Development
 
