@@ -102,7 +102,10 @@ def get_obs_col_histograms(
     X = marker.get_X_at(obs_indices)
     if len(X.shape) > 1:
         X = X.mean(0)
-    min_X, max_X = X.min(), X.max()
+    if not X.shape[-1]:
+        min_X, max_X = 0, 1
+    else:
+        min_X, max_X = X.min(), X.max()
 
     if min_X == max_X:
         max_X += 1
