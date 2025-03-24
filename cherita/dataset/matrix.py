@@ -15,4 +15,5 @@ def get_var_x_mean(
     markers = [
         Marker.from_any(adata_group, v, var_names_col=var_names_col) for v in var_keys
     ]
-    return {m.name: float(np.mean(m.get_X_at(obs_indices))) for m in markers}
+    X_dict = {m.name: m.get_X_at(obs_indices) for m in markers}
+    return {k: float(np.mean(v)) if v.shape[-1] else None for k, v in X_dict.items()}
