@@ -199,8 +199,9 @@ def type_bool(obs, **kwargs):
 
 def type_numeric(obs, obs_params: dict = {}, retbins: bool = True, **kwargs):
     if retbins:
+        # Set fillna to False to avoid type_category not catching NaN values
         cat_data, bins = to_categorical(
-            obs, type="continuous", fillna=True, **obs_params, **kwargs
+            obs, type="continuous", fillna=False, **obs_params, **kwargs
         )
         cat_obs = {**type_category(pd.Series(cat_data)), "bins": bins}
     else:
