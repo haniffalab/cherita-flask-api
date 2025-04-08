@@ -165,7 +165,7 @@ def fillna_as_undefined(obs):
     return obs, None
 
 
-def type_category(obs):
+def type_category(obs, **kwargs):
     obs, undefined_cat = fillna_as_undefined(obs)
     categories = [str(i) for i in obs.cat.categories.values.flatten()]
     codes = {str(i): idx for idx, i in enumerate(categories)}
@@ -190,7 +190,7 @@ def type_category(obs):
     }
 
 
-def type_bool(obs):
+def type_bool(obs, **kwargs):
     obs = obs.astype("category")
     data = type_category(obs)
     data["type"] = "boolean"
@@ -198,8 +198,17 @@ def type_bool(obs):
     return data
 
 
-def type_numeric(obs):
+def type_numeric(obs, obs_params: dict = None, retbins: bool = True, **kwargs):
+    if retbins:
+        cat_data, bins = to_categorical(
+            obs, type="continuous", fillna=True, **obs_params, **kwargs
+        )
+        cat_obs = {**type_category(pd.Series(cat_data)), "bins": bins}
+    else:
+        cat_obs = {}
+
     return {
+        **cat_obs,
         "type": "continuous",
         "min": encode_dtype(ndarray_min(obs)),
         "max": encode_dtype(ndarray_max(obs)),
@@ -209,7 +218,7 @@ def type_numeric(obs):
     }
 
 
-def type_discrete(obs):
+def type_discrete(obs, **kwargs):
     obs = obs.astype("category")
     data = type_category(obs)
     data["type"] = "discrete"
@@ -276,7 +285,7 @@ def to_categorical(
         "categorical": categorical,
     }
 
-    cat_data, bins = func_dict.get(
+    cat_data, bin_data = func_dict.get(
         type,
         lambda data, **kwargs: (
             data,
@@ -287,7 +296,7 @@ def to_categorical(
     if as_str:
         cat_data = cat_data.rename_categories(lambda x: str(x))
 
-    return cat_data, bins
+    return cat_data, bin_data
 
 
 def categorical(c: pd.Categorical, fillna: bool = True, **kwargs):
@@ -298,6 +307,20 @@ def categorical(c: pd.Categorical, fillna: bool = True, **kwargs):
     return c, None
 
 
+def get_bin_data(s: pd.Series, thresholds=None, nBins: int = 5):
+    if not thresholds:
+        bin_size = (s.max() - s.min()) / nBins
+        thresholds = [s.min() + bin_size * b for b in range(nBins + 1)]
+    else:
+        nBins = len(thresholds) - 1
+    bin_edges = [[thresholds[i], thresholds[i + 1]] for i in range(len(thresholds) - 1)]
+    return dict(
+        nBins=nBins,
+        thresholds=thresholds,
+        binEdges=bin_edges,
+    )
+
+
 def continuous2categorical(
     array: np.Array,
     thresholds: list[Union[int, float]] = None,
@@ -305,21 +328,26 @@ def continuous2categorical(
     fillna: bool = True,
     **kwargs,
 ):
-    s = pd.Series(array).astype("category")
-    if nBins >= len(s.cat.categories):
+    s = pd.Series(array)
+    bin_data = get_bin_data(s, thresholds=thresholds, nBins=nBins)
+    s_cat = s.astype("category")
+    s_cat = s_cat.cat.as_ordered()
+    if bin_data["nBins"] >= len(s_cat.cat.categories):
+        bin_data = get_bin_data(s_cat, nBins=len(s_cat.cat.categories))
         if fillna:
-            s, _ = fillna_as_undefined(s)
-        return pd.Categorical(s), None
+            s_cat, _ = fillna_as_undefined(s_cat)
+        s_bin_cat = pd.Categorical(s_cat)
+        return s_bin_cat, bin_data
     else:
         s_cut = (
-            pd.cut(s, thresholds or nBins, include_lowest=True, labels=False)
+            pd.cut(s_cat, bin_data["thresholds"], include_lowest=True, labels=False)
             .astype("Int64")
             .astype("category")
         )
         if fillna:
             s_cut, _ = fillna_as_undefined(s_cut)
-        s_cat = pd.Categorical(s_cut)
-        return s_cat, len(s_cat.categories)
+        s_bin_cat = pd.Categorical(s_cut)
+        return s_bin_cat, bin_data
 
 
 def discrete2categorical(
