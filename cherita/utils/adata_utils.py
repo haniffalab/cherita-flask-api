@@ -182,7 +182,6 @@ def type_category(obs, **kwargs):
         "values": categories,
         "n_values": len(categories),
         "codes": codes,
-        "hasnans": obs.hasnans,
         "value_counts": {
             **value_counts,
             **{str(k): v for k, v in obs.value_counts().to_dict().items()},
@@ -198,7 +197,7 @@ def type_bool(obs, **kwargs):
     return data
 
 
-def type_numeric(obs, obs_params: dict = None, retbins: bool = True, **kwargs):
+def type_numeric(obs, obs_params: dict = {}, retbins: bool = True, **kwargs):
     if retbins:
         cat_data, bins = to_categorical(
             obs, type="continuous", fillna=True, **obs_params, **kwargs

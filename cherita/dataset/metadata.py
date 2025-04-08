@@ -46,7 +46,9 @@ def get_obs_col_metadata(
         obs_metadata.append(
             {
                 "name": col,
-                **parse_dtype[t](obs_df[col], obs_params=obs_params, retbins=retbins),
+                **parse_dtype[t](
+                    obs_df[col], obs_params=obs_params.get(col, {}), retbins=retbins
+                ),
             }
         )
     return obs_metadata
