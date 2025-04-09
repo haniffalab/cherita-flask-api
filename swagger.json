@@ -710,7 +710,7 @@
     },
     "info": {
         "title": "API",
-        "version": "1.0.1"
+        "version": "1.0.2"
     },
     "produces": [
         "application/json"
@@ -757,6 +757,15 @@
                 "url": {
                     "type": "string",
                     "description": "URL to the zarr file"
+                },
+                "obsParams": {
+                    "type": "object",
+                    "description": "Parameters for the observation columns. Where obsParams is a dictionary with the obs column name as the key and the parameters as the value.  Possible values are `bins` dictionary with `nBins` or `thresholds` to bin continuous data. "
+                },
+                "retbins": {
+                    "type": "boolean",
+                    "description": "Whether to return the bins for continuous data. Default is True, which will return the bins.",
+                    "default": true
                 }
             },
             "type": "object"
