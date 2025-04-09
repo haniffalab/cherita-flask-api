@@ -36,17 +36,26 @@ def get_obs_col_names(adata_group: zarr.Group):
     return obs_col_names
 
 
-def get_obs_col_metadata(adata_group: zarr.Group):
+def get_obs_col_metadata(
+    adata_group: zarr.Group, obs_params: dict = {}, retbins: bool = True
+):
     obs_df = parse_data(adata_group.obs)
     obs_metadata = []
     for col in obs_df.columns:
         t = re.sub(r"[^a-zA-Z]", "", obs_df[col].dtype.name)
-        obs_metadata.append({"name": col, **parse_dtype[t](obs_df[col])})
+        obs_metadata.append(
+            {
+                "name": col,
+                **parse_dtype[t](
+                    obs_df[col], obs_params=obs_params.get(col, {}), retbins=retbins
+                ),
+            }
+        )
     return obs_metadata
 
 
 def get_obs_bin_data(
-    adata_group: zarr.Group, obs_col: str, thresholds: list, nBins: int
+    adata_group: zarr.Group, obs_col: str, thresholds: list, nBins: int = 5
 ):
     obs_s = parse_data(adata_group.obs[obs_col])
     cat, _ = to_categorical(

@@ -89,7 +89,7 @@ def groupby_violin(
         columns=[marker.name],
     )
 
-    df[obs_colname], bins = to_categorical(obs, **obs_col)
+    df[obs_colname], bin_data = to_categorical(obs, **obs_col)
 
     if obs_indices is not None:
         df = df.iloc[obs_indices]
@@ -123,7 +123,8 @@ def groupby_violin(
         layout=dict(
             yaxis=dict(title=marker.name),
             xaxis=dict(
-                title=obs_colname + (f" ({bins} bins)" if bins else ""),
+                title=obs_colname
+                + (f" ({bin_data['nBins']} bins)" if bin_data else ""),
             ),
         ),
     )

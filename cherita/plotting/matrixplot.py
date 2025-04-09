@@ -55,7 +55,7 @@ def matrixplot(
         columns=[m.name for m in markers],
     )
 
-    df[obs_colname], bins = to_categorical(obs, **obs_col)
+    df[obs_colname], bin_data = to_categorical(obs, **obs_col)
 
     if obs_indices is not None:
         df = df.iloc[obs_indices]
@@ -90,7 +90,8 @@ def matrixplot(
             xaxis_type="category",
             xaxis=dict(title="Markers", tickvals=values_df.columns),
             yaxis=dict(
-                title=obs_colname + (f" ({bins} bins)" if bins else ""),
+                title=obs_colname
+                + (f" ({bin_data['nBins']} bins)" if bin_data else ""),
                 tickvals=values_df.index,
                 scaleanchor="x",
             ),
