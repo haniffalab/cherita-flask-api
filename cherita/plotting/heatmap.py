@@ -68,7 +68,7 @@ def heatmap(
         columns=[m.name for m in markers],
     )
 
-    df[obs_colname], bins = to_categorical(obs, **obs_col)
+    df[obs_colname], bin_data = to_categorical(obs, **obs_col)
 
     if obs_indices is not None:
         df = df.iloc[obs_indices]
@@ -102,7 +102,8 @@ def heatmap(
     layout.update(
         dict(
             xaxis=dict(
-                title=obs_colname + (f" ({bins} bins)" if bins else ""),
+                title=obs_colname
+                + (f" ({bin_data['nBins']} bins)" if bin_data else ""),
                 tickvals=middle_ticks,
                 ticktext=list(df[obs_colname].cat.categories),
                 minor=dict(tickvals=ticks, ticks="outside", ticklen=5),

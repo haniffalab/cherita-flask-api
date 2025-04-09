@@ -50,6 +50,21 @@ obs_cols_model = ns.model(
     "ObsColsModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
+        "obsParams": fields.Raw(
+            description=(
+                "Parameters for the observation columns. Where obsParams is a "
+                "dictionary with the obs column name as the key and the parameters as "
+                "the value.  Possible values are `bins` dictionary with "
+                "`nBins` or `thresholds` to bin continuous data. "
+            )
+        ),
+        "retbins": fields.Boolean(
+            description=(
+                "Whether to return the bins for continuous data. "
+                "Default is True, which will return the bins."
+            ),
+            default=True,
+        ),
     },
 )
 
@@ -66,7 +81,13 @@ class ObsCols(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            return jsonify(get_obs_col_metadata(adata_group))
+            obs_params = json_data.get("obsParams", {})
+            retbins = json_data.get("retbins", True)
+            return jsonify(
+                get_obs_col_metadata(
+                    adata_group, obs_params=obs_params, retbins=retbins
+                )
+            )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
 
@@ -98,7 +119,7 @@ class ObsBinData(Resource):
             adata_group = open_anndata_zarr(json_data["url"])
             obs_col = json_data["obsCol"]
             thresholds = json_data.get("thresholds", None)
-            nBins = json_data.get("nBins", None)
+            nBins = json_data.get("nBins", 5)
             if not thresholds and not nBins:
                 raise BadRequest("Missing required parameter: thresholds or nBins")
             return jsonify(get_obs_bin_data(adata_group, obs_col, thresholds, nBins))
