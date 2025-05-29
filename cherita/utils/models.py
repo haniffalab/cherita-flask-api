@@ -83,18 +83,24 @@ class Marker:
         Raises:
             InvalidVar: If the index is invalid.
         """
+        var_index = get_group_index(adata_group.var)
+        if isinstance(var_index, zarr.Group):
+            raise InvalidVar(
+                (
+                    "Expected var index to be an array, got group. "
+                    "This can be due to var index being categorical."
+                )
+            )
         if isinstance(index, int):
             matrix_index = index
             try:
-                index = get_group_index(adata_group.var)[matrix_index]
+                index = var_index[matrix_index]
             except:
                 raise InvalidVar(f"Invalid feature index {index}")
         elif isinstance(index, str):
             index = index
             try:
-                matrix_index = get_index_in_array(
-                    get_group_index(adata_group.var), index
-                )
+                matrix_index = get_index_in_array(var_index, index)
             except InvalidKey:
                 raise InvalidVar(f"Invalid feature index {index}")
         else:

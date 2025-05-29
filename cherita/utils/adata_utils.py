@@ -309,8 +309,8 @@ def categorical(c: pd.Categorical, fillna: bool = True, **kwargs):
 
 def get_bin_data(s: pd.Series, thresholds=None, nBins: int = 5):
     if not thresholds:
-        bin_size = (s.max() - s.min()) / nBins
-        thresholds = [s.min() + bin_size * b for b in range(nBins + 1)]
+        bin_size = float(s.max() - s.min()) / nBins
+        thresholds = [float(s.min()) + bin_size * b for b in range(nBins + 1)]
     else:
         nBins = len(thresholds) - 1
     bin_edges = [[thresholds[i], thresholds[i + 1]] for i in range(len(thresholds) - 1)]
