@@ -710,7 +710,7 @@
     },
     "info": {
         "title": "API",
-        "version": "1.0.2"
+        "version": "1.0.3"
     },
     "produces": [
         "application/json"
