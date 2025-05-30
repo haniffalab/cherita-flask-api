@@ -156,9 +156,16 @@ def match_var_names(
     return matched_df
 
 
-def get_obsm_keys(adata_group: zarr.Group):
-    obsm_keys = list(adata_group.obsm.keys())
-    return obsm_keys
+def get_obsm_keys(adata_group: zarr.Group, filter2d: bool = True):
+    if filter2d:
+        # Filter to only obsm keys that can be plotted in 2D
+        return [
+            key
+            for key in adata_group.obsm.keys()
+            if adata_group.obsm[key].ndim == 2 and adata_group.obsm[key].shape[1] > 1
+        ]
+    else:
+        return list(adata_group.obsm.keys())
 
 
 def get_kde_values(data):
