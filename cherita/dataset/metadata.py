@@ -41,14 +41,21 @@ def get_obs_col_metadata(
 ):
     obs_df = parse_data(adata_group.obs)
     obs_metadata = []
+
     for col in obs_df.columns:
         t = re.sub(r"[^a-zA-Z]", "", obs_df[col].dtype.name)
+        metadata = parse_dtype[t](
+            obs_df[col], obs_params=obs_params.get(col, {}), retbins=retbins
+        )
+        if t == "category":
+            colors = get_obs_colors(adata_group, col)
+            if colors and metadata["n_values"] == len(colors):
+                metadata["colors"] = colors
+
         obs_metadata.append(
             {
                 "name": col,
-                **parse_dtype[t](
-                    obs_df[col], obs_params=obs_params.get(col, {}), retbins=retbins
-                ),
+                **metadata,
             }
         )
     return obs_metadata
@@ -62,6 +69,29 @@ def get_obs_bin_data(
         obs_s, type="continuous", thresholds=thresholds, nBins=nBins, fillna=False
     )
     return {**type_category(pd.Series(cat)), "type": "continuous"}
+
+
+def is_hex_triplet(color: str) -> bool:
+    if not isinstance(color, str):
+        return False
+    return bool(re.fullmatch(r"^#[0-9a-fA-F]{6}$", color))
+
+
+def get_obs_colors(adata_group: zarr.Group, obs_col: str) -> list[str] | None:
+    # Following cxg schema https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/6.0.0/schema.md#column_colors
+    obs_colors = f"{obs_col}_colors"
+    if obs_colors in adata_group.uns.array_keys():
+        try:
+            colors = parse_data(adata_group.uns[obs_colors]).tolist()
+            if not all(is_hex_triplet(c) for c in colors):
+                logging.warn(f"Colors in {obs_colors} are not hex strings")
+                return None
+            return colors
+
+        except Exception as e:
+            logging.error(f"Failed to parse colors for {obs_col}: {e}")
+            return None
+    return None
 
 
 def get_var_col_names(adata_group: zarr.Group):
