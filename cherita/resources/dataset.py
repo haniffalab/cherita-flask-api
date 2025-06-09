@@ -176,7 +176,8 @@ class ObsmKeys(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            return jsonify(get_obsm_keys(adata_group))
+            filter2d = json_data.get("filter2d", True)
+            return jsonify(get_obsm_keys(adata_group, filter2d))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
 
