@@ -84,7 +84,6 @@ def matrixplot(
             coloraxis="coloraxis",
         ),
         layout=dict(
-            autosize=False,
             plot_bgcolor="rgba(0,0,0,0)",
             yaxis_type="category",
             xaxis_type="category",
