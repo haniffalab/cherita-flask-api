@@ -10,7 +10,7 @@ from cherita.dataset.metadata import (
     get_obs_col_names,
     get_obs_col_metadata,
     get_pseudospatial_masks,
-    get_var_col_names,
+    get_var_names,
     get_obsm_keys,
     get_var_histograms,
     get_obs_bin_data,
@@ -50,6 +50,9 @@ obs_cols_model = ns.model(
     "ObsColsModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
+        "cols": fields.List(
+            fields.String, description="List of observation column names"
+        ),
         "obsParams": fields.Raw(
             description=(
                 "Parameters for the observation columns. Where obsParams is a "
@@ -81,11 +84,12 @@ class ObsCols(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
+            cols = json_data.get("cols", None)
             obs_params = json_data.get("obsParams", {})
             retbins = json_data.get("retbins", True)
             return jsonify(
                 get_obs_col_metadata(
-                    adata_group, obs_params=obs_params, retbins=retbins
+                    adata_group, cols=cols, obs_params=obs_params, retbins=retbins
                 )
             )
         except KeyError as e:
@@ -186,6 +190,17 @@ var_cols_name_model = ns.model(
     "VarColsNamesModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
+        "col": fields.String(
+            description="Name of the var column with names",
+            required=False,
+            default=None,
+        ),
+        "names": fields.List(
+            fields.String,
+            description="List of variable names to limit to",
+            required=False,
+            default=None,
+        ),
     },
 )
 
@@ -193,7 +208,7 @@ var_cols_name_model = ns.model(
 @ns.route("/var/cols/names")
 class VarColsNames(Resource):
     @ns.doc(
-        description="Get the names of the variable columns in the dataset",
+        description="Get the names of the var columns in the dataset",
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(var_cols_name_model)
@@ -202,7 +217,9 @@ class VarColsNames(Resource):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            return jsonify(get_var_col_names(adata_group))
+            col = json_data.get("col", None)
+            names = json_data.get("names", None)
+            return jsonify(get_var_names(adata_group, col=col, names=names))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
 
@@ -211,8 +228,8 @@ var_names_model = ns.model(
     "VarNamesModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
-        "col": fields.String(description="Name of the variable column"),
-        "text": fields.String(description="Text to search for in variable names"),
+        "col": fields.String(description="Name of the var column with names"),
+        "text": fields.String(description="Text to search for in var names"),
     },
 )
 

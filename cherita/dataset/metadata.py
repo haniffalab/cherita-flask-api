@@ -37,12 +37,19 @@ def get_obs_col_names(adata_group: zarr.Group):
 
 
 def get_obs_col_metadata(
-    adata_group: zarr.Group, obs_params: dict = {}, retbins: bool = True
+    adata_group: zarr.Group,
+    cols: [str] = None,
+    obs_params: dict = {},
+    retbins: bool = True,
 ):
     obs_df = parse_data(adata_group.obs)
     obs_metadata = []
 
-    for col in obs_df.columns:
+    cols = cols or obs_df.columns
+
+    for col in cols:
+        if col not in obs_df.columns:
+            continue
         t = re.sub(r"[^a-zA-Z]", "", obs_df[col].dtype.name)
         metadata = parse_dtype[t](
             obs_df[col], obs_params=obs_params.get(col, {}), retbins=retbins
@@ -159,7 +166,7 @@ def get_obs_col_histograms(
     return obs_data
 
 
-def get_var_names(adata_group: zarr.Group, col: str = None):
+def get_var_names(adata_group: zarr.Group, col: str = None, names: [str] = None):
     idx_col = get_group_index_name(adata_group.var)
     col = col or idx_col
     var_df = pd.DataFrame(
@@ -170,6 +177,8 @@ def get_var_names(adata_group: zarr.Group, col: str = None):
     var_df.reset_index(names=["index"], inplace=True)
     var_df.reset_index(names=[INDEX_NAME], inplace=True)
     var_df.sort_values(by=[COL_NAME], inplace=True)
+    if names is not None:
+        var_df = var_df[var_df[COL_NAME].isin(names)]
     return var_df.to_dict("records", index=True)
 
 
