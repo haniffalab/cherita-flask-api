@@ -206,6 +206,9 @@ def get_kde_values(data):
     data = data[~np.isnan(data)]
     data = data[~np.isinf(data)]
 
+    if not len(data):
+        return np.array([]), np.array([])
+
     x = np.linspace(data.min(), data.max(), 250)
     kde = gaussian_kde(data)
     kde_values = kde.evaluate(x)
