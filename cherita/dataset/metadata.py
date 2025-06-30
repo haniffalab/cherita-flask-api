@@ -189,10 +189,14 @@ def match_var_names(
 def get_obsm_keys(adata_group: zarr.Group, filter2d: bool = True):
     if filter2d:
         # Filter to only obsm keys that can be plotted in 2D
+        # i.e. is a zarr array, has float, int or uint dtype, and has at least 2 dimensions
         return [
             key
             for key in adata_group.obsm.keys()
-            if adata_group.obsm[key].ndim == 2 and adata_group.obsm[key].shape[1] > 1
+            if isinstance(adata_group.obsm[key], zarr.Array)
+            and adata_group.obsm[key].dtype.kind in "fiu"
+            and adata_group.obsm[key].ndim == 2
+            and adata_group.obsm[key].shape[1] > 1
         ]
     else:
         return list(adata_group.obsm.keys())
