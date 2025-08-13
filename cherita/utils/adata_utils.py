@@ -182,6 +182,7 @@ def type_category(obs, **kwargs):
         "values": categories,
         "n_values": len(categories),
         "codes": codes,
+        "codesMap": {str(v): k for k, v in codes.items()},
         "value_counts": {
             **value_counts,
             **{str(k): v for k, v in obs.value_counts().to_dict().items()},
