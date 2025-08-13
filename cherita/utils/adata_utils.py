@@ -182,6 +182,7 @@ def type_category(obs, **kwargs):
         "values": categories,
         "n_values": len(categories),
         "codes": codes,
+        "codesMap": {str(v): k for k, v in codes.items()},
         "value_counts": {
             **value_counts,
             **{str(k): v for k, v in obs.value_counts().to_dict().items()},
@@ -309,6 +310,12 @@ def categorical(c: pd.Categorical, fillna: bool = True, **kwargs):
 
 def get_bin_data(s: pd.Series, thresholds=None, nBins: int = 5):
     if not thresholds:
+        if nBins == 0:
+            return dict(
+                nBins=0,
+                thresholds=[],
+                binEdges=[],
+            )
         bin_size = float(s.max() - s.min()) / nBins
         thresholds = [float(s.min()) + bin_size * b for b in range(nBins + 1)]
     else:
