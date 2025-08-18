@@ -22,4 +22,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAC }}
         run: |
-          python -m semantic_release -v publish
+          python -m semantic_release -vv version

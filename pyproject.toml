@@ -34,17 +34,13 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.semantic_release]
-version_source = "commit"
+version_toml = ["pyproject.toml:project.version"]
 version_variable = [
     "config.py:version",
-    "citation.cff:version",
-    "pyproject.toml:version"
+    "CITATION.cff:version",
 ]
-branch = "main"
-upload_to_pypi = false
 changelog_file = "CHANGELOG.md"
-commit_message = "chore(release): {version} [skip ci]"
-tag_format = "v{version}"
+commit_message = "chore(release): {version}"
 
 [tool.semantic_release.branches]
 main = { match = "main" }
