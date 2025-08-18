@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v1.1.5 (2025-08-18)
+
+### Bug Fixes
+
+- Debug semantic release config
+  ([`372b5d7`](https://github.com/haniffalab/cherita-flask-api/commit/372b5d744555d374910a5568dd99e6403e2dded9))
+
+
 ## v1.1.4 (2025-08-18)
 
 ### Bug Fixes
