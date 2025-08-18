@@ -20,6 +20,6 @@ jobs:
           pip install python-semantic-release
       - name: Run semantic release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAC }}
+          GH_TOKEN: ${{ secrets.GH_PAC }}
         run: |
           python -m semantic_release -vv version
