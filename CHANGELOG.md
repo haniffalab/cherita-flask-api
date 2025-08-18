@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v1.1.12 (2025-08-18)
+
+### Bug Fixes
+
+- Test semantic release
+  ([`48734c1`](https://github.com/haniffalab/cherita-flask-api/commit/48734c19915f45402fd12cec09e488991238f7d8))
+
+
+## v1.1.11 (2025-08-18)
+
+### Bug Fixes
+
+- Test semantic release
+  ([`8a1985b`](https://github.com/haniffalab/cherita-flask-api/commit/8a1985b33e18fed8f7528b75a56417d440ec394a))
+
+- Test semantic release
+  ([`3c51dfe`](https://github.com/haniffalab/cherita-flask-api/commit/3c51dfe0111266958b7f4ce6071450c29acc583c))
+
+
 ## v1.1.9 (2025-08-18)
 
 
