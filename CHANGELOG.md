@@ -1,16 +1,31 @@
 # CHANGELOG
 
-<!-- version list -->
+
+## v1.1.9 (2025-08-18)
+
 
 ## v1.1.8 (2025-08-18)
 
+### Bug Fixes
+
+- Debug semantic release config
+  ([`8e54612`](https://github.com/haniffalab/cherita-flask-api/commit/8e54612ebe600857e10542677364ae444ff54437))
+
 
 ## v1.1.7 (2025-08-18)
+
+### Bug Fixes
+
+- Debug semantic release config
+  ([`28dd751`](https://github.com/haniffalab/cherita-flask-api/commit/28dd7510c831f9b851f83a84eb1da964db72a79f))
 
 
 ## v1.1.6 (2025-08-18)
 
 ### Bug Fixes
+
+- Debug semantic release config
+  ([`bf5c2c3`](https://github.com/haniffalab/cherita-flask-api/commit/bf5c2c396c7f6b4f3f7e5bd8c83485504af1e714))
 
 - Debug semantic release config
   ([`9fae384`](https://github.com/haniffalab/cherita-flask-api/commit/9fae384d674163f48c04104118dbf6b25413b62b))
@@ -37,10 +52,18 @@
 
 ## v1.1.2 (2025-08-18)
 
+### Bug Fixes
+
+- Debug semantic release config
+  ([`41a2e3a`](https://github.com/haniffalab/cherita-flask-api/commit/41a2e3a6695f845b016ca893792b9e1419087a6e))
+
 
 ## v1.1.1 (2025-08-18)
 
 ### Bug Fixes
+
+- Debug semantic release config
+  ([`83dcd9b`](https://github.com/haniffalab/cherita-flask-api/commit/83dcd9b15817fe5862a8f202531bcb67e7f966ae))
 
 - Debug semantic release config
   ([`50c3983`](https://github.com/haniffalab/cherita-flask-api/commit/50c3983e52e69706dd5b1eb107b6923e294ae0be))
@@ -49,6 +72,9 @@
 ## v1.1.0 (2025-08-18)
 
 ### Bug Fixes
+
+- Debug semantic release config
+  ([`e814341`](https://github.com/haniffalab/cherita-flask-api/commit/e81434180845d7e47f2fb713194b0cabf0fc1c11))
 
 - Debug semantic release config
   ([`837e334`](https://github.com/haniffalab/cherita-flask-api/commit/837e334c3afd6df8f07f07877147077ca9586c55))
@@ -102,5 +128,3 @@
 
 
 ## v0.1.0 (2025-01-30)
-
-- Initial Release
