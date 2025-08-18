@@ -600,7 +600,7 @@
                         "description": "Internal server error"
                     }
                 },
-                "description": "Get the names of the variable columns in the dataset",
+                "description": "Get the names of the var columns in the dataset",
                 "operationId": "post_var_cols_names",
                 "parameters": [
                     {
@@ -710,7 +710,7 @@
     },
     "info": {
         "title": "API",
-        "version": "1.0.4"
+        "version": "1.0.5"
     },
     "produces": [
         "application/json"
@@ -757,6 +757,13 @@
                 "url": {
                     "type": "string",
                     "description": "URL to the zarr file"
+                },
+                "cols": {
+                    "type": "array",
+                    "description": "List of observation column names",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "obsParams": {
                     "type": "object",
@@ -835,6 +842,17 @@
                 "url": {
                     "type": "string",
                     "description": "URL to the zarr file"
+                },
+                "col": {
+                    "type": "string",
+                    "description": "Name of the var column with names"
+                },
+                "names": {
+                    "type": "array",
+                    "description": "List of variable names to limit to",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             },
             "type": "object"
@@ -850,11 +868,11 @@
                 },
                 "col": {
                     "type": "string",
-                    "description": "Name of the variable column"
+                    "description": "Name of the var column with names"
                 },
                 "text": {
                     "type": "string",
-                    "description": "Text to search for in variable names"
+                    "description": "Text to search for in var names"
                 }
             },
             "type": "object"
