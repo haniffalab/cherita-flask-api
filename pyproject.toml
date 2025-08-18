@@ -36,7 +36,7 @@ build-backend = "setuptools.build_meta"
 [tool.semantic_release]
 version_source = "commit"
 version_variable = [
-    "config.py:__version__",
+    "config.py:version",
     "citation.cff:version",
     "pyproject.toml:version"
 ]
