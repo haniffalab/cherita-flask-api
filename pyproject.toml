@@ -44,3 +44,6 @@ commit_message = "chore(release): {version}"
 
 [tool.semantic_release.branches]
 main = { match = "main" }
+
+[semantic_release.remote]
+ignore_token_for_push = true
