@@ -21,5 +21,6 @@ jobs:
       - name: Run semantic release
         env:
           GH_TOKEN: ${{ secrets.GH_PAC }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAC }}
         run: |
           python -m semantic_release -vv version
