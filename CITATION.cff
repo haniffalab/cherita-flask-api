@@ -3,7 +3,7 @@ type: software
 message: "If you use this repo, please cite it"
 title: "Cherita Flask API"
 abstract: "A web service designed to provide a robust and scalable interface for managing and analyzing biological data."
-version: "1.1.7"
+version: "1.1.8"
 url: "https://github.com/haniffalab/cherita-flask-api"
 repository-code: "git@github.com:haniffalab/cherita-flask-api.git"
 doi: 10.5281/zenodo.14772563
