@@ -1,6 +1,6 @@
 [project]
 name = "cherita-flask-api"
-version = "1.2.2"
+version = "1.2.1"
 description = "A web service designed to provide a robust and scalable interface for managing and analyzing biological data."
 authors = [
     { name = "Haniffa Lab", email = "noreply@haniffalab.com" }
@@ -39,10 +39,8 @@ version_variables = [
     "config.py:version",
     "CITATION.cff:version",
 ]
-changelog = true
 changelog_file = "CHANGELOG.md"
 commit_message = "chore(release): {version}"
-title_format = "{version}"
 
 [tool.semantic_release.branches]
 main = { match = "main" }
