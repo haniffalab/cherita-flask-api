@@ -22,6 +22,6 @@ jobs:
 
       - name: Rename GitHub Release
         if: steps.release.outputs.released == 'true'
-        run: gh release edit v${{ steps.release.outputs.released_version }} --title "${{ steps.release.outputs.released_version }}"
+        run: gh release edit ${{ steps.release.outputs.tag }} --title "${{ steps.release.outputs.version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
