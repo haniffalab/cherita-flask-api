@@ -1,6 +1,6 @@
 [project]
 name = "cherita-flask-api"
-version = "1.2.5"
+version = "1.2.6"
 description = "A web service designed to provide a robust and scalable interface for managing and analyzing biological data."
 authors = [
     { name = "Haniffa Lab", email = "noreply@haniffalab.com" }
