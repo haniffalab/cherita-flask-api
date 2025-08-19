@@ -17,5 +17,3 @@ jobs:
         uses: python-semantic-release/python-semantic-release@v10.3.1
         with:
           github_token: ${{ secrets.GH_PAT }}
-          git_committer_name: "github-actions"
-          git_committer_email: "actions@users.noreply.github.com"
