@@ -1,149 +1,19 @@
 # CHANGELOG
 
-
-## v1.1.12 (2025-08-18)
-
-### Bug Fixes
-
-- Test semantic release
-  ([`48734c1`](https://github.com/haniffalab/cherita-flask-api/commit/48734c19915f45402fd12cec09e488991238f7d8))
-
-
-## v1.1.11 (2025-08-18)
-
-### Bug Fixes
-
-- Test semantic release
-  ([`8a1985b`](https://github.com/haniffalab/cherita-flask-api/commit/8a1985b33e18fed8f7528b75a56417d440ec394a))
-
-- Test semantic release
-  ([`3c51dfe`](https://github.com/haniffalab/cherita-flask-api/commit/3c51dfe0111266958b7f4ce6071450c29acc583c))
-
-
-## v1.1.9 (2025-08-18)
-
-
-## v1.1.8 (2025-08-18)
-
-### Bug Fixes
-
-- Debug semantic release config
-  ([`8e54612`](https://github.com/haniffalab/cherita-flask-api/commit/8e54612ebe600857e10542677364ae444ff54437))
-
-
-## v1.1.7 (2025-08-18)
-
-### Bug Fixes
-
-- Debug semantic release config
-  ([`28dd751`](https://github.com/haniffalab/cherita-flask-api/commit/28dd7510c831f9b851f83a84eb1da964db72a79f))
-
-
-## v1.1.6 (2025-08-18)
-
-### Bug Fixes
-
-- Debug semantic release config
-  ([`bf5c2c3`](https://github.com/haniffalab/cherita-flask-api/commit/bf5c2c396c7f6b4f3f7e5bd8c83485504af1e714))
-
-- Debug semantic release config
-  ([`9fae384`](https://github.com/haniffalab/cherita-flask-api/commit/9fae384d674163f48c04104118dbf6b25413b62b))
-
-
-## v1.1.5 (2025-08-18)
-
-### Bug Fixes
-
-- Debug semantic release config
-  ([`372b5d7`](https://github.com/haniffalab/cherita-flask-api/commit/372b5d744555d374910a5568dd99e6403e2dded9))
-
-
-## v1.1.4 (2025-08-18)
-
-### Bug Fixes
-
-- Debug semantic release config
-  ([`68f60b8`](https://github.com/haniffalab/cherita-flask-api/commit/68f60b8a636727e6f589347041f30f1c32b791cc))
-
-
-## v1.1.3 (2025-08-18)
-
-
-## v1.1.2 (2025-08-18)
-
-### Bug Fixes
-
-- Debug semantic release config
-  ([`41a2e3a`](https://github.com/haniffalab/cherita-flask-api/commit/41a2e3a6695f845b016ca893792b9e1419087a6e))
-
-
-## v1.1.1 (2025-08-18)
-
-### Bug Fixes
-
-- Debug semantic release config
-  ([`83dcd9b`](https://github.com/haniffalab/cherita-flask-api/commit/83dcd9b15817fe5862a8f202531bcb67e7f966ae))
-
-- Debug semantic release config
-  ([`50c3983`](https://github.com/haniffalab/cherita-flask-api/commit/50c3983e52e69706dd5b1eb107b6923e294ae0be))
-
+## v1.2.0 (2025-08-18)
 
 ## v1.1.0 (2025-08-18)
 
-### Bug Fixes
-
-- Debug semantic release config
-  ([`e814341`](https://github.com/haniffalab/cherita-flask-api/commit/e81434180845d7e47f2fb713194b0cabf0fc1c11))
-
-- Debug semantic release config
-  ([`837e334`](https://github.com/haniffalab/cherita-flask-api/commit/837e334c3afd6df8f07f07877147077ca9586c55))
-
-- Debug semantic release config
-  ([`7431e0f`](https://github.com/haniffalab/cherita-flask-api/commit/7431e0f529a0f0c96992ada6ec447b9deab13c43))
-
-- Debug semantic release config
-  ([`72d024f`](https://github.com/haniffalab/cherita-flask-api/commit/72d024f1d74bc60975b416308f2b218fd2dd3797))
-
-- Debug semantic release config
-  ([`ab173b0`](https://github.com/haniffalab/cherita-flask-api/commit/ab173b01b0513ada446db2d3cb0b07c464489f1c))
-
-- Debug semantic release config
-  ([`8667692`](https://github.com/haniffalab/cherita-flask-api/commit/8667692392f470c7b7c9fefaeb10eb9fec6614a3))
-
-- Trigger release test
-  ([`98f082d`](https://github.com/haniffalab/cherita-flask-api/commit/98f082dd9071832d2966560211f26bc77232e11f))
-
-### Features
-
-- Dummy feature for release test
-  ([`b279672`](https://github.com/haniffalab/cherita-flask-api/commit/b2796729c11e24cff9afc385e1c15447b9c98429))
-
-- Init python-semantic-release config
-  ([`7a48d13`](https://github.com/haniffalab/cherita-flask-api/commit/7a48d13394bc04e3c8adb81c11f3883d6926df13))
-
-- Update release number
-  ([`e9bce15`](https://github.com/haniffalab/cherita-flask-api/commit/e9bce152a1ff3c25b4607d664d19a3d84c26b98b))
-
-- Update release number
-  ([`20a3f7f`](https://github.com/haniffalab/cherita-flask-api/commit/20a3f7feea3e7a3867516249c177e3f1a5a0fca8))
-
-
 ## v1.0.5 (2025-06-30)
-
 
 ## v1.0.4 (2025-06-09)
 
-
 ## v1.0.3 (2025-05-29)
-
 
 ## v1.0.2 (2025-04-09)
 
-
 ## v1.0.1 (2025-04-01)
 
-
 ## v1.0.0 (2025-03-07)
-
 
 ## v0.1.0 (2025-01-30)

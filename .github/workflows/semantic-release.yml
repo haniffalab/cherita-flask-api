@@ -12,6 +12,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_PAC }}
       - name: Semantic Version Release
         id: release
         uses: python-semantic-release/python-semantic-release@v10.3.1
