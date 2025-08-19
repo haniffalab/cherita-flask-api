@@ -41,6 +41,7 @@ version_variables = [
 ]
 changelog_file = "CHANGELOG.md"
 commit_message = "chore(release): {version}"
+title_format = "{version}"
 
 [tool.semantic_release.branches]
 main = { match = "main" }
