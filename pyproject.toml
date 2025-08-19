@@ -39,6 +39,7 @@ version_variables = [
     "config.py:version",
     "CITATION.cff:version",
 ]
+changelog = true
 changelog_file = "CHANGELOG.md"
 commit_message = "chore(release): {version}"
 title_format = "{version}"
