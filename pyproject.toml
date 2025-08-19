@@ -40,7 +40,7 @@ version_variables = [
     "CITATION.cff:version",
 ]
 changelog_file = "CHANGELOG.md"
-commit_message = "chore(release): {version}"
+commit_message = "chore(release): {version} [skip ci]"
 
 [tool.semantic_release.branches]
 main = { match = "main" }

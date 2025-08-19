@@ -19,9 +19,3 @@ jobs:
         uses: python-semantic-release/python-semantic-release@v10.3.1
         with:
           github_token: ${{ secrets.GH_PAT }}
-
-      - name: Rename GitHub Release
-        if: steps.release.outputs.released == 'true'
-        run: gh release edit ${{ steps.release.outputs.tag }} --title "${{ steps.release.outputs.version }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
