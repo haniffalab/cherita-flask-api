@@ -42,17 +42,17 @@ def get_obs_col_metadata(
     obs_params: dict = {},
     retbins: bool = True,
 ):
-    obs_df = parse_data(adata_group.obs)
     obs_metadata = []
-
-    cols = cols or obs_df.columns
+    cols = cols or adata_group.obs.attrs["column-order"]
 
     for col in cols:
-        if col not in obs_df.columns:
+        if col not in adata_group.obs:
             continue
-        t = re.sub(r"[^a-zA-Z]", "", obs_df[col].dtype.name)
+        col_series = pd.Series(parse_data(adata_group.obs[col]))
+
+        t = re.sub(r"[^a-zA-Z]", "", col_series.dtype.name)
         metadata = parse_dtype[t](
-            obs_df[col], obs_params=obs_params.get(col, {}), retbins=retbins
+            col_series, obs_params=obs_params.get(col, {}), retbins=retbins
         )
         if t == "category":
             colors = get_obs_colors(adata_group, col)
