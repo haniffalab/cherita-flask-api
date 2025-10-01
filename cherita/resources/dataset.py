@@ -1,23 +1,25 @@
-from flask import request, jsonify
-from flask_restx import Resource, fields, Namespace
-from cherita.resources.errors import BadRequest
+import json
 
+from flask import Response, jsonify, request, stream_with_context
+from flask_restx import Namespace, Resource, fields
+
+from cherita.dataset.matrix import get_var_x_mean
+from cherita.dataset.metadata import (
+    get_obs_bin_data,
+    get_obs_col_histograms,
+    get_obs_col_metadata,
+    get_obs_col_names,
+    get_obs_distribution,
+    get_obsm_keys,
+    get_pseudospatial_masks,
+    get_var_histograms,
+    get_var_names,
+)
+from cherita.dataset.search import search_var_names
 from cherita.extensions import cache
+from cherita.resources.errors import BadRequest
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.utils.caching import make_cache_key
-from cherita.dataset.metadata import (
-    get_obs_col_histograms,
-    get_obs_col_names,
-    get_obs_col_metadata,
-    get_pseudospatial_masks,
-    get_var_names,
-    get_obsm_keys,
-    get_var_histograms,
-    get_obs_bin_data,
-    get_obs_distribution,
-)
-from cherita.dataset.matrix import get_var_x_mean
-from cherita.dataset.search import search_var_names
 
 ns = Namespace("dataset", description="Dataset related data", path="/")
 
@@ -79,18 +81,50 @@ class ObsCols(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_cols_model)
-    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
+        timeout = 3600 * 24 * 7
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            cols = json_data.get("cols", None)
+            cols = json_data.get("cols", adata_group.obs.attrs["column-order"])
             obs_params = json_data.get("obsParams", {})
             retbins = json_data.get("retbins", True)
-            return jsonify(
-                get_obs_col_metadata(
-                    adata_group, cols=cols, obs_params=obs_params, retbins=retbins
-                )
+
+            def generate():
+                yield "{"
+                first = True
+
+                for col in cols:
+                    # Cache each chunk
+                    col_request_body = json_data.copy()
+                    col_request_body.pop("cols", None)
+                    col_request_body["obsParams"] = obs_params.get(col, {})
+                    cache_key = make_cache_key(
+                        request_data={"body": col_request_body}, chunk=col
+                    )
+                    cached_metadata = cache.get(cache_key)
+                    if cached_metadata:
+                        col_metadata = cached_metadata
+                    else:
+                        col_metadata = get_obs_col_metadata(
+                            adata_group,
+                            col=col,
+                            obs_params=obs_params,
+                            retbins=retbins,
+                        )
+                        if col_metadata:
+                            cache.set(cache_key, col_metadata, timeout=timeout)
+
+                    if not col_metadata:
+                        continue
+                    if not first:
+                        yield ","
+                    yield f"{json.dumps(col)}:{json.dumps(col_metadata)}"
+                    first = False
+                yield "}"
+
+            return Response(
+                stream_with_context(generate()), mimetype="application/json"
             )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
