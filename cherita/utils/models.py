@@ -3,7 +3,7 @@ import numpy as np
 import zarr
 from dataclasses import dataclass
 from typing import Union, Callable
-from cherita.utils.adata_utils import get_group_index, get_index_in_array
+from cherita.utils.adata_utils import get_group_index, get_index_in_array, parse_data
 from cherita.resources.errors import (
     InvalidKey,
     InvalidVar,
@@ -109,7 +109,9 @@ class Marker:
         return cls(
             index=index,
             name=(
-                adata_group.var[var_names_col][matrix_index] if var_names_col else index
+                parse_data(adata_group.var[var_names_col])[matrix_index]
+                if var_names_col
+                else index
             ),
             matrix_index=matrix_index,
             isSet=False,
