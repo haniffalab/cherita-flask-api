@@ -91,7 +91,7 @@ class ObsCols(Resource):
             retbins = json_data.get("retbins", True)
 
             def generate():
-                yield "{"
+                yield "["
                 first = True
 
                 for col in cols:
@@ -119,9 +119,9 @@ class ObsCols(Resource):
                         continue
                     if not first:
                         yield ","
-                    yield f"{json.dumps(col)}:{json.dumps(col_metadata)}"
+                    yield json.dumps(col_metadata)
                     first = False
-                yield "}"
+                yield "]"
 
             return Response(
                 stream_with_context(generate()), mimetype="application/json"
