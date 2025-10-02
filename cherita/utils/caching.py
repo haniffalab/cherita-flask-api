@@ -7,7 +7,7 @@ from flask import request
 from flask_caching.backends.rediscache import RedisCache
 
 
-def make_cache_key(request_data: dict = {}, chunk: str = None, *args, **kwargs) -> str:
+def make_cache_key(*args, request_data: dict = {}, chunk: str = None, **kwargs) -> str:
     data = {
         "method": request.method,
         "path": request.path,
