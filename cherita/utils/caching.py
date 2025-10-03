@@ -7,12 +7,14 @@ from flask import request
 from flask_caching.backends.rediscache import RedisCache
 
 
-def make_cache_key(*args, **kwargs) -> str:
+def make_cache_key(*args, request_data: dict = {}, chunk: str = None, **kwargs) -> str:
     data = {
         "method": request.method,
         "path": request.path,
-        "body": request.get_json(silent=True) or {},
+        "body": request_data.get("body", request.get_json(silent=True) or {}),
     }
+    if chunk:
+        data["chunk"] = chunk
     data_str = json.dumps(data, sort_keys=True)
     return hashlib.md5(data_str.encode("utf-8")).hexdigest()
 
