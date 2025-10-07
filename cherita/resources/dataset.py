@@ -1,4 +1,5 @@
 import json
+import logging
 
 from flask import Response, jsonify, request, stream_with_context
 from flask_restx import Namespace, Resource, fields
@@ -17,7 +18,7 @@ from cherita.dataset.metadata import (
 )
 from cherita.dataset.search import search_var_names
 from cherita.extensions import cache
-from cherita.resources.errors import BadRequest
+from cherita.resources.errors import BadRequest, ReadZarrError
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.utils.caching import make_cache_key
 
@@ -106,12 +107,17 @@ class ObsCols(Resource):
                     if cached_metadata:
                         col_metadata = cached_metadata
                     else:
-                        col_metadata = get_obs_col_metadata(
-                            adata_group,
-                            col=col,
-                            obs_params=obs_params,
-                            retbins=retbins,
-                        )
+                        try:
+                            col_metadata = get_obs_col_metadata(
+                                adata_group,
+                                col=col,
+                                obs_params=obs_params,
+                                retbins=retbins,
+                            )
+                        except ReadZarrError as e:
+                            logging.error(f"Failed to read obs column {col}: {e}")
+                            col_metadata = None
+
                         if col_metadata:
                             cache.set(cache_key, col_metadata, timeout=timeout)
 
