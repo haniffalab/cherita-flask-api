@@ -266,3 +266,48 @@ def get_pseudospatial_masks(adata_group: zarr.Group):
         raise NotInData("No masks found in adata_group.uns['masks']")
 
     return mask_data
+
+
+
+def get_obs_values(adata_group: zarr.Group, col: str, values: [str] = None):
+    """
+    Get unique values from an obs column in the AnnData object.
+
+    Parameters
+    ----------
+    adata_group : zarr.Group
+        AnnData Zarr store
+    col : str
+        Name of the obs column
+    values : list of str, optional
+        Restrict to this subset of values
+
+    Returns
+    -------
+    dict
+        Records of unique values with an index
+    """
+    import pandas as pd
+
+    if col not in adata_group.obs:  # or check with adata_group["obs"].keys()
+        raise KeyError(f"Column '{col}' not found in .obs")
+
+    # Parse the column values
+    obs_vals = pd.Series(parse_data(adata_group.obs[col])).astype(str)
+
+    # Deduplicate & sort
+    # obs_df = pd.DataFrame({ "value": sorted(obs_vals.unique()) })
+    obs_df = pd.DataFrame(
+        {COL_NAME: sorted(obs_vals.unique())}
+    )
+
+    # if values is not None:
+    #     obs_df = obs_df[obs_df["value"].isin(values)]
+    if values is not None:
+        obs_df = obs_df[obs_df[COL_NAME].isin(values)]
+
+    # Reset index like get_var_names
+    obs_df.reset_index(names=["index"], inplace=True)
+    obs_df.reset_index(names=[INDEX_NAME], inplace=True)
+
+    return obs_df.to_dict("records", index=True)
