@@ -1,23 +1,23 @@
-from flask import request, jsonify
-from flask_restx import Resource, fields, Namespace
-from cherita.resources.errors import BadRequest
+from flask import jsonify, request
+from flask_restx import Namespace, Resource, fields
 
+from cherita.dataset.matrix import get_var_x_mean
+from cherita.dataset.metadata import (
+    get_obs_bin_data,
+    get_obs_col_histograms,
+    get_obs_col_metadata,
+    get_obs_col_names,
+    get_obs_distribution,
+    get_obsm_keys,
+    get_pseudospatial_masks,
+    get_var_histograms,
+    get_var_names,
+)
+from cherita.dataset.search import search_obs_values, search_var_names
 from cherita.extensions import cache
+from cherita.resources.errors import BadRequest
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.utils.caching import make_cache_key
-from cherita.dataset.metadata import (
-    get_obs_col_histograms,
-    get_obs_col_names,
-    get_obs_col_metadata,
-    get_pseudospatial_masks,
-    get_var_names,
-    get_obsm_keys,
-    get_var_histograms,
-    get_obs_bin_data,
-    get_obs_distribution,
-)
-from cherita.dataset.matrix import get_var_x_mean
-from cherita.dataset.search import (search_var_names, search_obs_values)
 
 ns = Namespace("dataset", description="Dataset related data", path="/")
 
@@ -50,8 +50,8 @@ obs_cols_value_model = ns.model(
     "ObsColsValuesModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
-        "col": fields.String(description="Name of the var column with names"),
-        "text": fields.String(description="Text to search for in var names"),
+        "col": fields.String(description="Name of the obs column with values"),
+        "text": fields.String(description="Text to search for in obs values"),
     },
 )
 
@@ -59,7 +59,7 @@ obs_cols_value_model = ns.model(
 @ns.route("/obs/cols/values")
 class ObsColsValues(Resource):
     @ns.doc(
-        description="Get the names of the observation columns in the dataset",
+        description="Get the values of the observation columns in the dataset",
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_cols_value_model)
