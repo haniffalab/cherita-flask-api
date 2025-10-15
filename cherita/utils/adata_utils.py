@@ -38,6 +38,18 @@ def get_indices_in_array(array: zarr.Array, items: list[str]):
     return sorter[np.searchsorted(array[:], items, sorter=sorter)]
 
 
+def get_category_at_index(group: zarr.Group, index: int):
+    encoding_type = group.attrs.get("encoding-type", "")
+    if encoding_type != "categorical":
+        raise ReadZarrError(f"Group {group} is not categorical")
+    if "codes" in group and "categories" in group:
+        return group["categories"][group["codes"][index]]
+    else:
+        raise ReadZarrError(
+            f"Categorical group {group} does not contain 'codes' and 'categories'"
+        )
+
+
 def parse_data(data: Union[zarr.Group, zarr.Array], store: zarr.Group = None):
     try:
         if isinstance(data, zarr.Group):

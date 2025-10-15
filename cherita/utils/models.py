@@ -3,7 +3,12 @@ import numpy as np
 import zarr
 from dataclasses import dataclass
 from typing import Union, Callable
-from cherita.utils.adata_utils import get_group_index, get_index_in_array
+from cherita.utils.adata_utils import (
+    get_group_index,
+    get_index_in_array,
+    parse_data,
+    get_category_at_index,
+)
 from cherita.resources.errors import (
     InvalidKey,
     InvalidVar,
@@ -106,11 +111,25 @@ class Marker:
         else:
             raise InvalidVar(f"Invalid feature type {type(index)}")
 
+        if var_names_col:
+            if isinstance(adata_group.var[var_names_col], zarr.Array):
+                var_name = adata_group.var[var_names_col][matrix_index]
+            else:
+                if (
+                    adata_group.var[var_names_col].attrs.get("encoding-type", "")
+                    == "categorical"
+                ):
+                    var_name = get_category_at_index(
+                        adata_group.var[var_names_col], matrix_index
+                    )
+                else:
+                    var_name = parse_data(adata_group.var[var_names_col])[matrix_index]
+        else:
+            var_name = index
+
         return cls(
             index=index,
-            name=(
-                adata_group.var[var_names_col][matrix_index] if var_names_col else index
-            ),
+            name=var_name,
             matrix_index=matrix_index,
             isSet=False,
             adata_group=adata_group,
