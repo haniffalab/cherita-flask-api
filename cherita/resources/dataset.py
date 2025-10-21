@@ -16,7 +16,7 @@ from cherita.dataset.metadata import (
     get_var_histograms,
     get_var_names,
 )
-from cherita.dataset.search import search_var_names
+from cherita.dataset.search import search_obs_values, search_var_names
 from cherita.extensions import cache
 from cherita.resources.errors import BadRequest, ReadZarrError
 from cherita.utils.adata_utils import open_anndata_zarr
@@ -45,6 +45,35 @@ class ObsColsNames(Resource):
         try:
             adata_group = open_anndata_zarr(json_data["url"])
             return jsonify(get_obs_col_names(adata_group))
+        except KeyError as e:
+            raise BadRequest("Missing required parameter: {}".format(e))
+
+
+obs_cols_value_model = ns.model(
+    "ObsColsValuesModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "col": fields.String(description="Name of the obs column with values"),
+        "text": fields.String(description="Text to search for in obs values"),
+    },
+)
+
+
+@ns.route("/obs/cols/values")
+class ObsColsValues(Resource):
+    @ns.doc(
+        description="Get the values of the observation columns in the dataset",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_cols_value_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            col = json_data.get("col", None)
+            text = json_data.get("text", "")
+            return jsonify(search_obs_values(adata_group, col, text))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
 
