@@ -12,7 +12,9 @@ from cherita.resources.errors import FetchError
 
 def search_var_names(adata_group: zarr.Group, col: str = None, text: str = ""):
     var_df = pd.DataFrame.from_records(get_var_names(adata_group, col))
-    var_df = var_df[var_df[COL_NAME].str.lower().str.startswith(text.lower())]
+    var_df = var_df[
+        var_df[COL_NAME].astype(str).str.lower().str.startswith(text.lower())
+    ]
     return var_df.to_dict("records", index=True)
 
 

@@ -1,4 +1,7 @@
-from flask import jsonify, request
+import json
+import logging
+
+from flask import Response, jsonify, request, stream_with_context
 from flask_restx import Namespace, Resource, fields
 
 from cherita.dataset.matrix import get_var_x_mean
@@ -15,7 +18,7 @@ from cherita.dataset.metadata import (
 )
 from cherita.dataset.search import search_obs_values, search_var_names
 from cherita.extensions import cache
-from cherita.resources.errors import BadRequest
+from cherita.resources.errors import BadRequest, ReadZarrError
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.utils.caching import make_cache_key
 
@@ -108,18 +111,55 @@ class ObsCols(Resource):
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
     @ns.expect(obs_cols_model)
-    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
+        timeout = 3600 * 24 * 7
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            cols = json_data.get("cols", None)
+            cols = json_data.get("cols", adata_group.obs.attrs["column-order"])
             obs_params = json_data.get("obsParams", {})
             retbins = json_data.get("retbins", True)
-            return jsonify(
-                get_obs_col_metadata(
-                    adata_group, cols=cols, obs_params=obs_params, retbins=retbins
-                )
+
+            def generate():
+                yield "["
+                first = True
+
+                for col in cols:
+                    # Cache each chunk
+                    col_request_body = json_data.copy()
+                    col_request_body.pop("cols", None)
+                    col_request_body["obsParams"] = obs_params.get(col, {})
+                    cache_key = make_cache_key(
+                        request_data={"body": col_request_body}, chunk=col
+                    )
+                    cached_metadata = cache.get(cache_key)
+                    if cached_metadata:
+                        col_metadata = cached_metadata
+                    else:
+                        try:
+                            col_metadata = get_obs_col_metadata(
+                                adata_group,
+                                col=col,
+                                obs_params=obs_params,
+                                retbins=retbins,
+                            )
+                        except ReadZarrError as e:
+                            logging.error(f"Failed to read obs column {col}: {e}")
+                            col_metadata = None
+
+                        if col_metadata:
+                            cache.set(cache_key, col_metadata, timeout=timeout)
+
+                    if not col_metadata:
+                        continue
+                    if not first:
+                        yield ","
+                    yield json.dumps(col_metadata)
+                    first = False
+                yield "]"
+
+            return Response(
+                stream_with_context(generate()), mimetype="application/json"
             )
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
