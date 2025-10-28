@@ -1,13 +1,14 @@
-import zarr
 import pandas as pd
+import zarr
+
 from cherita.dataset.metadata import (
-    get_var_names,
-    get_obs_values,
-    match_var_names,
     COL_NAME,
+    get_obs_values,
+    get_var_names,
+    match_var_names,
 )
-from cherita.utils.strapi_utils import get_from_strapi
 from cherita.resources.errors import FetchError
+from cherita.utils.strapi_utils import get_from_strapi
 
 
 def search_var_names(adata_group: zarr.Group, col: str = None, text: str = ""):
@@ -20,6 +21,7 @@ def search_obs_values(adata_group: zarr.Group, col: str, text: str = ""):
     obs_df = pd.DataFrame.from_records(get_obs_values(adata_group, col))
     obs_df = obs_df[obs_df[COL_NAME].str.lower().str.startswith(text.lower())]
     return obs_df.to_dict("records", index=True)
+
 
 def search_diseases(
     disease_datasets: list,

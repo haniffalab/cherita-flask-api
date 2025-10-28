@@ -46,33 +46,35 @@ class ObsColsNames(Resource):
             raise BadRequest("Missing required parameter: {}".format(e))
 
 
-obs_cols_value_model = ns.model(
-    "ObsColsValuesModel",
+obs_values_model = ns.model(
+    "ObsValuesModel",
     {
         "url": fields.String(description="URL to the zarr file", required=True),
-        "col": fields.String(description="Name of the obs column with values"),
-        "text": fields.String(description="Text to search for in obs values"),
+        "col": fields.String(
+            description="Name of the observation column", required=True
+        ),
+        "text": fields.String(description="Text prefix to search for in values"),
     },
 )
 
 
-@ns.route("/obs/cols/values")
-class ObsColsValues(Resource):
+@ns.route("/obs/values")
+class ObsValues(Resource):
     @ns.doc(
-        description="Get the values of the observation columns in the dataset",
+        description="Search for values within an observation column in the dataset",
         responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
     )
-    @ns.expect(obs_cols_value_model)
+    @ns.expect(obs_values_model)
     @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
     def post(self):
         json_data = request.get_json()
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            col = json_data.get("col", None)
+            col = json_data["col"]
             text = json_data.get("text", "")
             return jsonify(search_obs_values(adata_group, col, text))
         except KeyError as e:
-            raise BadRequest("Missing required parameter: {}".format(e))
+            raise BadRequest(f"Missing required parameter: {e}")
 
 
 obs_cols_model = ns.model(
