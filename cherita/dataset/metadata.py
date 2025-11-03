@@ -1,21 +1,23 @@
 import logging
 import re
 from typing import Union
-import zarr
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+import zarr
 from scipy.stats import gaussian_kde
+
+from cherita.plotting.resampling import resample
 from cherita.resources.errors import InvalidObs, NotInData
 from cherita.utils.adata_utils import (
     get_group_index_name,
     parse_data,
+    to_categorical,
+    type_bool,
     type_category,
     type_discrete,
     type_numeric,
-    type_bool,
-    to_categorical,
 )
-from cherita.plotting.resampling import resample
 from cherita.utils.models import Marker
 
 parse_dtype = {
@@ -295,41 +297,15 @@ def get_pseudospatial_masks(adata_group: zarr.Group):
     return mask_data
 
 
-
 def get_obs_values(adata_group: zarr.Group, col: str, values: [str] = None):
-    """
-    Get unique values from an obs column in the AnnData object.
-
-    Parameters
-    ----------
-    adata_group : zarr.Group
-        AnnData Zarr store
-    col : str
-        Name of the obs column
-    values : list of str, optional
-        Restrict to this subset of values
-
-    Returns
-    -------
-    dict
-        Records of unique values with an index
-    """
-    import pandas as pd
-
-    if col not in adata_group.obs:  # or check with adata_group["obs"].keys()
+    if col not in adata_group.obs:
         raise KeyError(f"Column '{col}' not found in .obs")
 
     # Parse the column values
     obs_vals = pd.Series(parse_data(adata_group.obs[col])).astype(str)
 
     # Deduplicate & sort
-    # obs_df = pd.DataFrame({ "value": sorted(obs_vals.unique()) })
-    obs_df = pd.DataFrame(
-        {COL_NAME: sorted(obs_vals.unique())}
-    )
-
-    # if values is not None:
-    #     obs_df = obs_df[obs_df["value"].isin(values)]
+    obs_df = pd.DataFrame({COL_NAME: sorted(obs_vals.unique())})
     if values is not None:
         obs_df = obs_df[obs_df[COL_NAME].isin(values)]
 
