@@ -87,7 +87,7 @@ class ObsCols(Resource):
         timeout = 3600 * 24 * 7
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            cols = json_data.get("cols", adata_group.obs.attrs["column-order"])
+            cols = json_data.get("cols", adata_group["obs"].attrs["column-order"])
             obs_params = json_data.get("obsParams", {})
             retbins = json_data.get("retbins", True)
 

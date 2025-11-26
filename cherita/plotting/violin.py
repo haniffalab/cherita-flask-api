@@ -69,7 +69,7 @@ def groupby_violin(
             Defaults to None.
         scale (str, optional): Method to scale each violin's width.
             Can be set to "width" or "count". Defaults to "width".
-        var_names_col (str, optional): Name of the column in `adata_group.var`
+        var_names_col (str, optional): Name of the column in `adata_group["var"]`
             to use as violin names. Defaults to None.
 
     Returns:
@@ -80,7 +80,7 @@ def groupby_violin(
     obs_colname = obs_col["name"]
 
     try:
-        obs = parse_data(adata_group.obs[obs_colname])
+        obs = parse_data(adata_group["obs"][obs_colname])
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
@@ -147,7 +147,7 @@ def multikey_violin(
         obs_keys (list[str]): List of observation keys.
         scale (str, optional): Method to scale each violin's width.
             Can be set to "width" or "count". Defaults to "width".
-        var_names_col (str, optional): Name of the column in `adata_group.var`
+        var_names_col (str, optional): Name of the column in `adata_group["var"]`
             to use as violin names. Defaults to None.
 
     Returns:
@@ -167,14 +167,14 @@ def multikey_violin(
 
     # Only numerical obs
     for o in obs_keys:
-        if not isinstance(adata_group.obs[o], zarr.Array) and adata_group.obs[
+        if not isinstance(adata_group["obs"][o], zarr.Array) and adata_group["obs"][
             o
         ].dtype in [
             "int",
             "float",
         ]:
             raise BadRequest("Obs column '{}' is not numerical".format(o))
-        df[o] = adata_group.obs[o]
+        df[o] = adata_group["obs"][o]
 
     if not len(df.columns):
         raise BadRequest("No var or numerical obs provided")
