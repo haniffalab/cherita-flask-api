@@ -88,7 +88,7 @@ class Marker:
         Raises:
             InvalidVar: If the index is invalid.
         """
-        var_index = get_group_index(adata_group.var)
+        var_index = get_group_index(adata_group["var"])
         if isinstance(var_index, zarr.Group):
             raise InvalidVar(
                 (
@@ -112,18 +112,20 @@ class Marker:
             raise InvalidVar(f"Invalid feature type {type(index)}")
 
         if var_names_col:
-            if isinstance(adata_group.var[var_names_col], zarr.Array):
-                var_name = adata_group.var[var_names_col][matrix_index]
+            if isinstance(adata_group["var"][var_names_col], zarr.Array):
+                var_name = adata_group["var"][var_names_col][matrix_index]
             else:
                 if (
-                    adata_group.var[var_names_col].attrs.get("encoding-type", "")
+                    adata_group["var"][var_names_col].attrs.get("encoding-type", "")
                     == "categorical"
                 ):
                     var_name = get_category_at_index(
-                        adata_group.var[var_names_col], matrix_index
+                        adata_group["var"][var_names_col], matrix_index
                     )
                 else:
-                    var_name = parse_data(adata_group.var[var_names_col])[matrix_index]
+                    var_name = parse_data(adata_group["var"][var_names_col])[
+                        matrix_index
+                    ]
         else:
             var_name = index
 
@@ -191,14 +193,14 @@ class Marker:
             # return all data for each marker in the set instead of aggregated data
             return np.array(
                 [
-                    self.adata_group.X[
+                    self.adata_group["X"][
                         indices if indices is not None else slice(None), i
                     ]
                     for i in self.matrix_index
                 ]
             )
         else:
-            return self.adata_group.X[
+            return self.adata_group["X"][
                 indices if indices is not None else slice(None), self.matrix_index
             ]
 
@@ -216,7 +218,7 @@ class Marker:
                     "Aggregation function is not set for a set of markers."
                 )
             return self._aggregation_function(
-                [self.adata_group.X[:, i] for i in self.matrix_index]
+                [self.adata_group["X"][:, i] for i in self.matrix_index]
             )
         else:
-            return self.adata_group.X[:, self.matrix_index]
+            return self.adata_group["X"][:, self.matrix_index]

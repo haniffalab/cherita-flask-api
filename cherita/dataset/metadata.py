@@ -34,7 +34,7 @@ INDEX_NAME = "matrix_index"
 
 
 def get_obs_col_names(adata_group: zarr.Group):
-    obs_col_names = adata_group.obs.attrs["column-order"]
+    obs_col_names = adata_group["obs"].attrs["column-order"]
     return obs_col_names
 
 
@@ -44,9 +44,9 @@ def get_obs_col_metadata(
     obs_params: dict = {},
     retbins: bool = True,
 ):
-    if col not in adata_group.obs:
+    if col not in adata_group["obs"]:
         return None
-    col_series = pd.Series(parse_data(adata_group.obs[col]))
+    col_series = pd.Series(parse_data(adata_group["obs"][col]))
 
     t = re.sub(r"[^a-zA-Z]", "", col_series.dtype.name)
     metadata = parse_dtype[t](
@@ -72,12 +72,12 @@ def get_obs_cols_metadata(
     retbins: bool = True,
 ):
     obs_metadata = []
-    cols = cols or adata_group.obs.attrs["column-order"]
+    cols = cols or adata_group["obs"].attrs["column-order"]
 
     for col in cols:
-        if col not in adata_group.obs:
+        if col not in adata_group["obs"]:
             continue
-        col_series = pd.Series(parse_data(adata_group.obs[col]))
+        col_series = pd.Series(parse_data(adata_group["obs"][col]))
 
         t = re.sub(r"[^a-zA-Z]", "", col_series.dtype.name)
         metadata = parse_dtype[t](
@@ -100,7 +100,7 @@ def get_obs_cols_metadata(
 def get_obs_bin_data(
     adata_group: zarr.Group, obs_col: str, thresholds: list, nBins: int = 5
 ):
-    obs_s = parse_data(adata_group.obs[obs_col])
+    obs_s = parse_data(adata_group["obs"][obs_col])
     cat, _ = to_categorical(
         obs_s, type="continuous", thresholds=thresholds, nBins=nBins, fillna=False
     )
@@ -116,9 +116,9 @@ def is_hex_triplet(color: str) -> bool:
 def get_obs_colors(adata_group: zarr.Group, obs_col: str) -> list[str] | None:
     # Following cxg schema https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/6.0.0/schema.md#column_colors
     obs_colors = f"{obs_col}_colors"
-    if obs_colors in adata_group.uns.array_keys():
+    if obs_colors in adata_group["uns"].array_keys():
         try:
-            colors = parse_data(adata_group.uns[obs_colors]).tolist()
+            colors = parse_data(adata_group["uns"][obs_colors]).tolist()
             if not all(is_hex_triplet(c) for c in colors):
                 logging.warn(f"Colors in {obs_colors} are not hex strings")
                 return None
@@ -131,7 +131,7 @@ def get_obs_colors(adata_group: zarr.Group, obs_col: str) -> list[str] | None:
 
 
 def get_var_col_names(adata_group: zarr.Group):
-    var_col_names = adata_group.var.attrs["column-order"]
+    var_col_names = adata_group["var"].attrs["column-order"]
     return var_col_names
 
 
@@ -161,10 +161,10 @@ def get_obs_col_histograms(
     obs_indices: list[int] = None,
 ):
     obs_colname = obs_col["name"]
-    if obs_colname not in adata_group.obs:
+    if obs_colname not in adata_group["obs"]:
         raise NotInData(f"Column '{obs_colname}' not found in AnnData")
     try:
-        obs = parse_data(adata_group.obs[obs_colname])
+        obs = parse_data(adata_group["obs"][obs_colname])
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
@@ -196,12 +196,12 @@ def get_obs_col_histograms(
 
 
 def get_var_names(adata_group: zarr.Group, col: str = None, names: [str] = None):
-    idx_col = get_group_index_name(adata_group.var)
+    idx_col = get_group_index_name(adata_group["var"])
     col = col or idx_col
     var_df = pd.DataFrame(
-        parse_data(adata_group.var[col]),
+        parse_data(adata_group["var"][col]),
         columns=[COL_NAME],
-        index=parse_data(adata_group.var[idx_col]),
+        index=parse_data(adata_group["var"][idx_col]),
     )
     var_df.reset_index(names=["index"], inplace=True)
     var_df.reset_index(names=[INDEX_NAME], inplace=True)
@@ -230,14 +230,14 @@ def get_obsm_keys(adata_group: zarr.Group, filter2d: bool = True):
         # i.e. is a zarr array, has float, int or uint dtype, and has at least 2 dimensions
         return [
             key
-            for key in adata_group.obsm.keys()
-            if isinstance(adata_group.obsm[key], zarr.Array)
-            and adata_group.obsm[key].dtype.kind in "fiu"
-            and adata_group.obsm[key].ndim == 2
-            and adata_group.obsm[key].shape[1] > 1
+            for key in adata_group["obsm"].keys()
+            if isinstance(adata_group["obsm"][key], zarr.Array)
+            and adata_group["obsm"][key].dtype.kind in "fiu"
+            and adata_group["obsm"][key].ndim == 2
+            and adata_group["obsm"][key].shape[1] > 1
         ]
     else:
-        return list(adata_group.obsm.keys())
+        return list(adata_group["obsm"].keys())
 
 
 def get_kde_values(data):
@@ -257,7 +257,7 @@ def get_obs_distribution(adata_group: zarr.Group, obs_colname: str):
     MAX_SAMPLES = 25000
     N_SAMPLES = 25000
 
-    obs = parse_data(adata_group.obs[obs_colname])
+    obs = parse_data(adata_group["obs"][obs_colname])
 
     resampled = False
     if len(obs) >= MAX_SAMPLES:
@@ -279,20 +279,20 @@ def get_obs_distribution(adata_group: zarr.Group, obs_colname: str):
 
 
 def get_pseudospatial_masks(adata_group: zarr.Group):
-    if "masks" not in adata_group.uns:
-        raise NotInData("masks not found in adata_group.uns")
+    if "masks" not in adata_group["uns"]:
+        raise NotInData("masks not found in adata_group['uns']")
 
     mask_data = {}
-    for mask in adata_group.uns["masks"]:
-        m = adata_group.uns["masks"][mask]
+    for mask in adata_group["uns"]["masks"]:
+        m = adata_group["uns"]["masks"][mask]
         if "polygons" not in m or "obs" not in m:
-            logging.err(f"polygons not found in adata_group.uns['masks'][{mask}]")
+            logging.err(f"polygons not found in adata_group['uns']['masks'][{mask}]")
         else:
-            obs = parse_data(adata_group.obs[m["obs"][()]])
+            obs = parse_data(adata_group["obs"][m["obs"][()]])
             mask_data[mask] = obs.categories.tolist()
 
     if not mask_data:
-        raise NotInData("No masks found in adata_group.uns['masks']")
+        raise NotInData("No masks found in adata_group['uns']['masks']")
 
     return mask_data
 

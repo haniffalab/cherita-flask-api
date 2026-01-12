@@ -14,11 +14,11 @@ from cherita.resources.errors import BadRequest, InvalidObs, InvalidVar, NotInDa
 
 
 def validate_pseudospatial(adata_group: zarr.Group, mask_set: str):
-    if "masks" not in adata_group.uns or mask_set not in adata_group.uns["masks"]:
+    if "masks" not in adata_group["uns"] or mask_set not in adata_group["uns"]["masks"]:
         raise NotInData(f"Mask '{mask_set}' not found in AnnData")
 
-    if "polygons" not in adata_group.uns["masks"][mask_set] or not len(
-        adata_group.uns["masks"][mask_set]["polygons"]
+    if "polygons" not in adata_group["uns"]["masks"][mask_set] or not len(
+        adata_group["uns"]["masks"][mask_set]["polygons"]
     ):
         raise NotInData(f"No polygons found in mask {mask_set}")
 
@@ -52,8 +52,8 @@ def pseudospatial_gene(
 
     # compute mean expression
     logging.info(f"Computing mean expression for {marker.name}")
-    mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
-    mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+    mask_obs_colname = adata_group["uns"]["masks"][mask_set]["obs"][()]
+    mask_obs_col = parse_data(adata_group["obs"][mask_obs_colname])
     masks = mask_obs_col.categories
 
     if mask_values is None:
@@ -63,7 +63,7 @@ def pseudospatial_gene(
     if obs_col and obs_values is not None:
         obs_colname = obs_col["name"]
         try:
-            obs = parse_data(adata_group.obs[obs_colname])
+            obs = parse_data(adata_group["obs"][obs_colname])
         except KeyError as e:
             raise InvalidObs(f"Invalid observation {e}")
 
@@ -131,13 +131,13 @@ def pseudospatial_categorical(
 
     obs_colname = obs_col["name"]
 
-    if obs_colname not in adata_group.obs:
+    if obs_colname not in adata_group["obs"]:
         raise NotInData(f"Column '{obs_colname}' not found in AnnData")
     if mode not in ["across", "within"]:
         raise BadRequest(f"Invalid mode '{mode}'. Must be 'across' or 'within'")
 
-    mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
-    mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+    mask_obs_colname = adata_group["uns"]["masks"][mask_set]["obs"][()]
+    mask_obs_col = parse_data(adata_group["obs"][mask_obs_colname])
     total_mask_counts = mask_obs_col.value_counts()
     masks = mask_obs_col.categories
 
@@ -145,7 +145,7 @@ def pseudospatial_categorical(
         mask_values = masks
 
     try:
-        obs = parse_data(adata_group.obs[obs_colname])
+        obs = parse_data(adata_group["obs"][obs_colname])
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
@@ -211,14 +211,14 @@ def pseudospatial_continuous(
 
     obs_colname = obs_col["name"]
 
-    if obs_colname not in adata_group.obs:
+    if obs_colname not in adata_group["obs"]:
         raise NotInData(f"Column '{obs_colname}' not found in AnnData")
 
-    mask_obs_colname = adata_group.uns["masks"][mask_set]["obs"][()]
-    mask_obs_col = parse_data(adata_group.obs[mask_obs_colname])
+    mask_obs_colname = adata_group["uns"]["masks"][mask_set]["obs"][()]
+    mask_obs_col = parse_data(adata_group["obs"][mask_obs_colname])
 
     try:
-        obs = parse_data(adata_group.obs[obs_colname])
+        obs = parse_data(adata_group["obs"][obs_colname])
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
@@ -273,7 +273,7 @@ def pseudospatial_masks(
     validate_format(plot_format)
 
     values_dict = {
-        k: None for k in adata_group.uns["masks"][mask_set]["polygons"].keys()
+        k: None for k in adata_group["uns"]["masks"][mask_set]["polygons"].keys()
     }
 
     return plot_polygons(
@@ -347,7 +347,7 @@ def plot_polygons(
 
     fig = go.Figure()
 
-    for polygon in adata_group.uns["masks"][mask_set]["polygons"].keys():
+    for polygon in adata_group["uns"]["masks"][mask_set]["polygons"].keys():
         line_color = (
             values_dict.get(polygon) is not None
             and color_values.get(polygon)
@@ -357,10 +357,10 @@ def plot_polygons(
         value = values_dict.get(polygon)
 
         x_coords = list(
-            *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
+            *adata_group["uns"]["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
         )
         y_coords = list(
-            *adata_group.uns["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
+            *adata_group["uns"]["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
         )
 
         # Add first coord to end to close the polygon

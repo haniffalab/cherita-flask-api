@@ -328,7 +328,7 @@ def get_bin_data(s: pd.Series, thresholds=None, nBins: int = 5):
                 thresholds=[],
                 binEdges=[],
             )
-        bin_size = float(s.max() - s.min()) / nBins
+        bin_size = (float(s.max()) - float(s.min())) / nBins
         thresholds = [float(s.min()) + bin_size * b for b in range(nBins + 1)]
     else:
         nBins = len(thresholds) - 1

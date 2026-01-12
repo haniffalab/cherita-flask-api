@@ -46,7 +46,7 @@ def matrixplot(
 
     obs_colname = obs_col["name"]
     try:
-        obs = parse_data(adata_group.obs[obs_colname])
+        obs = parse_data(adata_group["obs"][obs_colname])
     except KeyError as e:
         raise InvalidObs(f"Invalid observation {e}")
 
