@@ -298,12 +298,11 @@ def get_pseudospatial_masks(adata_group: zarr.Group):
 
 
 def get_obs_values(adata_group: zarr.Group, col: str, values: [str] = None):
-    if col not in adata_group.obs:
+    if col not in adata_group["obs"]:
         raise KeyError(f"Column '{col}' not found in .obs")
 
     # Parse the column values
-    obs_vals = pd.Series(parse_data(adata_group.obs[col])).astype(str)
-
+    obs_vals = pd.Series(parse_data(adata_group["obs"][col])).astype(str)
     # Create DataFrame
     obs_df = pd.DataFrame({COL_NAME: obs_vals})
 
