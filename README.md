@@ -1,5 +1,5 @@
 [![dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](https://github.com/haniffalab/cherita-flask-api/security)
-[![python](https://shields.io/badge/python-3.10-blue)](https://github.com/haniffalab/cherita-flask-api?tab=readme-ov-file#development)
+[![python](https://shields.io/badge/python-3.11-blue)](https://github.com/haniffalab/cherita-flask-api?tab=readme-ov-file#development)
 
 # Cherita Flask API
 

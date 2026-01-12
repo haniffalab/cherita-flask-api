@@ -16,7 +16,7 @@ from cherita.dataset.metadata import (
     get_var_histograms,
     get_var_names,
 )
-from cherita.dataset.search import search_var_names
+from cherita.dataset.search import search_obs_values, search_var_names
 from cherita.extensions import cache
 from cherita.resources.errors import BadRequest, ReadZarrError
 from cherita.utils.adata_utils import open_anndata_zarr
@@ -47,6 +47,37 @@ class ObsColsNames(Resource):
             return jsonify(get_obs_col_names(adata_group))
         except KeyError as e:
             raise BadRequest("Missing required parameter: {}".format(e))
+
+
+obs_values_model = ns.model(
+    "ObsValuesModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "col": fields.String(
+            description="Name of the observation column", required=True
+        ),
+        "text": fields.String(description="Text prefix to search for in values"),
+    },
+)
+
+
+@ns.route("/obs/values")
+class ObsValues(Resource):
+    @ns.doc(
+        description="Search for values within an observation column in the dataset",
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_values_model)
+    @cache.cached(make_cache_key=make_cache_key, timeout=3600 * 24 * 7)
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            col = json_data["col"]
+            text = json_data.get("text", "")
+            return jsonify(search_obs_values(adata_group, col, text))
+        except KeyError as e:
+            raise BadRequest(f"Missing required parameter: {e}")
 
 
 obs_cols_model = ns.model(
@@ -87,7 +118,7 @@ class ObsCols(Resource):
         timeout = 3600 * 24 * 7
         try:
             adata_group = open_anndata_zarr(json_data["url"])
-            cols = json_data.get("cols", adata_group.obs.attrs["column-order"])
+            cols = json_data.get("cols", adata_group["obs"].attrs["column-order"])
             obs_params = json_data.get("obsParams", {})
             retbins = json_data.get("retbins", True)
 
