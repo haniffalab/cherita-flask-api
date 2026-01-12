@@ -1,21 +1,23 @@
 import logging
 import re
 from typing import Union
-import zarr
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+import zarr
 from scipy.stats import gaussian_kde
+
+from cherita.plotting.resampling import resample
 from cherita.resources.errors import InvalidObs, NotInData
 from cherita.utils.adata_utils import (
     get_group_index_name,
     parse_data,
+    to_categorical,
+    type_bool,
     type_category,
     type_discrete,
     type_numeric,
-    type_bool,
-    to_categorical,
 )
-from cherita.plotting.resampling import resample
 from cherita.utils.models import Marker
 
 parse_dtype = {
@@ -293,3 +295,24 @@ def get_pseudospatial_masks(adata_group: zarr.Group):
         raise NotInData("No masks found in adata_group.uns['masks']")
 
     return mask_data
+
+
+def get_obs_values(adata_group: zarr.Group, col: str, values: [str] = None):
+    if col not in adata_group.obs:
+        raise KeyError(f"Column '{col}' not found in .obs")
+
+    # Parse the column values
+    obs_vals = pd.Series(parse_data(adata_group.obs[col])).astype(str)
+
+    # Create DataFrame
+    obs_df = pd.DataFrame({COL_NAME: obs_vals})
+
+    # Return index in INDEX_NAME
+    obs_df.reset_index(names=[INDEX_NAME], inplace=True)
+
+    # Deduplicate & sort
+    obs_df = obs_df.drop_duplicates(subset=[COL_NAME]).sort_values(by=[COL_NAME])
+    if values is not None:
+        obs_df = obs_df[obs_df[COL_NAME].isin(values)]
+
+    return obs_df.to_dict("records", index=True)
