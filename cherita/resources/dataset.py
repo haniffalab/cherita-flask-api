@@ -439,3 +439,66 @@ class Masks(Resource):
         json_data = request.get_json()
         adata_group = open_anndata_zarr(json_data["url"])
         return jsonify(get_pseudospatial_masks(adata_group))
+
+
+obs_rows_model = ns.model(
+    "ObsRowsModel",
+    {
+        "url": fields.String(description="URL to the zarr file", required=True),
+        "obsIndices": fields.List(
+            fields.Integer,
+            description="List of observation indices",
+            required=True,
+        ),
+        "cols": fields.List(
+            fields.String,
+            description="List of observation column names to return. "
+            "If omitted, all columns are returned.",
+            required=False,
+        ),
+    },
+)
+
+
+@ns.route("/obs/rows")
+class ObsRows(Resource):
+    @ns.doc(
+        description=("Get raw observation values for specific observation indices."),
+        responses={200: "Success", 400: "Invalid input", 500: "Internal server error"},
+    )
+    @ns.expect(obs_rows_model)
+    def post(self):
+        json_data = request.get_json()
+        try:
+            adata_group = open_anndata_zarr(json_data["url"])
+            obs_indices = json_data["obsIndices"]
+            cols = json_data.get("cols", None)
+
+            obs_group = adata_group["obs"]
+
+            # Default to all columns if none specified
+            if cols is None:
+                cols = obs_group.attrs["column-order"]
+
+            result = {}
+
+            for idx in obs_indices:
+                row = {}
+                for col in cols:
+                    try:
+                        arr = obs_group[col]
+                        value = arr[idx]
+
+                        row[col] = value
+                        # @TODO: Support categorical and other data types
+
+                    except Exception as e:
+                        logging.warning(f"Failed to read obs[{idx}][{col}]: {e}")
+                        row[col] = None
+
+                result[str(idx)] = row
+
+            return jsonify(result)
+
+        except KeyError as e:
+            raise BadRequest(f"Missing required parameter: {e}")
