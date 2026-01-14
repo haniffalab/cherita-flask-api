@@ -102,6 +102,13 @@ obs_cols_model = ns.model(
             ),
             default=True,
         ),
+        "returnValues": fields.Boolean(
+            description=(
+                "Whether to return the values for the observation column. "
+                "Default is True, which will return the values."
+            ),
+            default=True,
+        ),
     },
 )
 
@@ -121,6 +128,7 @@ class ObsCols(Resource):
             cols = json_data.get("cols", adata_group["obs"].attrs["column-order"])
             obs_params = json_data.get("obsParams", {})
             retbins = json_data.get("retbins", True)
+            return_values = json_data.get("returnValues", True)
 
             def generate():
                 yield "["
@@ -145,6 +153,9 @@ class ObsCols(Resource):
                                 obs_params=obs_params,
                                 retbins=retbins,
                             )
+                            # @TODO: optimize or create separate endpoint
+                            if col_metadata and not return_values:
+                                col_metadata.pop("values", None)
                         except ReadZarrError as e:
                             logging.error(f"Failed to read obs column {col}: {e}")
                             col_metadata = None
