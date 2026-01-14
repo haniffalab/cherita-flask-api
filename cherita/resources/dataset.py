@@ -153,16 +153,15 @@ class ObsCols(Resource):
                                 obs_params=obs_params,
                                 retbins=retbins,
                             )
-                            # @TODO: optimize or create separate endpoint
-                            if col_metadata and not return_values:
-                                col_metadata.pop("values", None)
                         except ReadZarrError as e:
                             logging.error(f"Failed to read obs column {col}: {e}")
                             col_metadata = None
 
                         if col_metadata:
                             cache.set(cache_key, col_metadata, timeout=timeout)
-
+                    # @TODO: optimize or create separate endpoint
+                    if col_metadata and not return_values:
+                        col_metadata.pop("values", None)
                     if not col_metadata:
                         continue
                     if not first:
