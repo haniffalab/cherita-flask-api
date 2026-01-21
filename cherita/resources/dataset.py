@@ -102,6 +102,13 @@ obs_cols_model = ns.model(
             ),
             default=True,
         ),
+        "returnValues": fields.Boolean(
+            description=(
+                "Whether to return the values for the observation column. "
+                "Default is True, which will return the values."
+            ),
+            default=True,
+        ),
     },
 )
 
@@ -121,6 +128,7 @@ class ObsCols(Resource):
             cols = json_data.get("cols", adata_group["obs"].attrs["column-order"])
             obs_params = json_data.get("obsParams", {})
             retbins = json_data.get("retbins", True)
+            return_values = json_data.get("returnValues", True)
 
             def generate():
                 yield "["
@@ -151,7 +159,9 @@ class ObsCols(Resource):
 
                         if col_metadata:
                             cache.set(cache_key, col_metadata, timeout=timeout)
-
+                    # @TODO: optimize or create separate endpoint
+                    if col_metadata and not return_values:
+                        col_metadata.pop("values", None)
                     if not col_metadata:
                         continue
                     if not first:
