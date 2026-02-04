@@ -1,6 +1,6 @@
 import os
 
-version = "1.2.11"
+version = "1.3.0"
 
 
 class Config(object):
