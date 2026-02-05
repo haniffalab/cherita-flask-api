@@ -179,7 +179,7 @@ def fillna_as_undefined(obs):
 
 def type_category(obs, **kwargs):
     obs, undefined_cat = fillna_as_undefined(obs)
-    categories = [str(i) for i in obs.cat.categories.values.flatten()]
+    categories = [str(i) for i in obs.cat.categories.values.tolist()]
     codes = {str(i): idx for idx, i in enumerate(categories)}
     value_counts = {}
 
