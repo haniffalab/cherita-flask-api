@@ -6,6 +6,8 @@ import logging
 from flask import request
 from flask_caching.backends.rediscache import RedisCache
 
+logger = logging.getLogger(__name__)
+
 
 def make_cache_key(*args, request_data: dict = {}, chunk: str = None, **kwargs) -> str:
     data = {
@@ -21,7 +23,7 @@ def make_cache_key(*args, request_data: dict = {}, chunk: str = None, **kwargs) 
 
 class SafeRedisCache(RedisCache):
     def _log_connection_error(self, e):
-        logging.error("Redis connection error", e)
+        logger.error("Redis connection error", e)
 
     def get(self, *args, **kwargs):
         try:
