@@ -138,7 +138,7 @@ def open_anndata_zarr(url: str):
     else:
         try:
             url, storage_options = get_s3_http_options(o)
-        except:
+        except Exception:
             url, storage_options = url, None
 
     try:
