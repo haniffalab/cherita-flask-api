@@ -72,3 +72,12 @@ FLUSHALL
 #### GCP Memorystore
 
 Note that when using a [Memorystore Redis instance](https://cloud.google.com/memorystore/docs/redis/memorystore-for-redis-overview) you will need to connect from a VM that is within the instance's authorized network. Refer to the [official documentation](https://cloud.google.com/memorystore/docs/redis/connect-redis-instance#connecting-compute-engine-redis-cli) for more information.
+
+#### Run tests
+
+Install dev packages and run `pytest`
+
+```sh
+python -m pip install -r requirements-dev.txt
+python -m pytest tests/
+```
