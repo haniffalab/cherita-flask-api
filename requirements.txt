@@ -1,4 +1,4 @@
-aiohttp==3.12.14
+aiohttp==3.13.3
 anndata==0.12.6
 Flask==2.3.2
 Flask-Caching==2.3.1
