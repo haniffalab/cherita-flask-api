@@ -18,7 +18,7 @@ from cherita.dataset.metadata import (
 )
 from cherita.dataset.search import search_obs_values, search_var_names
 from cherita.extensions import cache
-from cherita.resources.errors import BadRequest, ReadZarrError
+from cherita.resources.errors import BadRequest
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.utils.caching import make_cache_key
 
@@ -153,7 +153,7 @@ class ObsCols(Resource):
                                 obs_params=obs_params,
                                 retbins=retbins,
                             )
-                        except ReadZarrError as e:
+                        except Exception as e:
                             logging.error(f"Failed to read obs column {col}: {e}")
                             col_metadata = None
 
