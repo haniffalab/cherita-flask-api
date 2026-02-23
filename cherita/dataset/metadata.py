@@ -298,18 +298,16 @@ def get_pseudospatial_masks(adata_group: zarr.Group):
 
 
 def get_obs_values(adata_group: zarr.Group, col: str, values: [str] = None):
+    idx_col = get_group_index_name(adata_group["obs"])
+    col = col or idx_col
     if col not in adata_group["obs"]:
         raise KeyError(f"Column '{col}' not found in .obs")
 
-    # Parse the column values
     obs_vals = pd.Series(parse_data(adata_group["obs"][col])).astype(str)
-    # Create DataFrame
     obs_df = pd.DataFrame({COL_NAME: obs_vals})
 
-    # Return index in INDEX_NAME
     obs_df.reset_index(names=[INDEX_NAME], inplace=True)
 
-    # Deduplicate & sort
     obs_df = obs_df.drop_duplicates(subset=[COL_NAME]).sort_values(by=[COL_NAME])
     if values is not None:
         obs_df = obs_df[obs_df[COL_NAME].isin(values)]
