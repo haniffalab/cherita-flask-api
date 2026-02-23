@@ -138,14 +138,14 @@ def open_anndata_zarr(url: str):
     else:
         try:
             url, storage_options = get_s3_http_options(o)
-        except:
+        except Exception:
             url, storage_options = url, None
 
     try:
         adata_group = zarr.open_consolidated(
             url, storage_options=storage_options, mode="r"
         )
-    except (FileNotFoundError, KeyError):
+    except (FileNotFoundError, KeyError, ValueError):
         try:
             adata_group = zarr.open_group(
                 url, storage_options=storage_options, mode="r"
