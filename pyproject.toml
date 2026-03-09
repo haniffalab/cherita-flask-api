@@ -19,7 +19,7 @@ dependencies = [
     "gcsfs==2023.5.0",
     "gunicorn==23.0.0",
     "kaleido==0.2.1",
-    "plotly==5.14.1",
+    "plotly==6.6.0",
     "python-dotenv==1.0.1",
     "python-semantic-release==10.3.1",
     "redis==5.2.1",
