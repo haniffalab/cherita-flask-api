@@ -25,7 +25,7 @@ dependencies = [
     "redis==5.2.1",
     "requests==2.32.4",
     "s3fs==2023.5.0",
-    "scipy==1.14.0",
+    "scipy==1.17.1",
     "zarr==3.1.5"
 ]
 
