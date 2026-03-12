@@ -20,7 +20,7 @@ dependencies = [
     "gunicorn==25.1.0",
     "kaleido==0.2.1",
     "plotly==6.6.0",
-    "python-dotenv==1.0.1",
+    "python-dotenv==1.2.2",
     "python-semantic-release==10.3.1",
     "redis==5.2.1",
     "requests==2.32.4",
