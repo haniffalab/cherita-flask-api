@@ -7,3 +7,4 @@ updates:
     target-branch: "dev"
     pull-request-branch-name:
       separator: "/"
+    open-pull-requests-limit: 0
