@@ -22,7 +22,7 @@ dependencies = [
     "plotly==6.6.0",
     "python-dotenv==1.2.2",
     "python-semantic-release==10.3.1",
-    "redis==5.2.1",
+    "redis==7.3.0",
     "requests==2.32.4",
     "s3fs==2023.5.0",
     "scipy==1.17.1",
