@@ -347,74 +347,75 @@ def plot_polygons(
 
     fig = go.Figure()
 
-    for polygon in adata_group["uns"]["masks"][mask_set]["polygons"].keys():
+    for mask in adata_group["uns"]["masks"][mask_set]["polygons"].keys():
+        # mask with polygons dict with polygons shape (n_points, 2)
         line_color = (
-            values_dict.get(polygon) is not None
-            and color_values.get(polygon)
+            values_dict.get(mask) is not None
+            and color_values.get(mask)
             or "rgb(0,0,0,0.5)"
         )
-        fill_color = color_values.get(polygon)
-        value = values_dict.get(polygon)
+        fill_color = color_values.get(mask)
+        value = values_dict.get(mask)
 
-        x_coords = list(
-            *adata_group["uns"]["masks"][mask_set]["polygons"][polygon][:, :, 0, 0]
-        )
-        y_coords = list(
-            *adata_group["uns"]["masks"][mask_set]["polygons"][polygon][:, :, 0, 1]
-        )
+        polygons = adata_group["uns"]["masks"][mask_set]["polygons"][mask]
 
-        # Add first coord to end to close the polygon
-        x_coords.append(x_coords[0])
-        y_coords.append(y_coords[0])
+        for k in polygons.keys():
+            polygon = polygons[k]
+            x_coords = polygon[:, 0].tolist()
+            y_coords = polygon[:, 1].tolist()
 
-        fig.add_trace(
-            go.Scatter(
-                x=x_coords,
-                y=y_coords,
-                line=dict(
-                    color=line_color,
-                    width=1,
-                ),
-                mode="lines",
-                showlegend=False,
-                fill="toself",
-                fillcolor=fill_color or "rgba(0,0,0,0)",
-                fillpattern=(
-                    dict(
-                        shape="/",
-                        bgcolor="rgba(0,0,0,0)",
-                        fgcolor="rgba(0,0,0,0.5)",
-                        size=5,
-                        solidity=0.2,
-                    )
-                    if not fill_color
-                    else None
-                ),
-                hoverinfo="text",
-                text="<br>".join(
-                    [
-                        f"<b>{polygon}</b>",
-                        (
-                            f"{text}0"
-                            if value == 0
-                            else (
-                                f"{text}{value:.3e}"
-                                if value is not None and value < 0.001
+            # Add first coord to end to close the polygon
+            x_coords.append(x_coords[0])
+            y_coords.append(y_coords[0])
+
+            fig.add_trace(
+                go.Scatter(
+                    x=x_coords,
+                    y=y_coords,
+                    line=dict(
+                        color=line_color,
+                        width=1,
+                    ),
+                    mode="lines",
+                    showlegend=False,
+                    fill="toself",
+                    fillcolor=fill_color or "rgba(0,0,0,0)",
+                    fillpattern=(
+                        dict(
+                            shape="/",
+                            bgcolor="rgba(0,0,0,0)",
+                            fgcolor="rgba(0,0,0,0.5)",
+                            size=5,
+                            solidity=0.2,
+                        )
+                        if not fill_color
+                        else None
+                    ),
+                    hoverinfo="text",
+                    text="<br>".join(
+                        [
+                            f"<b>{mask}</b>",
+                            (
+                                f"{text}0"
+                                if value == 0
                                 else (
-                                    f"{text}{value:,.3f}"
-                                    if value is not None
-                                    else f"{text}N/A"
+                                    f"{text}{value:.3e}"
+                                    if value is not None and value < 0.001
+                                    else (
+                                        f"{text}{value:,.3f}"
+                                        if value is not None
+                                        else f"{text}N/A"
+                                    )
                                 )
-                            )
-                        ),
-                        add_text.get(polygon, "") or "",
-                    ]
-                ),
-                meta=dict(
-                    value=value,
-                ),
+                            ),
+                            add_text.get(mask, "") or "",
+                        ]
+                    ),
+                    meta=dict(
+                        value=value,
+                    ),
+                )
             )
-        )
 
     if isinstance(show_colorbar, str):
         show_colorbar = show_colorbar.lower() in ["true", "1"]
