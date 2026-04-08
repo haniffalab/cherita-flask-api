@@ -357,7 +357,15 @@ def plot_polygons(
         fill_color = color_values.get(mask)
         value = values_dict.get(mask)
 
-        polygons = adata_group["uns"]["masks"][mask_set]["polygons"][mask]
+        if isinstance(
+            adata_group["uns"]["masks"][mask_set]["polygons"][mask], zarr.Array
+        ):
+            # If polygons is an array, assume it's a single polygon and convert to dict format
+            arr = adata_group["uns"]["masks"][mask_set]["polygons"][mask][:]
+            arr = arr.ravel().reshape(-1, 2)
+            polygons = {"0": arr}
+        else:
+            polygons = adata_group["uns"]["masks"][mask_set]["polygons"][mask]
 
         for k in polygons.keys():
             polygon = polygons[k]
