@@ -18,7 +18,7 @@ dependencies = [
     "fsspec==2026.2.0",
     "gcsfs==2026.2.0",
     "gunicorn==25.1.0",
-    "kaleido==0.2.1",
+    "kaleido==1.2.0",
     "plotly==6.6.0",
     "python-dotenv==1.2.2",
     "python-semantic-release==10.3.1",
