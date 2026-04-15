@@ -20,6 +20,8 @@ from cherita.utils.adata_utils import (
 )
 from cherita.utils.models import Marker
 
+logger = logging.getLogger(__name__)
+
 parse_dtype = {
     "category": type_category,
     "object": type_discrete,
@@ -120,12 +122,12 @@ def get_obs_colors(adata_group: zarr.Group, obs_col: str) -> list[str] | None:
         try:
             colors = parse_data(adata_group["uns"][obs_colors]).tolist()
             if not all(is_hex_triplet(c) for c in colors):
-                logging.warn(f"Colors in {obs_colors} are not hex strings")
+                logger.warning(f"Colors in {obs_colors} are not hex strings")
                 return None
             return colors
 
         except Exception as e:
-            logging.error(f"Failed to parse colors for {obs_col}: {e}")
+            logger.error(f"Failed to parse colors for {obs_col}: {e}")
             return None
     return None
 
@@ -286,7 +288,7 @@ def get_pseudospatial_masks(adata_group: zarr.Group):
     for mask in adata_group["uns"]["masks"]:
         m = adata_group["uns"]["masks"][mask]
         if "polygons" not in m or "obs" not in m:
-            logging.err(f"polygons not found in adata_group['uns']['masks'][{mask}]")
+            logger.err(f"polygons not found in adata_group['uns']['masks'][{mask}]")
         else:
             obs = parse_data(adata_group["obs"][m["obs"][()]])
             mask_data[mask] = obs.categories.tolist()

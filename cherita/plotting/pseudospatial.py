@@ -12,6 +12,8 @@ from cherita.utils.adata_utils import parse_data, to_categorical
 from cherita.utils.models import Marker
 from cherita.resources.errors import BadRequest, InvalidObs, InvalidVar, NotInData
 
+logger = logging.getLogger(__name__)
+
 
 def validate_pseudospatial(adata_group: zarr.Group, mask_set: str):
     if "masks" not in adata_group["uns"] or mask_set not in adata_group["uns"]["masks"]:
@@ -51,7 +53,7 @@ def pseudospatial_gene(
         raise NotInData(f"{var_key} not found in data")
 
     # compute mean expression
-    logging.info(f"Computing mean expression for {marker.name}")
+    logger.info(f"Computing mean expression for {marker.name}")
     mask_obs_colname = adata_group["uns"]["masks"][mask_set]["obs"][()]
     mask_obs_col = parse_data(adata_group["obs"][mask_obs_colname])
     masks = mask_obs_col.categories
