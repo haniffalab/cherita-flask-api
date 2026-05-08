@@ -15,6 +15,8 @@ from cherita.utils.adata_utils import (
 )
 from cherita.utils.models import Marker
 
+logger = logging.getLogger(__name__)
+
 MARKER_PIXEL_SIZE = 50
 
 
@@ -190,7 +192,7 @@ def dotplot(
             "max": float(dot_color_df.values.max()),
         }
     except ValueError as e:
-        logging.warning(e)
+        logger.warning(e)
         data_values_range = {
             "min": 0,
             "max": 0,

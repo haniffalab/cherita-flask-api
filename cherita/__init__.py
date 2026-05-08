@@ -12,6 +12,8 @@ from config import Config
 from cherita.api import api, bp
 from cherita.extensions import cache
 
+logger = logging.getLogger(__name__)
+
 
 def create_app(test_config=None):
     # create and configure an instance of the Flask application
@@ -38,7 +40,7 @@ def create_app(test_config=None):
         app.config.update(test_config)
 
     if app.config["REDIS_HOST"] is not None:
-        logging.info("Using RedisCache")
+        logger.info("Using RedisCache")
         cache.init_app(
             app,
             config={
@@ -49,7 +51,7 @@ def create_app(test_config=None):
             },
         )
     else:
-        logging.warning("No REDIS_HOST provided, using NullCache")
+        logger.warning("No REDIS_HOST provided, using NullCache")
         cache.init_app(app, config={"CACHE_TYPE": "NullCache"})
 
     CORS(app)

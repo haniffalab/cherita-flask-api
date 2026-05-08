@@ -22,6 +22,8 @@ from cherita.resources.errors import BadRequest
 from cherita.utils.adata_utils import open_anndata_zarr
 from cherita.utils.caching import make_cache_key
 
+logger = logging.getLogger(__name__)
+
 ns = Namespace("dataset", description="Dataset related data", path="/")
 
 obs_cols_name_model = ns.model(
@@ -154,7 +156,7 @@ class ObsCols(Resource):
                                 retbins=retbins,
                             )
                         except Exception as e:
-                            logging.error(f"Failed to read obs column {col}: {e}")
+                            logger.error(f"Failed to read obs column {col}: {e}")
                             col_metadata = None
 
                         if col_metadata:
